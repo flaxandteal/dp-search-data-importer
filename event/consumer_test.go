@@ -19,7 +19,7 @@ var testCtx = context.Background()
 
 var errHandler = errors.New("Handler Error")
 
-var testEvent = event.HelloCalled{
+var testEvent = event.PublishedContent{
 	RecipientName: "World",
 }
 
@@ -43,7 +43,7 @@ func TestConsume(t *testing.T) {
 
 		handlerWg := &sync.WaitGroup{}
 		mockEventHandler := &mock.HandlerMock{
-			HandleFunc: func(ctx context.Context, config *config.Config, event *event.HelloCalled) error {
+			HandleFunc: func(ctx context.Context, config *config.Config, event *event.PublishedContent) error {
 				defer handlerWg.Done()
 				return nil
 			},
@@ -103,7 +103,7 @@ func TestConsume(t *testing.T) {
 		})
 
 		Convey("With a failing handler and a kafka message with the valid schema being sent to the Upstream channel", func() {
-			mockEventHandler.HandleFunc = func(ctx context.Context, config *config.Config, event *event.HelloCalled) error {
+			mockEventHandler.HandleFunc = func(ctx context.Context, config *config.Config, event *event.PublishedContent) error {
 				defer handlerWg.Done()
 				return errHandler
 			}
@@ -132,7 +132,7 @@ func TestConsume(t *testing.T) {
 }
 
 // marshal helper method to marshal a event into a []byte
-func marshal(event event.HelloCalled) []byte {
+func marshal(event event.PublishedContent) []byte {
 	bytes, err := schema.HelloCalledEvent.Marshal(event)
 	So(err, ShouldBeNil)
 	return bytes

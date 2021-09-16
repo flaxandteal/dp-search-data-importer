@@ -18,11 +18,11 @@ import (
 )
 
 func (c *Component) RegisterSteps(ctx *godog.ScenarioContext) {
-	ctx.Step(`^these hello events are consumed:$`, c.theseHelloEventsAreConsumed)
-	ctx.Step(`^I should receive a hello-world response$`, c.iShouldReceiveAHelloworldResponse)
+	ctx.Step(`^these published contents are consumed:$`, c.thesePublishedContentsAreConsumed)
+	ctx.Step(`^I should receive a published-content response$`, c.iShouldReceiveAPublishedContentResponse)
 }
 
-func (c *Component) iShouldReceiveAHelloworldResponse() error {
+func (c *Component) iShouldReceiveAPublishedContentResponse() error {
 	content, err := ioutil.ReadFile(c.cfg.OutputFilePath)
 	if err != nil {
 		return err
@@ -33,7 +33,7 @@ func (c *Component) iShouldReceiveAHelloworldResponse() error {
 	return c.StepError()
 }
 
-func (c *Component) theseHelloEventsAreConsumed(table *godog.Table) error {
+func (c *Component) thesePublishedContentsAreConsumed(table *godog.Table) error {
 
 	observationEvents, err := c.convertToHelloEvents(table)
 	if err != nil {
@@ -62,16 +62,16 @@ func (c *Component) theseHelloEventsAreConsumed(table *godog.Table) error {
 	return nil
 }
 
-func (c *Component) convertToHelloEvents(table *godog.Table) ([]*event.HelloCalled, error) {
+func (c *Component) convertToHelloEvents(table *godog.Table) ([]*event.PublishedContent, error) {
 	assist := assistdog.NewDefault()
-	events, err := assist.CreateSlice(&event.HelloCalled{}, table)
+	events, err := assist.CreateSlice(&event.PublishedContent{}, table)
 	if err != nil {
 		return nil, err
 	}
-	return events.([]*event.HelloCalled), nil
+	return events.([]*event.PublishedContent), nil
 }
 
-func (c *Component) sendToConsumer(e *event.HelloCalled) error {
+func (c *Component) sendToConsumer(e *event.PublishedContent) error {
 	bytes, err := schema.HelloCalledEvent.Marshal(e)
 	if err != nil {
 		return err

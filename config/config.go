@@ -17,8 +17,8 @@ type Config struct {
 	KafkaVersion               string        `envconfig:"KAFKA_VERSION"`
 	KafkaOffsetOldest          bool          `envconfig:"KAFKA_OFFSET_OLDEST"`
 	KafkaNumWorkers            int           `envconfig:"KAFKA_NUM_WORKERS"`
-	HelloCalledGroup           string        `envconfig:"HELLO_CALLED_GROUP"`
-	HelloCalledTopic           string        `envconfig:"HELLO_CALLED_TOPIC"`
+	PublishedContentGroup      string        `envconfig:"PUBLISEHD_CONTENT_GROUP"`
+	PublishedContentTopic       string        `envconfig:"PUBLISHED_CONTENT_TOPIC"`
 	OutputFilePath             string        `envconfig:"OUTPUT_FILE_PATH"`
 }
 
@@ -40,9 +40,9 @@ func Get() (*Config, error) {
 		KafkaVersion:               "1.0.2",
 		KafkaOffsetOldest:          true,
 		KafkaNumWorkers:            1,
-		HelloCalledGroup:           "dp-search-data-importer",
-		HelloCalledTopic:           "hello-called",
-		OutputFilePath:             "/tmp/helloworld.txt",
+		PublishedContentGroup:           "dp-search-data-importer",
+		PublishedContentTopic:           "published-content",
+		OutputFilePath:             "/tmp/dpSearchDataImporter.txt",
 	}
 
 	return cfg, envconfig.Process("", cfg)
