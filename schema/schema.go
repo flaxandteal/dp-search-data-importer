@@ -4,16 +4,15 @@ import (
 	"github.com/ONSdigital/go-ns/avro"
 )
 
-// TODO: remove or replace hello called structure and model with app specific
-var helloCalledEvent = `{
+var publishedContentEvent = `{
   "type": "record",
-  "name": "hello-called",
+  "name": "published-content",
   "fields": [
     {"name": "recipient_name", "type": "string", "default": ""}
   ]
 }`
 
-// HelloCalledEvent is the Avro schema for Hello Called messages.
-var HelloCalledEvent = &avro.Schema{
-	Definition: helloCalledEvent,
+// PublishedContentEvent is the Avro schema for Published Content messages.
+var PublishedContentEvent = &avro.Schema{
+	Definition: publishedContentEvent,
 }

@@ -3,15 +3,15 @@ package event_test
 import (
 	"context"
 	"errors"
-	"github.com/ONSdigital/dp-search-data-importer/config"
 	"sync"
 	"testing"
+
+	"github.com/ONSdigital/dp-search-data-importer/config"
 
 	kafka "github.com/ONSdigital/dp-kafka/v2"
 	"github.com/ONSdigital/dp-kafka/v2/kafkatest"
 	"github.com/ONSdigital/dp-search-data-importer/event"
 	"github.com/ONSdigital/dp-search-data-importer/event/mock"
-	"github.com/ONSdigital/dp-search-data-importer/schema"
 	. "github.com/smartystreets/goconvey/convey"
 )
 
@@ -19,7 +19,7 @@ var testCtx = context.Background()
 
 var errHandler = errors.New("Handler Error")
 
-var testEvent = event.PublishedContent{
+var testEvent = event.PublishedContentExtracted{
 	RecipientName: "World",
 }
 
@@ -43,7 +43,7 @@ func TestConsume(t *testing.T) {
 
 		handlerWg := &sync.WaitGroup{}
 		mockEventHandler := &mock.HandlerMock{
-			HandleFunc: func(ctx context.Context, config *config.Config, event *event.PublishedContent) error {
+			HandleFunc: func(ctx context.Context, config *config.Config, event *event.PublishedContentExtracted) error {
 				defer handlerWg.Done()
 				return nil
 			},
@@ -62,7 +62,7 @@ func TestConsume(t *testing.T) {
 
 				Convey("An event is sent to the mockEventHandler ", func() {
 					So(len(mockEventHandler.HandleCalls()), ShouldEqual, 1)
-					So(*mockEventHandler.HandleCalls()[0].HelloCalled, ShouldResemble, testEvent)
+					So(*mockEventHandler.HandleCalls()[0].PublishedContentExtracted, ShouldResemble, testEvent)
 				})
 
 				Convey("The message is committed and the consumer is released", func() {
@@ -88,7 +88,7 @@ func TestConsume(t *testing.T) {
 
 				Convey("Only the valid event is sent to the mockEventHandler ", func() {
 					So(len(mockEventHandler.HandleCalls()), ShouldEqual, 1)
-					So(*mockEventHandler.HandleCalls()[0].HelloCalled, ShouldResemble, testEvent)
+					So(*mockEventHandler.HandleCalls()[0].PublishedContentExtracted, ShouldResemble, testEvent)
 				})
 
 				Convey("Only the valid message is committed, but the consumer is released for both messages", func() {
@@ -103,7 +103,7 @@ func TestConsume(t *testing.T) {
 		})
 
 		Convey("With a failing handler and a kafka message with the valid schema being sent to the Upstream channel", func() {
-			mockEventHandler.HandleFunc = func(ctx context.Context, config *config.Config, event *event.PublishedContent) error {
+			mockEventHandler.HandleFunc = func(ctx context.Context, config *config.Config, event *event.PublishedContentExtracted) error {
 				defer handlerWg.Done()
 				return errHandler
 			}
@@ -118,7 +118,7 @@ func TestConsume(t *testing.T) {
 
 				Convey("An event is sent to the mockEventHandler ", func() {
 					So(len(mockEventHandler.HandleCalls()), ShouldEqual, 1)
-					So(*mockEventHandler.HandleCalls()[0].HelloCalled, ShouldResemble, testEvent)
+					So(*mockEventHandler.HandleCalls()[0].PublishedContentExtracted, ShouldResemble, testEvent)
 				})
 
 				Convey("The message is committed and the consumer is released", func() {
@@ -131,9 +131,9 @@ func TestConsume(t *testing.T) {
 	})
 }
 
-// marshal helper method to marshal a event into a []byte
-func marshal(event event.PublishedContent) []byte {
-	bytes, err := schema.HelloCalledEvent.Marshal(event)
-	So(err, ShouldBeNil)
-	return bytes
-}
+// // marshal helper method to marshal a event into a []byte
+// func marshal(event event.PublishedContentExtracted) []byte {
+// 	bytes, err := schema.PublishedContentEvent.Marshal(event)
+// 	So(err, ShouldBeNil)
+// 	return bytes
+// }

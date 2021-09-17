@@ -18,7 +18,7 @@ type Config struct {
 	KafkaOffsetOldest          bool          `envconfig:"KAFKA_OFFSET_OLDEST"`
 	KafkaNumWorkers            int           `envconfig:"KAFKA_NUM_WORKERS"`
 	PublishedContentGroup      string        `envconfig:"PUBLISEHD_CONTENT_GROUP"`
-	PublishedContentTopic       string        `envconfig:"PUBLISHED_CONTENT_TOPIC"`
+	PublishedContentTopic      string        `envconfig:"PUBLISHED_CONTENT_TOPIC"`
 	OutputFilePath             string        `envconfig:"OUTPUT_FILE_PATH"`
 }
 
@@ -40,8 +40,8 @@ func Get() (*Config, error) {
 		KafkaVersion:               "1.0.2",
 		KafkaOffsetOldest:          true,
 		KafkaNumWorkers:            1,
-		PublishedContentGroup:           "dp-search-data-importer",
-		PublishedContentTopic:           "published-content",
+		PublishedContentGroup:      "dp-search-data-importer",
+		PublishedContentTopic:      "published-content",
 		OutputFilePath:             "/tmp/dpSearchDataImporter.txt",
 	}
 

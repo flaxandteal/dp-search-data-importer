@@ -44,11 +44,11 @@ func main() {
 	scanner := bufio.NewScanner(os.Stdin)
 	for {
 		e := scanEvent(scanner)
-		log.Info(ctx, "sending hello-called event", log.Data{"helloCalledEvent": e})
+		log.Info(ctx, "sending published-content event", log.Data{"publlishedContentEvent": e})
 
-		bytes, err := schema.HelloCalledEvent.Marshal(e)
+		bytes, err := schema.PublishedContentEvent.Marshal(e)
 		if err != nil {
-			log.Fatal(ctx, "hello-called event error", err)
+			log.Fatal(ctx, "published-content event error", err)
 			os.Exit(1)
 		}
 
@@ -59,15 +59,15 @@ func main() {
 }
 
 // scanEvent creates a HelloCalled event according to the user input
-func scanEvent(scanner *bufio.Scanner) *event.PublishedContent {
-	fmt.Println("--- [Send Kafka HelloCalled] ---")
+func scanEvent(scanner *bufio.Scanner) *event.PublishedContentExtracted {
+	fmt.Println("--- [Send Kafka PublishedContent] ---")
 
 	fmt.Println("Please type the recipient name")
 	fmt.Printf("$ ")
 	scanner.Scan()
 	name := scanner.Text()
 
-	return &event.PublishedContent{
+	return &event.PublishedContentExtracted{
 		RecipientName: name,
 	}
 }

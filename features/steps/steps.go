@@ -28,7 +28,7 @@ func (c *Component) iShouldReceiveAPublishedContentResponse() error {
 		return err
 	}
 
-	assert.Equal(c, "Hello, Tim!", string(content))
+	assert.Equal(c, "Published Content, Tim!", string(content))
 
 	return c.StepError()
 }
@@ -62,17 +62,17 @@ func (c *Component) thesePublishedContentsAreConsumed(table *godog.Table) error 
 	return nil
 }
 
-func (c *Component) convertToHelloEvents(table *godog.Table) ([]*event.PublishedContent, error) {
+func (c *Component) convertToHelloEvents(table *godog.Table) ([]*event.PublishedContentExtracted, error) {
 	assist := assistdog.NewDefault()
-	events, err := assist.CreateSlice(&event.PublishedContent{}, table)
+	events, err := assist.CreateSlice(&event.PublishedContentExtracted{}, table)
 	if err != nil {
 		return nil, err
 	}
-	return events.([]*event.PublishedContent), nil
+	return events.([]*event.PublishedContentExtracted), nil
 }
 
-func (c *Component) sendToConsumer(e *event.PublishedContent) error {
-	bytes, err := schema.HelloCalledEvent.Marshal(e)
+func (c *Component) sendToConsumer(e *event.PublishedContentExtracted) error {
+	bytes, err := schema.PublishedContentEvent.Marshal(e)
 	if err != nil {
 		return err
 	}
