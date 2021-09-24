@@ -35,7 +35,7 @@ func (c *Component) iShouldReceiveAPublishedContentResponse() error {
 
 func (c *Component) thesePublishedContentsAreConsumed(table *godog.Table) error {
 
-	observationEvents, err := c.convertToHelloEvents(table)
+	observationEvents, err := c.convertToPublishedContentExtractedEvents(table)
 	if err != nil {
 		return err
 	}
@@ -62,7 +62,7 @@ func (c *Component) thesePublishedContentsAreConsumed(table *godog.Table) error 
 	return nil
 }
 
-func (c *Component) convertToHelloEvents(table *godog.Table) ([]*event.PublishedContentExtracted, error) {
+func (c *Component) convertToPublishedContentExtractedEvents(table *godog.Table) ([]*event.PublishedContentExtracted, error) {
 	assist := assistdog.NewDefault()
 	events, err := assist.CreateSlice(&event.PublishedContentExtracted{}, table)
 	if err != nil {

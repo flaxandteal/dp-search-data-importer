@@ -17,10 +17,20 @@ import (
 
 var testCtx = context.Background()
 
-var errHandler = errors.New("Handler Error")
+var errHandler = errors.New("consumer test error")
 
 var testEvent = event.PublishedContentExtracted{
-	RecipientName: "World",
+	DataType:        "testDataType",
+	JobID:           "",
+	SearchIndex:     "ONS",
+	CDID:            "",
+	DatasetID:       "",
+	Keywords:        "",
+	MetaDescription: "",
+	Summary:         "",
+	ReleaseDate:     "",
+	Title:           "",
+	TraceID:         "testTraceID",
 }
 
 // kafkaStubConsumer mock which exposes Channels function returning empty channels
@@ -31,7 +41,6 @@ var kafkaStubConsumer = &kafkatest.IConsumerGroupMock{
 	},
 }
 
-// TODO: remove or replace hello called logic with app specific
 func TestConsume(t *testing.T) {
 
 	Convey("Given kafka consumer and event handler mocks", t, func() {
@@ -51,7 +60,7 @@ func TestConsume(t *testing.T) {
 
 		Convey("And a kafka message with the valid schema being sent to the Upstream channel", func() {
 
-			message := kafkatest.NewMessage(marshal(testEvent), 0)
+			message := kafkatest.NewMessage([]byte(marshal(testEvent)), 0)
 			mockConsumer.Channels().Upstream <- message
 
 			Convey("When consume message is called", func() {

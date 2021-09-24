@@ -29,11 +29,11 @@ func main() {
 
 	// Create Kafka Producer
 	pChannels := kafka.CreateProducerChannels()
-	kafkaProducer, err := kafka.NewProducer(ctx, config.KafkaAddr, config.PublishedContentTopic, pChannels, &kafka.ProducerConfig{
+	kafkaProducer, err := kafka.NewProducer(ctx, config.KafkaAddr, config.PublishedContentGroup, pChannels, &kafka.ProducerConfig{
 		KafkaVersion: &config.KafkaVersion,
 	})
 	if err != nil {
-		log.Fatal(ctx, "fatal error trying to create kafka producer", err, log.Data{"topic": config.PublishedContentTopic})
+		log.Fatal(ctx, "fatal error trying to create kafka producer", err, log.Data{"topic": config.PublishedContentGroup})
 		os.Exit(1)
 	}
 
@@ -58,16 +58,16 @@ func main() {
 	}
 }
 
-// scanEvent creates a HelloCalled event according to the user input
+// scanEvent creates a PublishedContentExtracted event according to the user input
 func scanEvent(scanner *bufio.Scanner) *event.PublishedContentExtracted {
 	fmt.Println("--- [Send Kafka PublishedContent] ---")
 
-	fmt.Println("Please type the recipient name")
+	fmt.Println("Please type the DataType")
 	fmt.Printf("$ ")
 	scanner.Scan()
 	name := scanner.Text()
 
 	return &event.PublishedContentExtracted{
-		RecipientName: name,
+		DataType: name,
 	}
 }

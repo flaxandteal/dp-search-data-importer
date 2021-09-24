@@ -20,7 +20,7 @@ func (h *PublishedContentHandler) Handle(ctx context.Context, cfg *config.Config
 	}
 	log.Info(ctx, "event handler called", logData)
 
-	success := fmt.Sprintf("Published Content, %s!", event.RecipientName)
+	success := fmt.Sprintf("Published Content Data Type, %s!", event.DataType)
 	err = ioutil.WriteFile(cfg.OutputFilePath, []byte(success), 0644)
 	if err != nil {
 		return err

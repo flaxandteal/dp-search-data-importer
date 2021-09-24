@@ -17,7 +17,7 @@ func TestIsEmpty(t *testing.T) {
 	Convey("Given a batch that is not empty", t, func() {
 
 		expectedEvent := getExampleEvent()
-		message := kafkatest.NewMessage([]byte(marshal(*expectedEvent)), 0)
+		message := kafkatest.NewMessage([]byte(marshal(expectedEvent)), 0)
 
 		batchSize := 1
 		batch := event.NewBatch(batchSize)
@@ -44,7 +44,7 @@ func TestAdd(t *testing.T) {
 	Convey("Given a batch", t, func() {
 
 		expectedEvent := getExampleEvent()
-		message := kafkatest.NewMessage([]byte(marshal(*expectedEvent)), 0)
+		message := kafkatest.NewMessage([]byte(marshal(expectedEvent)), 0)
 
 		batchSize := 1
 		batch := event.NewBatch(batchSize)
@@ -55,7 +55,7 @@ func TestAdd(t *testing.T) {
 
 			Convey("The batch contains the expected event.", func() {
 				So(batch.Size(), ShouldEqual, 1)
-				So(batch.Events()[0].RecipientName, ShouldEqual, expectedEvent.RecipientName)
+				So(batch.Events()[0].DataType, ShouldEqual, expectedEvent.DataType)
 			})
 		})
 	})
@@ -65,10 +65,10 @@ func TestCommit(t *testing.T) {
 
 	Convey("Given a batch with two valid messages", t, func() {
 
-		expectedEvent1 := event.PublishedContentExtracted{RecipientName: "Test"}
-		expectedEvent2 := event.PublishedContentExtracted{RecipientName: "Test"}
-		expectedEvent3 := event.PublishedContentExtracted{RecipientName: "Test"}
-		expectedEvent4 := event.PublishedContentExtracted{RecipientName: "Test"}
+		expectedEvent1 := event.PublishedContentExtracted{DataType: "TestDataType"}
+		expectedEvent2 := event.PublishedContentExtracted{MetaDescription: "TestMetaDescription"}
+		expectedEvent3 := event.PublishedContentExtracted{Summary: "TestSummary"}
+		expectedEvent4 := event.PublishedContentExtracted{Title: "TestTitle"}
 		message1 := kafkatest.NewMessage([]byte(marshal(expectedEvent1)), 0)
 		message2 := kafkatest.NewMessage([]byte(marshal(expectedEvent2)), 0)
 		message3 := kafkatest.NewMessage([]byte(marshal(expectedEvent3)), 0)
@@ -103,7 +103,7 @@ func TestCommit(t *testing.T) {
 				So(batch.IsFull(), ShouldBeFalse)
 				So(batch.Size(), ShouldEqual, 1)
 
-				So(batch.Events()[0].RecipientName, ShouldEqual, expectedEvent3.RecipientName)
+				So(batch.Events()[0].DataType, ShouldEqual, expectedEvent3.DataType)
 
 				batch.Add(ctx, message4)
 
@@ -111,7 +111,7 @@ func TestCommit(t *testing.T) {
 				So(batch.IsFull(), ShouldBeTrue)
 				So(batch.Size(), ShouldEqual, 2)
 
-				So(batch.Events()[1].RecipientName, ShouldEqual, expectedEvent4.RecipientName)
+				So(batch.Events()[1].Title, ShouldEqual, expectedEvent4.Title)
 			})
 		})
 	})
@@ -122,7 +122,7 @@ func TestSize(t *testing.T) {
 	Convey("Given a batch", t, func() {
 
 		expectedEvent := getExampleEvent()
-		message := kafkatest.NewMessage([]byte(marshal(*expectedEvent)), 0)
+		message := kafkatest.NewMessage([]byte(marshal(expectedEvent)), 0)
 
 		batchSize := 1
 		batch := event.NewBatch(batchSize)
@@ -147,7 +147,7 @@ func TestIsFull(t *testing.T) {
 	Convey("Given a batch with a size of 2", t, func() {
 
 		expectedEvent := getExampleEvent()
-		message := kafkatest.NewMessage([]byte(marshal(*expectedEvent)), 0)
+		message := kafkatest.NewMessage([]byte(marshal(expectedEvent)), 0)
 
 		batchSize := 2
 		batch := event.NewBatch(batchSize)
@@ -172,7 +172,7 @@ func TestToEvent(t *testing.T) {
 	Convey("Given a event schema encoded using avro", t, func() {
 
 		expectedEvent := getExampleEvent()
-		message := kafkatest.NewMessage([]byte(marshal(*expectedEvent)), 0)
+		message := kafkatest.NewMessage([]byte(marshal(expectedEvent)), 0)
 
 		Convey("When the expectedEvent is unmarshalled", func() {
 
@@ -180,7 +180,7 @@ func TestToEvent(t *testing.T) {
 
 			Convey("The expectedEvent has the expected values", func() {
 				So(err, ShouldBeNil)
-				So(event.RecipientName, ShouldEqual, expectedEvent.RecipientName)
+				So(event.DataType, ShouldEqual, expectedEvent.DataType)
 			})
 		})
 	})
@@ -193,9 +193,19 @@ func marshal(event event.PublishedContentExtracted) []byte {
 	return bytes
 }
 
-func getExampleEvent() *event.PublishedContentExtracted {
-	expectedEvent := &event.PublishedContentExtracted{
-		RecipientName: "1234",
+func getExampleEvent() event.PublishedContentExtracted {
+	expectedEvent := event.PublishedContentExtracted{
+		DataType:        "testDataType",
+		JobID:           "",
+		SearchIndex:     "ONS",
+		CDID:            "",
+		DatasetID:       "",
+		Keywords:        "",
+		MetaDescription: "",
+		Summary:         "",
+		ReleaseDate:     "",
+		Title:           "",
+		TraceID:         "testTraceID",
 	}
 	return expectedEvent
 }
