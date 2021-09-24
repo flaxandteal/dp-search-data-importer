@@ -9,7 +9,7 @@ import (
 
 	kafka "github.com/ONSdigital/dp-kafka/v2"
 	"github.com/ONSdigital/dp-search-data-importer/config"
-	"github.com/ONSdigital/dp-search-data-importer/event"
+	"github.com/ONSdigital/dp-search-data-importer/models"
 	"github.com/ONSdigital/dp-search-data-importer/schema"
 	"github.com/ONSdigital/log.go/v2/log"
 )
@@ -59,7 +59,7 @@ func main() {
 }
 
 // scanEvent creates a PublishedContentExtracted event according to the user input
-func scanEvent(scanner *bufio.Scanner) *event.PublishedContentExtracted {
+func scanEvent(scanner *bufio.Scanner) *models.PublishedContentExtracted {
 	fmt.Println("--- [Send Kafka PublishedContent] ---")
 
 	fmt.Println("Please type the DataType")
@@ -67,7 +67,7 @@ func scanEvent(scanner *bufio.Scanner) *event.PublishedContentExtracted {
 	scanner.Scan()
 	name := scanner.Text()
 
-	return &event.PublishedContentExtracted{
+	return &models.PublishedContentExtracted{
 		DataType: name,
 	}
 }

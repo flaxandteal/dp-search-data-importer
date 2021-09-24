@@ -1,4 +1,4 @@
-package event
+package models
 
 // PublishedContentExtracted provides an avro structure for a PublishedContentExtracted Called event
 type PublishedContentExtracted struct {

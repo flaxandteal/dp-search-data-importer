@@ -1,4 +1,4 @@
-package event
+package handler
 
 import (
 	"context"
@@ -6,6 +6,7 @@ import (
 	"io/ioutil"
 
 	"github.com/ONSdigital/dp-search-data-importer/config"
+	"github.com/ONSdigital/dp-search-data-importer/models"
 	"github.com/ONSdigital/log.go/v2/log"
 )
 
@@ -14,7 +15,7 @@ type PublishedContentHandler struct {
 }
 
 // Handle takes a single event.
-func (h *PublishedContentHandler) Handle(ctx context.Context, cfg *config.Config, event *PublishedContentExtracted) (err error) {
+func (h *PublishedContentHandler) Handle(ctx context.Context, cfg *config.Config, event *models.PublishedContentExtracted) (err error) {
 	logData := log.Data{
 		"event": event,
 	}

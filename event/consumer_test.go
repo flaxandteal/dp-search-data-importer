@@ -7,6 +7,7 @@ import (
 	"testing"
 
 	"github.com/ONSdigital/dp-search-data-importer/config"
+	"github.com/ONSdigital/dp-search-data-importer/models"
 
 	kafka "github.com/ONSdigital/dp-kafka/v2"
 	"github.com/ONSdigital/dp-kafka/v2/kafkatest"
@@ -19,7 +20,7 @@ var testCtx = context.Background()
 
 var errHandler = errors.New("consumer test error")
 
-var testEvent = event.PublishedContentExtracted{
+var testEvent = models.PublishedContentExtracted{
 	DataType:        "testDataType",
 	JobID:           "",
 	SearchIndex:     "ONS",
@@ -52,7 +53,7 @@ func TestConsume(t *testing.T) {
 
 		handlerWg := &sync.WaitGroup{}
 		mockEventHandler := &mock.HandlerMock{
-			HandleFunc: func(ctx context.Context, config *config.Config, event *event.PublishedContentExtracted) error {
+			HandleFunc: func(ctx context.Context, config *config.Config, event *models.PublishedContentExtracted) error {
 				defer handlerWg.Done()
 				return nil
 			},
@@ -112,7 +113,7 @@ func TestConsume(t *testing.T) {
 		})
 
 		Convey("With a failing handler and a kafka message with the valid schema being sent to the Upstream channel", func() {
-			mockEventHandler.HandleFunc = func(ctx context.Context, config *config.Config, event *event.PublishedContentExtracted) error {
+			mockEventHandler.HandleFunc = func(ctx context.Context, config *config.Config, event *models.PublishedContentExtracted) error {
 				defer handlerWg.Done()
 				return errHandler
 			}

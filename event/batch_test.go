@@ -6,6 +6,7 @@ import (
 
 	"github.com/ONSdigital/dp-kafka/v2/kafkatest"
 	"github.com/ONSdigital/dp-search-data-importer/event"
+	"github.com/ONSdigital/dp-search-data-importer/models"
 	"github.com/ONSdigital/dp-search-data-importer/schema"
 	. "github.com/smartystreets/goconvey/convey"
 )
@@ -65,10 +66,10 @@ func TestCommit(t *testing.T) {
 
 	Convey("Given a batch with two valid messages", t, func() {
 
-		expectedEvent1 := event.PublishedContentExtracted{DataType: "TestDataType"}
-		expectedEvent2 := event.PublishedContentExtracted{MetaDescription: "TestMetaDescription"}
-		expectedEvent3 := event.PublishedContentExtracted{Summary: "TestSummary"}
-		expectedEvent4 := event.PublishedContentExtracted{Title: "TestTitle"}
+		expectedEvent1 := models.PublishedContentExtracted{DataType: "TestDataType"}
+		expectedEvent2 := models.PublishedContentExtracted{MetaDescription: "TestMetaDescription"}
+		expectedEvent3 := models.PublishedContentExtracted{Summary: "TestSummary"}
+		expectedEvent4 := models.PublishedContentExtracted{Title: "TestTitle"}
 		message1 := kafkatest.NewMessage([]byte(marshal(expectedEvent1)), 0)
 		message2 := kafkatest.NewMessage([]byte(marshal(expectedEvent2)), 0)
 		message3 := kafkatest.NewMessage([]byte(marshal(expectedEvent3)), 0)
@@ -187,14 +188,14 @@ func TestToEvent(t *testing.T) {
 }
 
 // Marshal helper method to marshal a event into a []byte
-func marshal(event event.PublishedContentExtracted) []byte {
+func marshal(event models.PublishedContentExtracted) []byte {
 	bytes, err := schema.PublishedContentEvent.Marshal(event)
 	So(err, ShouldBeNil)
 	return bytes
 }
 
-func getExampleEvent() event.PublishedContentExtracted {
-	expectedEvent := event.PublishedContentExtracted{
+func getExampleEvent() models.PublishedContentExtracted {
+	expectedEvent := models.PublishedContentExtracted{
 		DataType:        "testDataType",
 		JobID:           "",
 		SearchIndex:     "ONS",

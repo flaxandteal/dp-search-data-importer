@@ -5,6 +5,7 @@ import (
 
 	kafka "github.com/ONSdigital/dp-kafka/v2"
 	"github.com/ONSdigital/dp-search-data-importer/config"
+	"github.com/ONSdigital/dp-search-data-importer/models"
 	"github.com/ONSdigital/dp-search-data-importer/schema"
 	"github.com/ONSdigital/log.go/v2/log"
 )
@@ -13,7 +14,7 @@ import (
 
 // Handler represents a handler for processing a single event.
 type Handler interface {
-	Handle(ctx context.Context, cfg *config.Config, publishedContentExtracted *PublishedContentExtracted) error
+	Handle(ctx context.Context, cfg *config.Config, publishedContentExtracted *models.PublishedContentExtracted) error
 }
 
 // Consume converts messages to event instances, and pass the event to the provided handler.
@@ -72,8 +73,8 @@ func processMessage(ctx context.Context, message kafka.Message, handler Handler,
 }
 
 // unmarshal converts a event instance to []byte.
-func unmarshal(message kafka.Message) (*PublishedContentExtracted, error) {
-	var event PublishedContentExtracted
+func unmarshal(message kafka.Message) (*models.PublishedContentExtracted, error) {
+	var event models.PublishedContentExtracted
 	err := schema.PublishedContentEvent.Unmarshal(message.GetData(), &event)
 	return &event, err
 }
