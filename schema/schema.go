@@ -6,14 +6,6 @@ import (
 
 var publishedContentEvent = `{
   "type": "record",
-  "name": "published-content",
-  "fields": [
-    {"name": "recipient_name", "type": "string", "default": ""}
-  ]
-}`
-
-var searchDataImport = `{
-  "type": "record",
   "name": "search-data-import",
   "fields": [
     {"name": "type", "type": "string", "default": ""},
@@ -32,6 +24,6 @@ var searchDataImport = `{
 
 // PublishedContentEvent is the Avro schema for Search Data Import messages.
 var PublishedContentEvent = &avro.Schema{
-	Definition: searchDataImport,
+	Definition: publishedContentEvent,
 }
 

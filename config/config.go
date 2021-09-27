@@ -8,17 +8,17 @@ import (
 
 // Config represents service configuration for dp-search-data-importer
 type Config struct {
-	BindAddr                       string        `envconfig:"BIND_ADDR"`
-	GracefulShutdownTimeout        time.Duration `envconfig:"GRACEFUL_SHUTDOWN_TIMEOUT"`
-	HealthCheckInterval            time.Duration `envconfig:"HEALTHCHECK_INTERVAL"`
-	HealthCheckCriticalTimeout     time.Duration `envconfig:"HEALTHCHECK_CRITICAL_TIMEOUT"`
-	KafkaAddr                      []string      `envconfig:"KAFKA_ADDR"                     json:"-"`
-	KafkaVersion                   string        `envconfig:"KAFKA_VERSION"`
-	KafkaOffsetOldest              bool          `envconfig:"KAFKA_OFFSET_OLDEST"`
-	KafkaNumWorkers                int           `envconfig:"KAFKA_NUM_WORKERS"`
-	PublishedContentGroup string        `envconfig:"PUBLISHED_CONTENT_GROUP"`
-	PublishedContentTopic string        `envconfig:"PUBLISHED_CONTENT_TOPIC"`
-	OutputFilePath                 string        `envconfig:"OUTPUT_FILE_PATH"`
+	BindAddr                   string        `envconfig:"BIND_ADDR"`
+	GracefulShutdownTimeout    time.Duration `envconfig:"GRACEFUL_SHUTDOWN_TIMEOUT"`
+	HealthCheckInterval        time.Duration `envconfig:"HEALTHCHECK_INTERVAL"`
+	HealthCheckCriticalTimeout time.Duration `envconfig:"HEALTHCHECK_CRITICAL_TIMEOUT"`
+	KafkaAddr                  []string      `envconfig:"KAFKA_ADDR"                     json:"-"`
+	KafkaVersion               string        `envconfig:"KAFKA_VERSION"`
+	KafkaOffsetOldest          bool          `envconfig:"KAFKA_OFFSET_OLDEST"`
+	KafkaNumWorkers            int           `envconfig:"KAFKA_NUM_WORKERS"`
+	PublishedContentGroup      string        `envconfig:"PUBLISHED_CONTENT_GROUP"`
+	PublishedContentTopic      string        `envconfig:"PUBLISHED_CONTENT_TOPIC"`
+	OutputFilePath             string        `envconfig:"OUTPUT_FILE_PATH"`
 }
 
 var cfg *Config
@@ -31,17 +31,17 @@ func Get() (*Config, error) {
 	}
 
 	cfg = &Config{
-		BindAddr:                       "localhost:25900",
-		GracefulShutdownTimeout:        5 * time.Second,
-		HealthCheckInterval:            30 * time.Second,
-		HealthCheckCriticalTimeout:     90 * time.Second,
-		KafkaAddr:                      []string{"localhost:9092"},
-		KafkaVersion:                   "1.0.2",
-		KafkaOffsetOldest:              true,
-		KafkaNumWorkers:                1,
-		PublishedContentGroup: "dp-search-data-importer",
-		PublishedContentTopic: "search-data-import",
-		OutputFilePath:                 "/tmp/dpSearchDataImporter.txt",
+		BindAddr:                   "localhost:25900",
+		GracefulShutdownTimeout:    5 * time.Second,
+		HealthCheckInterval:        30 * time.Second,
+		HealthCheckCriticalTimeout: 90 * time.Second,
+		KafkaAddr:                  []string{"localhost:9092"},
+		KafkaVersion:               "1.0.2",
+		KafkaOffsetOldest:          true,
+		KafkaNumWorkers:            1,
+		PublishedContentGroup:      "dp-search-data-importer",
+		PublishedContentTopic:      "search-data-import",
+		OutputFilePath:             "/tmp/dpSearchDataImporter.txt",
 	}
 
 	return cfg, envconfig.Process("", cfg)
