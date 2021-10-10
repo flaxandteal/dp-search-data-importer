@@ -13,23 +13,23 @@ import (
 	. "github.com/smartystreets/goconvey/convey"
 )
 
-var testCtx = context.Background()
+var (
+	testCtx = context.Background()
 
-// var errHandler = errors.New("consumer test error")
-
-var expectedEvent = models.PublishedContentModel{
-	DataType:        "testDataType",
-	JobID:           "",
-	SearchIndex:     "ONS",
-	CDID:            "",
-	DatasetID:       "",
-	Keywords:        []string{"testkeyword1", "testkeyword2"},
-	MetaDescription: "",
-	Summary:         "",
-	ReleaseDate:     "",
-	Title:           "",
-	TraceID:         "",
-}
+	expectedEvent = models.PublishedContentModel{
+		DataType:        "testDataType",
+		JobID:           "",
+		SearchIndex:     "ONS",
+		CDID:            "",
+		DatasetID:       "",
+		Keywords:        []string{"testkeyword1", "testkeyword2"},
+		MetaDescription: "",
+		Summary:         "",
+		ReleaseDate:     "",
+		Title:           "",
+		TraceID:         "",
+	}
+)
 
 func TestConsume(t *testing.T) {
 

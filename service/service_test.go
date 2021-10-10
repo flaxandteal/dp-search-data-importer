@@ -22,24 +22,22 @@ var (
 	testBuildTime = "BuildTime"
 	testGitCommit = "GitCommit"
 	testVersion   = "Version"
-)
 
-var (
 	errKafkaConsumer = errors.New("Kafka consumer error")
 	errHealthcheck   = errors.New("healthCheck error")
+
+	funcDoGetKafkaConsumerErr = func(ctx context.Context, cfg *config.Config) (kafka.IConsumerGroup, error) {
+		return nil, errKafkaConsumer
+	}
+
+	funcDoGetHealthcheckErr = func(cfg *config.Config, buildTime string, gitCommit string, version string) (service.HealthChecker, error) {
+		return nil, errHealthcheck
+	}
+
+	funcDoGetHTTPServerNil = func(bindAddr string, router http.Handler) service.HTTPServer {
+		return nil
+	}
 )
-
-var funcDoGetKafkaConsumerErr = func(ctx context.Context, cfg *config.Config) (kafka.IConsumerGroup, error) {
-	return nil, errKafkaConsumer
-}
-
-var funcDoGetHealthcheckErr = func(cfg *config.Config, buildTime string, gitCommit string, version string) (service.HealthChecker, error) {
-	return nil, errHealthcheck
-}
-
-var funcDoGetHTTPServerNil = func(bindAddr string, router http.Handler) service.HTTPServer {
-	return nil
-}
 
 func TestRun(t *testing.T) {
 

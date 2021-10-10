@@ -31,7 +31,7 @@ func TestConfig(t *testing.T) {
 				So(cfg.PublishedContentGroup, ShouldEqual, "dp-search-data-importer")
 				So(cfg.PublishedContentTopic, ShouldEqual, "search-data-import")
 				So(cfg.BatchSize, ShouldEqual, 1)
-				So(cfg.BatchWaitTime, ShouldEqual, time.Millisecond * 2)
+				So(cfg.BatchWaitTime, ShouldEqual, time.Millisecond*2)
 			})
 
 			Convey("Then a second call to config should return the same config", func() {

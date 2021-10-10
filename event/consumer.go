@@ -11,7 +11,6 @@ import (
 	"github.com/ONSdigital/log.go/v2/log"
 )
 
-
 // MessageConsumer provides a generic interface for consuming []byte messages (from Kafka)
 type MessageConsumer interface {
 	Channels() *kafka.ConsumerGroupChannels
