@@ -25,7 +25,7 @@ var _ event.Handler = &HandlerMock{}
 //
 //         // make and configure a mocked event.Handler
 //         mockedHandler := &HandlerMock{
-//             HandleFunc: func(ctx context.Context, cfg *config.Config, publishedContentExtracted *models.PublishedContentExtracted) error {
+//             HandleFunc: func(ctx context.Context, cfg *config.Config, PublishedContentModel *models.PublishedContentModel) error {
 // 	               panic("mock out the Handle method")
 //             },
 //         }
@@ -36,7 +36,7 @@ var _ event.Handler = &HandlerMock{}
 //     }
 type HandlerMock struct {
 	// HandleFunc mocks the Handle method.
-	HandleFunc func(ctx context.Context, cfg *config.Config, publishedContentExtracted *models.PublishedContentExtracted) error
+	HandleFunc func(ctx context.Context, cfg *config.Config, PublishedContentModel *models.PublishedContentModel) error
 
 	// calls tracks calls to the methods.
 	calls struct {
@@ -46,44 +46,44 @@ type HandlerMock struct {
 			Ctx context.Context
 			// Cfg is the cfg argument value.
 			Cfg *config.Config
-			// PublishedContentExtracted is the publishedContentExtracted argument value.
-			PublishedContentExtracted *models.PublishedContentExtracted
+			// PublishedContentModel is the PublishedContentModel argument value.
+			PublishedContentModel *models.PublishedContentModel
 		}
 	}
 }
 
 // Handle calls HandleFunc.
-func (mock *HandlerMock) Handle(ctx context.Context, cfg *config.Config, publishedContentExtracted *models.PublishedContentExtracted) error {
+func (mock *HandlerMock) Handle(ctx context.Context, cfg *config.Config, PublishedContentModel *models.PublishedContentModel) error {
 	if mock.HandleFunc == nil {
 		panic("HandlerMock.HandleFunc: method is nil but Handler.Handle was just called")
 	}
 	callInfo := struct {
-		Ctx                       context.Context
-		Cfg                       *config.Config
-		PublishedContentExtracted *models.PublishedContentExtracted
+		Ctx                   context.Context
+		Cfg                   *config.Config
+		PublishedContentModel *models.PublishedContentModel
 	}{
-		Ctx:                       ctx,
-		Cfg:                       cfg,
-		PublishedContentExtracted: publishedContentExtracted,
+		Ctx:                   ctx,
+		Cfg:                   cfg,
+		PublishedContentModel: PublishedContentModel,
 	}
 	lockHandlerMockHandle.Lock()
 	mock.calls.Handle = append(mock.calls.Handle, callInfo)
 	lockHandlerMockHandle.Unlock()
-	return mock.HandleFunc(ctx, cfg, publishedContentExtracted)
+	return mock.HandleFunc(ctx, cfg, PublishedContentModel)
 }
 
 // HandleCalls gets all the calls that were made to Handle.
 // Check the length with:
 //     len(mockedHandler.HandleCalls())
 func (mock *HandlerMock) HandleCalls() []struct {
-	Ctx                       context.Context
-	Cfg                       *config.Config
-	PublishedContentExtracted *models.PublishedContentExtracted
+	Ctx                   context.Context
+	Cfg                   *config.Config
+	PublishedContentModel *models.PublishedContentModel
 } {
 	var calls []struct {
-		Ctx                       context.Context
-		Cfg                       *config.Config
-		PublishedContentExtracted *models.PublishedContentExtracted
+		Ctx                   context.Context
+		Cfg                   *config.Config
+		PublishedContentModel *models.PublishedContentModel
 	}
 	lockHandlerMockHandle.RLock()
 	calls = mock.calls.Handle

@@ -1,7 +1,7 @@
 package schema
 
 import (
-	"github.com/ONSdigital/go-ns/avro"
+  "github.com/ONSdigital/dp-kafka/v2/avro"
 )
 
 var publishedContentEvent = `{
@@ -13,7 +13,7 @@ var publishedContentEvent = `{
     {"name": "search_index", "type": "string", "default": ""},
     {"name": "cdid", "type": "string", "default": ""},
     {"name": "dataset_id", "type": "string", "default": ""},
-    {"name": "keywords", "type": "string", "default": ""},
+    {"name": "keywords","type":["null",{"type":"array","items":"string"}]},
     {"name": "meta_description", "type": "string", "default": ""},
     {"name": "release_date", "type": "string", "default": ""},
     {"name": "summary", "type": "string", "default": ""},
@@ -26,4 +26,3 @@ var publishedContentEvent = `{
 var PublishedContentEvent = &avro.Schema{
 	Definition: publishedContentEvent,
 }
-

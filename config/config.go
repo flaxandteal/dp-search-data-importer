@@ -19,6 +19,8 @@ type Config struct {
 	PublishedContentGroup      string        `envconfig:"PUBLISHED_CONTENT_GROUP"`
 	PublishedContentTopic      string        `envconfig:"PUBLISHED_CONTENT_TOPIC"`
 	OutputFilePath             string        `envconfig:"OUTPUT_FILE_PATH"`
+	BatchSize                  int           `envconfig:"BATCH_SIZE"`
+	BatchWaitTime              time.Duration `envconfig:"BATCH_WAIT_TIME"`
 }
 
 var cfg *Config
@@ -42,6 +44,8 @@ func Get() (*Config, error) {
 		PublishedContentGroup:      "dp-search-data-importer",
 		PublishedContentTopic:      "search-data-import",
 		OutputFilePath:             "/tmp/dpSearchDataImporter.txt",
+		BatchSize:                  100,
+		BatchWaitTime:              time.Millisecond * 200,
 	}
 
 	return cfg, envconfig.Process("", cfg)

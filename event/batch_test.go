@@ -17,7 +17,7 @@ func TestIsEmpty(t *testing.T) {
 
 	Convey("Given a batch that is not empty", t, func() {
 
-		expectedEvent := getExampleEvent()
+		expectedEvent := getExpectedEvent()
 		message := kafkatest.NewMessage([]byte(marshal(expectedEvent)), 0)
 
 		batchSize := 1
@@ -44,7 +44,7 @@ func TestAdd(t *testing.T) {
 
 	Convey("Given a batch", t, func() {
 
-		expectedEvent := getExampleEvent()
+		expectedEvent := getExpectedEvent()
 		message := kafkatest.NewMessage([]byte(marshal(expectedEvent)), 0)
 
 		batchSize := 1
@@ -66,10 +66,10 @@ func TestCommit(t *testing.T) {
 
 	Convey("Given a batch with two valid messages", t, func() {
 
-		expectedEvent1 := models.PublishedContentExtracted{DataType: "TestDataType"}
-		expectedEvent2 := models.PublishedContentExtracted{MetaDescription: "TestMetaDescription"}
-		expectedEvent3 := models.PublishedContentExtracted{Summary: "TestSummary"}
-		expectedEvent4 := models.PublishedContentExtracted{Title: "TestTitle"}
+		expectedEvent1 := models.PublishedContentModel{DataType: "TestDataType"}
+		expectedEvent2 := models.PublishedContentModel{MetaDescription: "TestMetaDescription"}
+		expectedEvent3 := models.PublishedContentModel{Summary: "TestSummary"}
+		expectedEvent4 := models.PublishedContentModel{Title: "TestTitle"}
 		message1 := kafkatest.NewMessage([]byte(marshal(expectedEvent1)), 0)
 		message2 := kafkatest.NewMessage([]byte(marshal(expectedEvent2)), 0)
 		message3 := kafkatest.NewMessage([]byte(marshal(expectedEvent3)), 0)
@@ -122,7 +122,7 @@ func TestSize(t *testing.T) {
 
 	Convey("Given a batch", t, func() {
 
-		expectedEvent := getExampleEvent()
+		expectedEvent := getExpectedEvent()
 		message := kafkatest.NewMessage([]byte(marshal(expectedEvent)), 0)
 
 		batchSize := 1
@@ -147,7 +147,7 @@ func TestIsFull(t *testing.T) {
 
 	Convey("Given a batch with a size of 2", t, func() {
 
-		expectedEvent := getExampleEvent()
+		expectedEvent := getExpectedEvent()
 		message := kafkatest.NewMessage([]byte(marshal(expectedEvent)), 0)
 
 		batchSize := 2
@@ -172,7 +172,7 @@ func TestToEvent(t *testing.T) {
 
 	Convey("Given a event schema encoded using avro", t, func() {
 
-		expectedEvent := getExampleEvent()
+		expectedEvent := getExpectedEvent()
 		message := kafkatest.NewMessage([]byte(marshal(expectedEvent)), 0)
 
 		Convey("When the expectedEvent is unmarshalled", func() {
@@ -188,20 +188,20 @@ func TestToEvent(t *testing.T) {
 }
 
 // Marshal helper method to marshal a event into a []byte
-func marshal(event models.PublishedContentExtracted) []byte {
+func marshal(event models.PublishedContentModel) []byte {
 	bytes, err := schema.PublishedContentEvent.Marshal(event)
 	So(err, ShouldBeNil)
 	return bytes
 }
 
-func getExampleEvent() models.PublishedContentExtracted {
-	expectedEvent := models.PublishedContentExtracted{
+func getExpectedEvent() models.PublishedContentModel {
+	expectedEvent := models.PublishedContentModel{
 		DataType:        "testDataType",
 		JobID:           "",
 		SearchIndex:     "ONS",
 		CDID:            "",
 		DatasetID:       "",
-		Keywords:        "",
+		Keywords:        []string{"testkeyword1", "testkeyword2"},
 		MetaDescription: "",
 		Summary:         "",
 		ReleaseDate:     "",

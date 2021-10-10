@@ -11,7 +11,7 @@ import (
 // Batch handles adding raw messages to a batch of ObservationExtracted events.
 type Batch struct {
 	maxSize  int
-	events   []*models.PublishedContentExtracted
+	events   []*models.PublishedContentModel
 	messages []Message
 }
 
@@ -24,7 +24,7 @@ type Message interface {
 
 // NewBatch returns a new batch instance of the given size.
 func NewBatch(batchSize int) *Batch {
-	events := make([]*models.PublishedContentExtracted, 0, batchSize)
+	events := make([]*models.PublishedContentModel, 0, batchSize)
 
 	return &Batch{
 		maxSize: batchSize,
@@ -57,7 +57,7 @@ func (batch *Batch) IsFull() bool {
 }
 
 // Events returns the events currenty in the batch.
-func (batch *Batch) Events() []*models.PublishedContentExtracted {
+func (batch *Batch) Events() []*models.PublishedContentModel {
 	return batch.events
 }
 
@@ -85,8 +85,8 @@ func (batch *Batch) Clear() {
 }
 
 // Unmarshal converts an event instance to []byte.
-func Unmarshal(message Message) (*models.PublishedContentExtracted, error) {
-	var event models.PublishedContentExtracted
+func Unmarshal(message Message) (*models.PublishedContentModel, error) {
+	var event models.PublishedContentModel
 	err := schema.PublishedContentEvent.Unmarshal(message.GetData(), &event)
 	return &event, err
 }

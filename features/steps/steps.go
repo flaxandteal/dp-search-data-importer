@@ -62,16 +62,16 @@ func (c *Component) thesePublishedContentsAreConsumed(table *godog.Table) error 
 	return nil
 }
 
-func (c *Component) convertToPublishedContentExtractedEvents(table *godog.Table) ([]*models.PublishedContentExtracted, error) {
+func (c *Component) convertToPublishedContentExtractedEvents(table *godog.Table) ([]*models.PublishedContentModel, error) {
 	assist := assistdog.NewDefault()
-	events, err := assist.CreateSlice(&models.PublishedContentExtracted{}, table)
+	events, err := assist.CreateSlice(&models.PublishedContentModel{}, table)
 	if err != nil {
 		return nil, err
 	}
-	return events.([]*models.PublishedContentExtracted), nil
+	return events.([]*models.PublishedContentModel), nil
 }
 
-func (c *Component) sendToConsumer(e *models.PublishedContentExtracted) error {
+func (c *Component) sendToConsumer(e *models.PublishedContentModel) error {
 	bytes, err := schema.PublishedContentEvent.Marshal(e)
 	if err != nil {
 		return err
