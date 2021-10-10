@@ -29,6 +29,7 @@ func NewServiceList(initialiser Initialiser) *ExternalServiceList {
 // Init implements the Initialiser interface to initialise dependencies
 type Init struct{}
 
+
 // GetHTTPServer creates an http server and sets the Server flag to true
 func (e *ExternalServiceList) GetHTTPServer(bindAddr string, router http.Handler) HTTPServer {
 	s := e.Init.DoGetHTTPServer(bindAddr, router)
@@ -64,21 +65,25 @@ func (e *Init) DoGetHTTPServer(bindAddr string, router http.Handler) HTTPServer 
 
 // DoGetKafkaConsumer returns a Kafka Consumer group
 func (e *Init) DoGetKafkaConsumer(ctx context.Context, cfg *config.Config) (dpkafka.IConsumerGroup, error) {
-	cgChannels := dpkafka.CreateConsumerGroupChannels(1)
+	
+	cgChannels := dpkafka.CreateConsumerGroupChannels(cfg.BatchSize)
+
 	kafkaOffset := dpkafka.OffsetNewest
 	if cfg.KafkaOffsetOldest {
 		kafkaOffset = dpkafka.OffsetOldest
 	}
+	cgConfig := &dpkafka.ConsumerGroupConfig{
+		KafkaVersion: &cfg.KafkaVersion,
+		Offset:       &kafkaOffset,
+	}
+
 	kafkaConsumer, err := dpkafka.NewConsumerGroup(
 		ctx,
 		cfg.KafkaAddr,
 		cfg.PublishedContentTopic,
 		cfg.PublishedContentGroup,
 		cgChannels,
-		&dpkafka.ConsumerGroupConfig{
-			KafkaVersion: &cfg.KafkaVersion,
-			Offset:       &kafkaOffset,
-		},
+		cgConfig,
 	)
 	if err != nil {
 		return nil, err

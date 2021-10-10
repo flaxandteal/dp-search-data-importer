@@ -43,9 +43,8 @@ func Get() (*Config, error) {
 		KafkaNumWorkers:            1,
 		PublishedContentGroup:      "dp-search-data-importer",
 		PublishedContentTopic:      "search-data-import",
-		OutputFilePath:             "/tmp/dpSearchDataImporter.txt",
-		BatchSize:                  100,
-		BatchWaitTime:              time.Millisecond * 200,
+		BatchSize:                  1,
+		BatchWaitTime:              time.Millisecond * 2,
 	}
 
 	return cfg, envconfig.Process("", cfg)

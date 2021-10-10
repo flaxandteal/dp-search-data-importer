@@ -8,7 +8,7 @@ import (
 	"github.com/ONSdigital/log.go/log"
 )
 
-// Batch handles adding raw messages to a batch of ObservationExtracted events.
+// Batch handles adding raw messages to a batch of PublishedContentModel events.
 type Batch struct {
 	maxSize  int
 	events   []*models.PublishedContentModel

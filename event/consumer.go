@@ -2,6 +2,7 @@ package event
 
 import (
 	"context"
+	"time"
 
 	kafka "github.com/ONSdigital/dp-kafka/v2"
 	"github.com/ONSdigital/dp-search-data-importer/config"
@@ -10,15 +11,42 @@ import (
 	"github.com/ONSdigital/log.go/v2/log"
 )
 
-//go:generate moq -out mock/handler.go -pkg mock . Handler
+
+// MessageConsumer provides a generic interface for consuming []byte messages (from Kafka)
+type MessageConsumer interface {
+	Channels() *kafka.ConsumerGroupChannels
+}
+
+// Consumer consumes event messages.
+type Consumer struct {
+	closing chan eventClose
+	closed  chan bool
+}
+
+// NewConsumer returns a new consumer instance.
+func NewConsumer() *Consumer {
+	return &Consumer{
+		closing: make(chan eventClose),
+		closed:  make(chan bool),
+	}
+}
+
+type eventClose struct {
+	ctx context.Context
+}
 
 // Handler represents a handler for processing a single event.
 type Handler interface {
-	Handle(ctx context.Context, cfg *config.Config, PublishedContentModel *models.PublishedContentModel) error
+	Handle(ctx context.Context,
+		PublishedContentModel []*models.PublishedContentModel) error
 }
 
 // Consume converts messages to event instances, and pass the event to the provided handler.
-func Consume(ctx context.Context, messageConsumer kafka.IConsumerGroup, handler Handler, cfg *config.Config) {
+func (consumer *Consumer) Consume(
+	ctx context.Context,
+	messageConsumer MessageConsumer,
+	handler Handler,
+	cfg *config.Config) {
 
 	// consume loop, to be executed by each worker
 	var consume = func(workerID int) {
@@ -30,7 +58,7 @@ func Consume(ctx context.Context, messageConsumer kafka.IConsumerGroup, handler 
 					return
 				}
 				messageCtx := context.Background()
-				processMessage(messageCtx, message, handler, cfg)
+				processMessage(messageCtx, messageConsumer, message, handler, cfg, consumer)
 				message.Release()
 			case <-messageConsumer.Channels().Closer:
 				log.Info(ctx, "closing event consumer loop because closer channel is closed", log.Data{"worker_id": workerID})
@@ -47,7 +75,12 @@ func Consume(ctx context.Context, messageConsumer kafka.IConsumerGroup, handler 
 
 // processMessage unmarshals the provided kafka message into an event and calls the handler.
 // After the message is handled, it is committed.
-func processMessage(ctx context.Context, message kafka.Message, handler Handler, cfg *config.Config) {
+func processMessage(ctx context.Context,
+	messageConsumer MessageConsumer,
+	message kafka.Message,
+	handler Handler,
+	cfg *config.Config,
+	consumer *Consumer) {
 
 	// unmarshal - commit on failure (consuming the message again would result in the same error)
 	event, err := unmarshal(message)
@@ -59,17 +92,62 @@ func processMessage(ctx context.Context, message kafka.Message, handler Handler,
 
 	log.Info(ctx, "event received", log.Data{"event": event})
 
-	// handle - commit on failure (implement error handling to not commit if message needs to be consumed again)
-	err = handler.Handle(ctx, cfg, event)
+	//Handle Batch Events : Starts
+	start := time.Now()
+	log.Info(ctx, "batch processing starts", log.Data{"batch start time": start})
+
+	batchSize := cfg.BatchSize
+	batchWaitTime := cfg.BatchWaitTime
+	batch := NewBatch(batchSize)
+
+	defer close(consumer.closed)
+
+	// Wait a batch full of messages.
+	// If we do not get any messages for a time, just process the messages already in the batch.
+	for {
+		select {
+		case msg := <-messageConsumer.Channels().Upstream:
+			ctx := context.Background()
+
+			batch.Add(ctx, msg)
+			if batch.IsFull() {
+				log.Event(ctx, "batch is full - processing batch", log.INFO, log.Data{"batchsize": batch.Size()})
+				ProcessBatch(ctx, handler, batch)
+			}
+
+			msg.Release()
+
+		case <-time.After(batchWaitTime):
+			if batch.IsEmpty() {
+				continue
+			}
+
+			ctx := context.Background()
+
+			log.Event(ctx, "batch wait time reached. proceeding with batch", log.INFO, log.Data{"batchsize": batch.Size()})
+			ProcessBatch(ctx, handler, batch)
+
+		case eventClose := <-consumer.closing:
+			log.Event(eventClose.ctx, "closing event consumer loop", log.INFO)
+			close(consumer.closing)
+			return
+		}
+	}
+}
+
+// ProcessBatch will attempt to handle and commit the batch, or shutdown if something goes horribly wrong.
+func ProcessBatch(ctx context.Context, handler Handler, batch *Batch) {
+	err := handler.Handle(ctx, batch.Events())
 	if err != nil {
-		log.Error(ctx, "failed to handle event", err)
-		message.Commit()
+		log.Info(ctx, "error processing batch", log.Data{"err": err})
 		return
 	}
 
-	log.Info(ctx, "event processed - committing message", log.Data{"event": event})
-	message.Commit()
-	log.Info(ctx, "message committed", log.Data{"event": event})
+	//Handle Batch Events " Ends"
+	end := time.Now()
+	log.Info(ctx, "batch event processed - committing message - with batchsizee", log.Data{"batch end time": end, "batch-size": batch.Size()})
+
+	batch.Commit()
 }
 
 // unmarshal converts a event instance to []byte.

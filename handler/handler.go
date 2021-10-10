@@ -3,32 +3,77 @@ package handler
 import (
 	"context"
 	"fmt"
-	"io/ioutil"
+	"os"
 
-	"github.com/ONSdigital/dp-search-data-importer/config"
+	"github.com/ONSdigital/dp-search-data-importer/event"
 	"github.com/ONSdigital/dp-search-data-importer/models"
-	"github.com/ONSdigital/log.go/v2/log"
+	"github.com/ONSdigital/log.go/log"
 )
 
-// PublishedContentHandler ...
-type PublishedContentHandler struct {
+//go:generate moq -out eventtest/result_writer.go -pkg eventtest . ResultWriter
+
+var _ event.Handler = (*BatchHandler)(nil)
+
+// BatchHandler handles batches of publishedContentModel events that contain CSV row data.
+type BatchHandler struct {
+	resultWriter ResultWriter
 }
 
-// Handle takes a single event.
-func (h *PublishedContentHandler) Handle(ctx context.Context, cfg *config.Config, event *models.PublishedContentExtracted) (err error) {
+// TODO : ResultWriter dependency that outputs results
+type ResultWriter interface{}
+
+// NewBatchHandler returns a resultWriter TBD.
+func NewBatchHandler(
+	resultWriter ResultWriter) *BatchHandler {
+
+	return &BatchHandler{
+		resultWriter: resultWriter,
+	}
+}
+
+// Handle the given slice of PublishedContent events.
+func (batchHandler BatchHandler) Handle(ctx context.Context, events []*models.PublishedContentModel) error {
+
 	logData := log.Data{
-		"event": event,
+		"event": events,
 	}
-	log.Info(ctx, "event handler called", logData)
+	log.Event(ctx, "events handler called", log.INFO, logData)
 
-	success := fmt.Sprintf("Published Content Data Type, %s!", event.DataType)
-	err = ioutil.WriteFile(cfg.OutputFilePath, []byte(success), 0644)
+	publisheContents := make([]*models.PublishedContentModel, 0, len(events))
+
+	//Print all incoming object and total size of slice
+	//TODO : temp output
+	f, err := os.Create("/tmp/dp-search-data-importer.txt")
 	if err != nil {
-		return err
+		fmt.Println(err)
+	}
+	fmt.Printf("file created %v", f)
+
+	// for _, publisheContent := range publisheContents {
+
+	fmt.Printf("slice size %v", len(publisheContents))
+
+	for i := 0; i < len(publisheContents); i++ {
+		dataType := fmt.Sprintf("publishedDataReceived.DataType, %s!", publisheContents[i].DataType)
+		keywords := fmt.Sprintf("publishedDataReceived.Keywords, %s!", publisheContents[i].Keywords)
+		appendFile(dataType, keywords)
 	}
 
-	logData["success"] = success
-	log.Info(ctx, "event successfully handled", logData)
+	// }
 
+	log.Event(ctx, "event successfully handled", log.INFO, logData)
 	return nil
+}
+
+//TODO : temp output
+func appendFile(datatype string, keywords string) {
+	f, err := os.OpenFile("/tmp/dp-search-data-importer.txt", os.O_APPEND|os.O_WRONLY, 0644)
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+	_, err = fmt.Fprintln(f, datatype, keywords)
+	if err != nil {
+		fmt.Println(err)
+	}
 }

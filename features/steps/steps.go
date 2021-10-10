@@ -35,7 +35,7 @@ func (c *Component) iShouldReceiveAPublishedContentResponse() error {
 
 func (c *Component) thesePublishedContentsAreConsumed(table *godog.Table) error {
 
-	observationEvents, err := c.convertToPublishedContentExtractedEvents(table)
+	publishedContentModelEvents, err := c.convertToPublishedContentExtractedEvents(table)
 	if err != nil {
 		return err
 	}
@@ -47,8 +47,8 @@ func (c *Component) thesePublishedContentsAreConsumed(table *godog.Table) error 
 		c.svc, err = service.Run(context.Background(), c.serviceList, "", "", "", c.errorChan)
 	}()
 
-	// consume extracted observations
-	for _, e := range observationEvents {
+	// consume extracted publishedContentModelEvents
+	for _, e := range publishedContentModelEvents {
 		if err := c.sendToConsumer(e); err != nil {
 			return err
 		}

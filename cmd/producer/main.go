@@ -59,7 +59,7 @@ func main() {
 }
 
 // scanEvent creates a PublishedContentExtracted event according to the user input
-func scanEvent(scanner *bufio.Scanner) *models.PublishedContentExtracted {
+func scanEvent(scanner *bufio.Scanner) *models.PublishedContentModel {
 	fmt.Println("--- [Send Kafka PublishedContent] ---")
 
 	fmt.Println("Please type the DataType")
@@ -67,7 +67,7 @@ func scanEvent(scanner *bufio.Scanner) *models.PublishedContentExtracted {
 	scanner.Scan()
 	name := scanner.Text()
 
-	return &models.PublishedContentExtracted{
+	return &models.PublishedContentModel{
 		DataType: name,
 	}
 }
