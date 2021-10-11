@@ -31,7 +31,7 @@ var (
 	}
 )
 
-func TestConsume(t *testing.T) {
+func TestConsumeWithOneMessage(t *testing.T) {
 
 	Convey("Given a consumer with a mocked message producer with an expected message", t, func() {
 
@@ -42,7 +42,6 @@ func TestConsume(t *testing.T) {
 			t.Log(ctx, "failed to retrieve configuration", err)
 			t.Fail()
 		}
-		// exit := make(chan error, 1)
 
 		consumer := event.NewConsumer()
 
@@ -66,6 +65,29 @@ func TestConsume(t *testing.T) {
 				<-message.UpstreamDone()
 				So(len(message.CommitCalls()), ShouldEqual, 1)
 				So(len(message.ReleaseCalls()), ShouldEqual, 1)
+			})
+		})
+	})
+}
+
+func TestClose(t *testing.T) {
+
+	Convey("Given a consumer", t, func() {
+		messageConsumer := kafkatest.NewMessageConsumer(false)
+		eventHandler := eventtest.NewEventHandler()
+		cfg, err := config.Get()
+		if err != nil {
+			t.Log(ctx, "failed to retrieve configuration", err)
+			t.Fail()
+		}
+		consumer := event.NewConsumer()
+		go consumer.Consume(testCtx, messageConsumer, eventHandler, cfg)
+
+		Convey("When close is called", func() {
+			err := consumer.Close(nil)
+
+			Convey("The expected event is sent to the handler", func() {
+				So(err, ShouldBeNil)
 			})
 		})
 	})

@@ -44,7 +44,7 @@ func Get() (*Config, error) {
 		PublishedContentGroup:      "dp-search-data-importer",
 		PublishedContentTopic:      "search-data-import",
 		BatchSize:                  2,
-		BatchWaitTime:              time.Millisecond * 2,
+		BatchWaitTime:              time.Second,
 	}
 
 	return cfg, envconfig.Process("", cfg)

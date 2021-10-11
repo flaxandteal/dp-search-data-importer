@@ -66,10 +66,11 @@ func TestCommit(t *testing.T) {
 
 	Convey("Given a batch with two valid messages", t, func() {
 
-		expectedEvent1 := models.PublishedContentModel{DataType: "TestDataType"}
-		expectedEvent2 := models.PublishedContentModel{MetaDescription: "TestMetaDescription"}
-		expectedEvent3 := models.PublishedContentModel{Summary: "TestSummary"}
-		expectedEvent4 := models.PublishedContentModel{Title: "TestTitle"}
+		expectedEvent1 := getExpectedEvent()
+		expectedEvent2 := getExpectedEvent()
+		expectedEvent3 := getExpectedEvent()
+		expectedEvent4 := getExpectedEvent()
+
 		message1 := kafkatest.NewMessage([]byte(marshal(expectedEvent1)), 0)
 		message2 := kafkatest.NewMessage([]byte(marshal(expectedEvent2)), 0)
 		message3 := kafkatest.NewMessage([]byte(marshal(expectedEvent3)), 0)
@@ -206,7 +207,7 @@ func getExpectedEvent() models.PublishedContentModel {
 		Summary:         "",
 		ReleaseDate:     "",
 		Title:           "",
-		TraceID:         "testTraceID",
+		TraceID:         "",
 	}
 	return expectedEvent
 }
