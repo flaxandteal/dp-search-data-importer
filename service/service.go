@@ -77,9 +77,6 @@ func Run(ctx context.Context, serviceList *ExternalServiceList, buildTime, gitCo
 		}
 	}()
 
-	// // maps from incoming row to PublishContent data.
-	// publishedContentBatchMapper := NewMapper(?????????)
-
 	// write import results to the output.
 	resultWriter := NewResultWriter()
 
