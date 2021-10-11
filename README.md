@@ -26,6 +26,11 @@ An example event can be created using the helper script, `make produce`.
 | KAFKA_ADDR                   | "localhost:9092"                  | The address of Kafka (accepts list)
 | KAFKA_OFFSET_OLDEST          | true                              | Start processing Kafka messages in order from the oldest in the queue
 | KAFKA_NUM_WORKERS            | 1                                 | The maximum number of parallel kafka consumers
+| KAFKA_SEC_PROTO              | _unset_   (only `TLS`)   | if set to `TLS`, kafka connections will use TLS
+| KAFKA_SEC_CLIENT_KEY         | _unset_                  | PEM [2] for the client key (optional, used for client auth) [1]
+| KAFKA_SEC_CLIENT_CERT        | _unset_                  | PEM [2] for the client certificate (optional, used for client auth) [1]
+| KAFKA_SEC_CA_CERTS           | _unset_                  | PEM [2] of CA cert chain if using private CA for the server cert [1]
+| KAFKA_SEC_SKIP_VERIFY        | false                    | ignore server certificate issues if set to `true` [1]
 | HELLO_CALLED_GROUP           | dp-search-data-importer           | The consumer group this application to consume ImageUploaded messages
 | HELLO_CALLED_TOPIC           | hello-called                      | The name of the topic to consume messages from
 
@@ -36,6 +41,11 @@ An example event can be created using the helper script, `make produce`.
  On a development machine a request to the health check endpoint can be made by:
 
  `curl localhost:25900/health`
+
+**Notes:**
+
+1. For more info, see the [kafka TLS examples documentation](https://github.com/ONSdigital/dp-kafka/tree/main/examples#tls)
+
 
 ### Contributing
 
