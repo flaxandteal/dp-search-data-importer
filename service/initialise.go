@@ -10,6 +10,9 @@ import (
 	"github.com/ONSdigital/dp-search-data-importer/config"
 )
 
+// KafkaTLSProtocolFlag informs service to use TLS protocol for kafka
+const KafkaTLSProtocolFlag = "TLS"
+
 // ExternalServiceList holds the initialiser and initialisation state of external services.
 type ExternalServiceList struct {
 	HealthCheck   bool
@@ -66,11 +69,11 @@ func (e *Init) DoGetHTTPServer(bindAddr string, router http.Handler) HTTPServer 
 func (e *Init) DoGetKafkaConsumer(ctx context.Context, cfg *config.Config) (dpkafka.IConsumerGroup, error) {
 	cgChannels := dpkafka.CreateConsumerGroupChannels(1)
 
-	pConfig := &dpkafka.ProducerConfig{
+	cConfig := &dpkafka.ConsumerGroupConfig{
 		KafkaVersion: &cfg.KafkaVersion,
 	}
 	if cfg.KafkaSecProtocol == "TLS" {
-		pConfig.SecurityConfig = dpkafka.GetSecurityConfig(
+		cConfig.SecurityConfig = dpkafka.GetSecurityConfig(
 			cfg.KafkaSecCACerts,
 			cfg.KafkaSecClientCert,
 			cfg.KafkaSecClientKey,
@@ -84,8 +87,8 @@ func (e *Init) DoGetKafkaConsumer(ctx context.Context, cfg *config.Config) (dpka
 	kafkaConsumer, err := dpkafka.NewConsumerGroup(
 		ctx,
 		cfg.KafkaAddr,
-		cfg.HelloCalledTopic,
-		cfg.HelloCalledGroup,
+		cfg.PublishedContentTopic,
+		cfg.PublishedContentGroup,
 		cgChannels,
 		&dpkafka.ConsumerGroupConfig{
 			KafkaVersion: &cfg.KafkaVersion,

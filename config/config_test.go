@@ -28,8 +28,13 @@ func TestConfig(t *testing.T) {
 				So(cfg.KafkaAddr[0], ShouldEqual, "localhost:9092")
 				So(cfg.KafkaVersion, ShouldEqual, "1.0.2")
 				So(cfg.KafkaNumWorkers, ShouldEqual, 1)
-				So(cfg.HelloCalledGroup, ShouldEqual, "dp-search-data-importer")
-				So(cfg.HelloCalledTopic, ShouldEqual, "hello-called")
+				So(cfg.KafkaSecProtocol, ShouldEqual, "")
+				So(cfg.KafkaSecCACerts, ShouldEqual, "")
+				So(cfg.KafkaSecClientCert, ShouldEqual, "")
+				So(cfg.KafkaSecClientKey, ShouldEqual, "")
+				So(cfg.KafkaSecSkipVerify, ShouldBeFalse)
+				So(cfg.PublishedContentGroup, ShouldEqual, "dp-search-data-importer")
+				So(cfg.PublishedContentTopic, ShouldEqual, "search-data-import")
 			})
 
 			Convey("Then a second call to config should return the same config", func() {
