@@ -32,7 +32,7 @@ func main() {
 
 	// Create Kafka Producer
 	pChannels := kafka.CreateProducerChannels()
-	pConfig := kafka.ProducerConfig{
+	pConfig := &kafka.ProducerConfig{
 		KafkaVersion: &config.KafkaVersion,
 	}
 	if config.KafkaSecProtocol == KafkaTLSProtocolFlag {
@@ -44,9 +44,7 @@ func main() {
 		)
 	}
 
-	kafkaProducer, err := kafka.NewProducer(ctx, config.KafkaAddr, config.PublishedContentTopic, pChannels, &kafka.ProducerConfig{
-		KafkaVersion: &config.KafkaVersion,
-	})
+	kafkaProducer, err := kafka.NewProducer(ctx, config.KafkaAddr, config.PublishedContentTopic, pChannels, pConfig)
 	if err != nil {
 		log.Fatal(ctx, "fatal error trying to create kafka producer", err, log.Data{"topic": config.PublishedContentTopic})
 		os.Exit(1)
