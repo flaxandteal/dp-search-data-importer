@@ -69,8 +69,14 @@ func (e *Init) DoGetHTTPServer(bindAddr string, router http.Handler) HTTPServer 
 func (e *Init) DoGetKafkaConsumer(ctx context.Context, cfg *config.Config) (dpkafka.IConsumerGroup, error) {
 	cgChannels := dpkafka.CreateConsumerGroupChannels(1)
 
+	kafkaOffset := dpkafka.OffsetNewest
+	if cfg.KafkaOffsetOldest {
+		kafkaOffset = dpkafka.OffsetOldest
+	}
+
 	cConfig := &dpkafka.ConsumerGroupConfig{
 		KafkaVersion: &cfg.KafkaVersion,
+		Offset: &kafkaOffset,
 	}
 	if cfg.KafkaSecProtocol == "TLS" {
 		cConfig.SecurityConfig = dpkafka.GetSecurityConfig(
@@ -80,10 +86,7 @@ func (e *Init) DoGetKafkaConsumer(ctx context.Context, cfg *config.Config) (dpka
 			cfg.KafkaSecSkipVerify,
 		)
 	}
-	kafkaOffset := dpkafka.OffsetNewest
-	if cfg.KafkaOffsetOldest {
-		kafkaOffset = dpkafka.OffsetOldest
-	}
+
 	kafkaConsumer, err := dpkafka.NewConsumerGroup(
 		ctx,
 		cfg.KafkaAddr,

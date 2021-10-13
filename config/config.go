@@ -12,7 +12,7 @@ type Config struct {
 	GracefulShutdownTimeout    time.Duration `envconfig:"GRACEFUL_SHUTDOWN_TIMEOUT"`
 	HealthCheckInterval        time.Duration `envconfig:"HEALTHCHECK_INTERVAL"`
 	HealthCheckCriticalTimeout time.Duration `envconfig:"HEALTHCHECK_CRITICAL_TIMEOUT"`
-	KafkaAddr                  []string      `envconfig:"KAFKA_ADDR"                    json:"-"`
+	KafkaAddr                  []string      `envconfig:"KAFKA_ADDR"`
 	KafkaVersion               string        `envconfig:"KAFKA_VERSION"`
 	KafkaOffsetOldest          bool          `envconfig:"KAFKA_OFFSET_OLDEST"`
 	KafkaNumWorkers            int           `envconfig:"KAFKA_NUM_WORKERS"`
@@ -51,7 +51,7 @@ func Get() (*Config, error) {
 		KafkaSecSkipVerify:         false,
 		PublishedContentGroup:      "dp-search-data-importer",
 		PublishedContentTopic:      "search-data-import",
-		OutputFilePath:             "/tmp/helloworld.txt",
+		OutputFilePath:             "/tmp/search-data-importer.txt",
 	}
 
 	return cfg, envconfig.Process("", cfg)
