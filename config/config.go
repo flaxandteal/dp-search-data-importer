@@ -6,6 +6,7 @@ import (
 	"github.com/kelseyhightower/envconfig"
 )
 
+// KafkaTLSProtocolFlag informs service to use TLS protocol for kafka
 const KafkaTLSProtocolFlag = "TLS"
 
 // Config represents service configuration for dp-search-data-importer
@@ -23,7 +24,6 @@ type Config struct {
 	KafkaSecClientCert         string        `envconfig:"KAFKA_SEC_CLIENT_CERT"`
 	KafkaSecClientKey          string        `envconfig:"KAFKA_SEC_CLIENT_KEY"          json:"-"`
 	KafkaSecSkipVerify         bool          `envconfig:"KAFKA_SEC_SKIP_VERIFY"`
-	KafkaTLSProtocolFlag       string        `envconfig:"KAFKA_TLS_PROTOCOL_FLAG"`	
 	PublishedContentGroup      string        `envconfig:"KAFKA_PUBLISHED_CONTENT_GROUP"`
 	PublishedContentTopic      string        `envconfig:"KAFKA_PUBLISHED_CONTENT_TOPIC"`
 	OutputFilePath             string        `envconfig:"OUTPUT_FILE_PATH"`
