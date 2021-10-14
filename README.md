@@ -24,6 +24,7 @@ An example event can be created using the helper script, `make produce`.
 | HEALTHCHECK_INTERVAL          | 30s                               | Time between self-healthchecks (`time.Duration` format)
 | HEALTHCHECK_CRITICAL_TIMEOUT  | 90s                               | Time to wait until an unhealthy dependent propagates its state to make this app unhealthy (`time.Duration` format)
 | KAFKA_ADDR                    | "localhost:9092"                  | The address of Kafka (accepts list)
+| KAFKA_VERSION                 | `1.0.2`                           | The version of Kafka
 | KAFKA_OFFSET_OLDEST           | true                              | Start processing Kafka messages in order from the oldest in the queue
 | KAFKA_NUM_WORKERS             | 1                                 | The maximum number of parallel kafka consumers
 | KAFKA_SEC_PROTO               | _unset_   (only `TLS`)            | if set to `TLS`, kafka connections will use TLS

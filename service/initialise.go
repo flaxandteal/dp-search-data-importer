@@ -10,9 +10,6 @@ import (
 	"github.com/ONSdigital/dp-search-data-importer/config"
 )
 
-// KafkaTLSProtocolFlag informs service to use TLS protocol for kafka
-const KafkaTLSProtocolFlag = "TLS"
-
 // ExternalServiceList holds the initialiser and initialisation state of external services.
 type ExternalServiceList struct {
 	HealthCheck   bool
@@ -78,7 +75,9 @@ func (e *Init) DoGetKafkaConsumer(ctx context.Context, cfg *config.Config) (dpka
 		KafkaVersion: &cfg.KafkaVersion,
 		Offset: &kafkaOffset,
 	}
-	if cfg.KafkaSecProtocol == "TLS" {
+
+	// KafkaTLSProtocolFlag informs service to use TLS protocol for kafka
+	if cfg.KafkaSecProtocol == cfg.KafkaTLSProtocolFlag {
 		cConfig.SecurityConfig = dpkafka.GetSecurityConfig(
 			cfg.KafkaSecCACerts,
 			cfg.KafkaSecClientCert,
@@ -93,10 +92,7 @@ func (e *Init) DoGetKafkaConsumer(ctx context.Context, cfg *config.Config) (dpka
 		cfg.PublishedContentTopic,
 		cfg.PublishedContentGroup,
 		cgChannels,
-		&dpkafka.ConsumerGroupConfig{
-			KafkaVersion: &cfg.KafkaVersion,
-			Offset:       &kafkaOffset,
-		},
+		cConfig,
 	)
 	if err != nil {
 		return nil, err

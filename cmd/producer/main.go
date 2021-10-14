@@ -16,9 +16,6 @@ import (
 
 const serviceName = "dp-search-data-importer"
 
-// KafkaTLSProtocolFlag informs service to use TLS protocol for kafka
-const KafkaTLSProtocolFlag = "TLS"
-
 func main() {
 	log.Namespace = serviceName
 	ctx := context.Background()
@@ -35,7 +32,9 @@ func main() {
 	pConfig := &kafka.ProducerConfig{
 		KafkaVersion: &config.KafkaVersion,
 	}
-	if config.KafkaSecProtocol == KafkaTLSProtocolFlag {
+
+	// KafkaTLSProtocolFlag informs service to use TLS protocol for kafka
+	if config.KafkaSecProtocol == config.KafkaTLSProtocolFlag {
 		pConfig.SecurityConfig = kafka.GetSecurityConfig(
 			config.KafkaSecCACerts,
 			config.KafkaSecClientCert,
