@@ -6,6 +6,8 @@ import (
 	"github.com/kelseyhightower/envconfig"
 )
 
+const KafkaTLSProtocolFlag = "TLS"
+
 // Config represents service configuration for dp-search-data-importer
 type Config struct {
 	BindAddr                   string        `envconfig:"BIND_ADDR"`
@@ -50,7 +52,6 @@ func Get() (*Config, error) {
 		KafkaSecClientCert:         "",
 		KafkaSecClientKey:          "",
 		KafkaSecSkipVerify:         false,
-		KafkaTLSProtocolFlag:        "TLS",
 		PublishedContentGroup:      "dp-search-data-importer",
 		PublishedContentTopic:      "search-data-import",
 		OutputFilePath:             "/tmp/search-data-importer.txt",

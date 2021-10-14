@@ -33,7 +33,6 @@ func TestConfig(t *testing.T) {
 				So(cfg.KafkaSecClientCert, ShouldEqual, "")
 				So(cfg.KafkaSecClientKey, ShouldEqual, "")
 				So(cfg.KafkaSecSkipVerify, ShouldBeFalse)
-				So(cfg.KafkaTLSProtocolFlag, ShouldEqual, "TLS")
 				So(cfg.PublishedContentGroup, ShouldEqual, "dp-search-data-importer")
 				So(cfg.PublishedContentTopic, ShouldEqual, "search-data-import")
 			})
