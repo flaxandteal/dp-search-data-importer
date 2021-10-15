@@ -16,7 +16,7 @@ import (
 var (
 	testCtx = context.Background()
 
-	expectedEvent = models.PublishedContentModel{
+	expectedEvent = models.SearchDataImportModel{
 		DataType:        "testDataType",
 		JobID:           "",
 		SearchIndex:     "ONS",

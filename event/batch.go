@@ -8,10 +8,10 @@ import (
 	"github.com/ONSdigital/log.go/log"
 )
 
-// Batch handles adding raw messages to a batch of PublishedContentModel events.
+// Batch handles adding raw messages to a batch of SearchDataImportModel events.
 type Batch struct {
 	maxSize  int
-	events   []*models.PublishedContentModel
+	events   []*models.SearchDataImportModel
 	messages []Message
 }
 
@@ -24,7 +24,7 @@ type Message interface {
 
 // NewBatch returns a new batch instance of the given size.
 func NewBatch(batchSize int) *Batch {
-	events := make([]*models.PublishedContentModel, 0, batchSize)
+	events := make([]*models.SearchDataImportModel, 0, batchSize)
 
 	return &Batch{
 		maxSize: batchSize,
@@ -57,7 +57,7 @@ func (batch *Batch) IsFull() bool {
 }
 
 // Events returns the events currenty in the batch.
-func (batch *Batch) Events() []*models.PublishedContentModel {
+func (batch *Batch) Events() []*models.SearchDataImportModel {
 	return batch.events
 }
 
@@ -85,8 +85,8 @@ func (batch *Batch) Clear() {
 }
 
 // Unmarshal converts an event instance to []byte.
-func Unmarshal(message Message) (*models.PublishedContentModel, error) {
-	var event models.PublishedContentModel
-	err := schema.PublishedContentEvent.Unmarshal(message.GetData(), &event)
+func Unmarshal(message Message) (*models.SearchDataImportModel, error) {
+	var event models.SearchDataImportModel
+	err := schema.SearchDataImportEvent.Unmarshal(message.GetData(), &event)
 	return &event, err
 }

@@ -1,12 +1,7 @@
 package models
 
-//PublishedContentBatch represents its associated data.
-type PublishedContentBatch struct {
-	PublishedContentModel []*PublishedContentModel
-}
-
-// PublishedContentModel provides an avro structure for a PublishedContentModel Called event
-type PublishedContentModel struct {
+// SearchDataImportModel provides an avro structure for a SearchDataImportModel Called event
+type SearchDataImportModel struct {
 	DataType        string   `avro:"type"`
 	JobID           string   `avro:"job_id"`
 	SearchIndex     string   `avro:"search_index"`

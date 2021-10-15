@@ -4,7 +4,7 @@ import (
 	"github.com/ONSdigital/dp-kafka/v2/avro"
 )
 
-var publishedContentEvent = `{
+var searchDataImportEvent = `{
   "type": "record",
   "name": "search-data-import",
   "fields": [
@@ -22,7 +22,7 @@ var publishedContentEvent = `{
   ]
 }`
 
-// PublishedContentEvent is the Avro schema for Search Data Import messages.
-var PublishedContentEvent = &avro.Schema{
-	Definition: publishedContentEvent,
+// SearchDataImportEvent is the Avro schema for Search Data Import messages.
+var SearchDataImportEvent = &avro.Schema{
+	Definition: searchDataImportEvent,
 }

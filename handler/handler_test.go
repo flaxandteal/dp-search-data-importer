@@ -11,7 +11,7 @@ import (
 	. "github.com/smartystreets/goconvey/convey"
 )
 
-var expectedEvent1 = &models.PublishedContentModel{
+var expectedEvent1 = &models.SearchDataImportModel{
 	DataType:        "testDataType",
 	JobID:           "",
 	SearchIndex:     "ONS",
@@ -25,7 +25,7 @@ var expectedEvent1 = &models.PublishedContentModel{
 	TraceID:         "testTraceID",
 }
 
-var expectedEvent2 = &models.PublishedContentModel{
+var expectedEvent2 = &models.SearchDataImportModel{
 	DataType:        "testDataType2",
 	JobID:           "",
 	SearchIndex:     "ONS",
@@ -39,7 +39,7 @@ var expectedEvent2 = &models.PublishedContentModel{
 	TraceID:         "",
 }
 
-var expectedEvents = []*models.PublishedContentModel{
+var expectedEvents = []*models.SearchDataImportModel{
 	expectedEvent1,
 	expectedEvent2,
 }
@@ -58,13 +58,7 @@ func TestPublishedContentExtractedHandler_Handle(t *testing.T) {
 
 			Convey("The expected calls to the publish content mapper", func() {
 				So(err, ShouldBeNil)
-				// So(len(mockpublishedContentBatchMapper.MapCalls()), ShouldEqual, 1)
-				// So(mockpublishedContentBatchMapper.MapCalls()[0].Row, ShouldEqual, expectedEvent.Row)
-				// So(mockpublishedContentBatchMapper.MapCalls()[0].InstanceID, ShouldEqual, expectedEvent.InstanceID)
 			})
-			// Convey("And a file is created with all published content data"){
-
-			// })
 		})
 
 	})

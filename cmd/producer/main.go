@@ -46,7 +46,7 @@ func main() {
 		e := scanEvent(scanner)
 		log.Info(ctx, "sending published-content event", log.Data{"publlishedContentEvent": e})
 
-		bytes, err := schema.PublishedContentEvent.Marshal(e)
+		bytes, err := schema.SearchDataImportEvent.Marshal(e)
 		if err != nil {
 			log.Fatal(ctx, "published-content event error", err)
 			os.Exit(1)
@@ -59,7 +59,7 @@ func main() {
 }
 
 // scanEvent creates a PublishedContentExtracted event according to the user input
-func scanEvent(scanner *bufio.Scanner) *models.PublishedContentModel {
+func scanEvent(scanner *bufio.Scanner) *models.SearchDataImportModel {
 	fmt.Println("--- [Send Kafka PublishedContent] ---")
 
 	fmt.Println("Please type the DataType")
@@ -67,7 +67,7 @@ func scanEvent(scanner *bufio.Scanner) *models.PublishedContentModel {
 	scanner.Scan()
 	name := scanner.Text()
 
-	return &models.PublishedContentModel{
+	return &models.SearchDataImportModel{
 		DataType: name,
 	}
 }

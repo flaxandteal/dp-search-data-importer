@@ -37,7 +37,7 @@ type eventClose struct {
 // Handler represents a handler for processing a single event.
 type Handler interface {
 	Handle(ctx context.Context,
-		PublishedContentModel []*models.PublishedContentModel) error
+		SearchDataImportModel []*models.SearchDataImportModel) error
 }
 
 // Consume converts messages to event instances, and pass the event to the provided handler.

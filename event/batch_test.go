@@ -189,14 +189,14 @@ func TestToEvent(t *testing.T) {
 }
 
 // Marshal helper method to marshal a event into a []byte
-func marshal(event models.PublishedContentModel) []byte {
-	bytes, err := schema.PublishedContentEvent.Marshal(event)
+func marshal(event models.SearchDataImportModel) []byte {
+	bytes, err := schema.SearchDataImportEvent.Marshal(event)
 	So(err, ShouldBeNil)
 	return bytes
 }
 
-func getExpectedEvent() models.PublishedContentModel {
-	expectedEvent := models.PublishedContentModel{
+func getExpectedEvent() models.SearchDataImportModel {
+	expectedEvent := models.SearchDataImportModel{
 		DataType:        "testDataType",
 		JobID:           "",
 		SearchIndex:     "ONS",

@@ -14,7 +14,7 @@ import (
 
 var _ event.Handler = (*BatchHandler)(nil)
 
-// BatchHandler handles batches of publishedContentModel events that contain CSV row data.
+// BatchHandler handles batches of SearchDataImportModel events that contain CSV row data.
 type BatchHandler struct {
 	resultWriter ResultWriter
 }
@@ -32,34 +32,29 @@ func NewBatchHandler(
 }
 
 // Handle the given slice of PublishedContent events.
-func (batchHandler BatchHandler) Handle(ctx context.Context, events []*models.PublishedContentModel) error {
+func (batchHandler BatchHandler) Handle(ctx context.Context, events []*models.SearchDataImportModel) error {
 
 	logData := log.Data{
 		"event": events,
 	}
 	log.Event(ctx, "events handler called", log.INFO, logData)
 
-	publisheContents := make([]*models.PublishedContentModel, 0, len(events))
+	publishedContents := make([]*models.SearchDataImportModel, 0, len(events))
 
-	//Print all incoming object and total size of slice
-	//TODO : temp output
+	//TODO : temp output - Part 2 of task in another trello ticket -
+	//https://trello.com/c/jhN0Yhlc/850-extend-search-data-importer-to-upsertupdate-add-docs-from-elasticsearch-ons-index-part-2
 	f, err := os.Create("/tmp/dp-search-data-importer.txt")
 	if err != nil {
 		fmt.Println(err)
 	}
-	fmt.Printf("file created %v", f)
+	log.Event(ctx, "file created", log.INFO, log.Data{"publisheContents": f})
+	log.Event(ctx, "slice size", log.INFO, log.Data{"publisheContents": publishedContents})
 
-	// for _, publisheContent := range publisheContents {
-
-	fmt.Printf("slice size %v", len(publisheContents))
-
-	for i := 0; i < len(publisheContents); i++ {
-		dataType := fmt.Sprintf("publishedDataReceived.DataType, %s!", publisheContents[i].DataType)
-		keywords := fmt.Sprintf("publishedDataReceived.Keywords, %s!", publisheContents[i].Keywords)
+	for i := 0; i < len(publishedContents); i++ {
+		dataType := fmt.Sprintf("publishedDataReceived.DataType, %s!", publishedContents[i].DataType)
+		keywords := fmt.Sprintf("publishedDataReceived.Keywords, %s!", publishedContents[i].Keywords)
 		appendFile(dataType, keywords)
 	}
-
-	// }
 
 	log.Event(ctx, "event successfully handled", log.INFO, logData)
 	return nil
