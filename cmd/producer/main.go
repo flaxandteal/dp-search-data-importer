@@ -33,8 +33,8 @@ func main() {
 		KafkaVersion: &cfg.KafkaVersion,
 	}
 
-	// KafkaTLSProtocolFlag informs service to use TLS protocol for kafka
-	if cfg.KafkaSecProtocol == config.KafkaTLSProtocolFlag {
+	// KafkaTLSProtocol informs service to use TLS protocol for kafka
+	if cfg.KafkaSecProtocol == config.KafkaTLSProtocol {
 		pConfig.SecurityConfig = kafka.GetSecurityConfig(
 			cfg.KafkaSecCACerts,
 			cfg.KafkaSecClientCert,

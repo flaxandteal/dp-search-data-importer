@@ -6,8 +6,8 @@ import (
 	"github.com/kelseyhightower/envconfig"
 )
 
-// KafkaTLSProtocolFlag informs service to use TLS protocol for kafka
-const KafkaTLSProtocolFlag = "TLS"
+// KafkaTLSProtocol is a constant describing the TLS protocol used for kafka
+const KafkaTLSProtocol = "TLS"
 
 // Config represents service configuration for dp-search-data-importer
 type Config struct {

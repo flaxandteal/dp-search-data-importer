@@ -76,8 +76,8 @@ func (e *Init) DoGetKafkaConsumer(ctx context.Context, cfg *config.Config) (dpka
 		Offset: &kafkaOffset,
 	}
 
-	// KafkaTLSProtocolFlag informs service to use TLS protocol for kafka
-	if cfg.KafkaSecProtocol == config.KafkaTLSProtocolFlag {
+	// KafkaTLSProtocol informs service to use TLS protocol for kafka
+	if cfg.KafkaSecProtocol == config.KafkaTLSProtocol {
 		cConfig.SecurityConfig = dpkafka.GetSecurityConfig(
 			cfg.KafkaSecCACerts,
 			cfg.KafkaSecClientCert,
