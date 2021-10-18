@@ -44,11 +44,11 @@ func main() {
 	scanner := bufio.NewScanner(os.Stdin)
 	for {
 		e := scanEvent(scanner)
-		log.Info(ctx, "sending published-content event", log.Data{"publlishedContentEvent": e})
+		log.Info(ctx, "sending search data import event", log.Data{"searchDataImportEvent": e})
 
 		bytes, err := schema.SearchDataImportEvent.Marshal(e)
 		if err != nil {
-			log.Fatal(ctx, "published-content event error", err)
+			log.Fatal(ctx, "search data import event error", err)
 			os.Exit(1)
 		}
 
@@ -58,16 +58,49 @@ func main() {
 	}
 }
 
-// scanEvent creates a PublishedContentExtracted event according to the user input
+// scanEvent creates a searchDataImport event according to the user input
 func scanEvent(scanner *bufio.Scanner) *models.SearchDataImportModel {
 	fmt.Println("--- [Send Kafka PublishedContent] ---")
 
-	fmt.Println("Please type the DataType")
+	fmt.Println("Type the Data Type")
 	fmt.Printf("$ ")
 	scanner.Scan()
-	name := scanner.Text()
+	dataType := scanner.Text()
+
+	fmt.Println("Type the JobID")
+	fmt.Printf("$ ")
+	scanner.Scan()
+	jobID := scanner.Text()
+
+	fmt.Println("Type the CDID")
+	fmt.Printf("$ ")
+	scanner.Scan()
+	cdid := scanner.Text()
+
+	fmt.Println("Type the DatasetID")
+	fmt.Printf("$ ")
+	scanner.Scan()
+	datasetID := scanner.Text()
+
+	fmt.Println("Type the Summary")
+	fmt.Printf("$ ")
+	scanner.Scan()
+	summary := scanner.Text()
+
+	fmt.Println("Type the title")
+	fmt.Printf("$ ")
+	scanner.Scan()
+	title := scanner.Text()
 
 	return &models.SearchDataImportModel{
-		DataType: name,
+		DataType:    dataType,
+		JobID:       jobID,
+		SearchIndex: "ONS",
+		CDID:        cdid,
+		DatasetID:   datasetID,
+		Keywords:    []string{"keyword1", "keyword2"},
+		Summary:     summary,
+		ReleaseDate: "2017-09-07",
+		Title:       title,
 	}
 }

@@ -2,6 +2,7 @@ package handler_test
 
 import (
 	"context"
+	"fmt"
 	"os"
 	"testing"
 
@@ -21,7 +22,7 @@ var expectedEvent1 = &models.SearchDataImportModel{
 	MetaDescription: "",
 	Summary:         "",
 	ReleaseDate:     "",
-	Title:           "",
+	Title:           "testTilte",
 	TraceID:         "testTraceID",
 }
 
@@ -35,8 +36,8 @@ var expectedEvent2 = &models.SearchDataImportModel{
 	MetaDescription: "",
 	Summary:         "",
 	ReleaseDate:     "",
-	Title:           "",
-	TraceID:         "",
+	Title:           "testTilte2",
+	TraceID:         "testTraceID2",
 }
 
 var expectedEvents = []*models.SearchDataImportModel{
@@ -59,7 +60,14 @@ func TestPublishedContentExtractedHandler_Handle(t *testing.T) {
 			Convey("The expected calls to the publish content mapper", func() {
 				So(err, ShouldBeNil)
 			})
+			Convey("And the expected file is created", func() {
+				if _, err := os.Stat(filePath); err != nil {
+					if os.IsNotExist(err) {
+						fmt.Printf("file does not exists")
+						t.Fail()
+					}
+				}
+			})
 		})
-
 	})
 }
