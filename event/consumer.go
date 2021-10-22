@@ -92,7 +92,9 @@ func AddMessageToBatch(ctx context.Context, batch *Batch, msg kafka.Message, han
 
 // ProcessBatch will attempt to handle and commit the batch, or shutdown if something goes horribly wrong.
 func ProcessBatch(ctx context.Context, handler Handler, batch *Batch) {
-	log.Info(ctx, "process batch starts", log.Data{"process batch starts time": time.Now()})
+	log.Info(ctx, "process batch starts", log.Data{
+		"process batch starts time": time.Now(),
+		"batch size":                batch.Size()})
 	err := handler.Handle(ctx, batch.Events())
 	if err != nil {
 		log.Info(ctx, "error processing batch", log.Data{"err": err})
