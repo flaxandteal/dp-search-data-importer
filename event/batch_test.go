@@ -15,7 +15,7 @@ var ctx = context.Background()
 
 func TestIsEmpty(t *testing.T) {
 
-	Convey("Given a batch that is not empty", t, func() {
+	Convey("Given a batch", t, func() {
 
 		expectedEvent := getExpectedEvent()
 		message := kafkatest.NewMessage([]byte(marshal(expectedEvent)), 0)
@@ -24,7 +24,7 @@ func TestIsEmpty(t *testing.T) {
 		batch := event.NewBatch(batchSize)
 
 		Convey("When the batch has no messages added", func() {
-			Convey("The batch is empty", func() {
+			Convey("Then the batch is empty", func() {
 				So(batch.IsEmpty(), ShouldBeTrue)
 			})
 		})
@@ -32,8 +32,7 @@ func TestIsEmpty(t *testing.T) {
 		Convey("When the batch has a message added", func() {
 
 			batch.Add(ctx, message)
-
-			Convey("The batch is not empty", func() {
+			Convey("Then the batch is not empty", func() {
 				So(batch.IsEmpty(), ShouldBeFalse)
 			})
 		})
@@ -54,7 +53,7 @@ func TestAdd(t *testing.T) {
 
 			batch.Add(ctx, message)
 
-			Convey("The batch contains the expected event.", func() {
+			Convey("Then the batch contains the expected event.", func() {
 				So(batch.Size(), ShouldEqual, 1)
 				So(batch.Events()[0].DataType, ShouldEqual, expectedEvent.DataType)
 			})
@@ -82,9 +81,9 @@ func TestCommit(t *testing.T) {
 		batch.Add(ctx, message1)
 		batch.Add(ctx, message2)
 
-		batch.Commit()
-
 		Convey("When commit is called", func() {
+
+			batch.Commit()
 
 			Convey("All messages that were present in batch are marked, and last one is committed", func() {
 				So(message1.IsMarked(), ShouldBeTrue)
@@ -92,13 +91,13 @@ func TestCommit(t *testing.T) {
 				So(message2.IsCommitted(), ShouldBeTrue)
 			})
 
-			Convey("The batch is emptied.", func() {
+			Convey("Then the batch is emptied.", func() {
 				So(batch.IsEmpty(), ShouldBeTrue)
 				So(batch.IsFull(), ShouldBeFalse)
 				So(batch.Size(), ShouldEqual, 0)
 			})
 
-			Convey("The batch can be reused", func() {
+			Convey("Then the batch can be reused", func() {
 				batch.Add(ctx, message3)
 
 				So(batch.IsEmpty(), ShouldBeFalse)
@@ -135,7 +134,7 @@ func TestSize(t *testing.T) {
 
 			batch.Add(ctx, message)
 
-			Convey("The batch size should increase.", func() {
+			Convey("Then the batch size should increase.", func() {
 				So(batch.Size(), ShouldEqual, 1)
 				batch.Add(ctx, message)
 				So(batch.Size(), ShouldEqual, 2)
@@ -162,7 +161,7 @@ func TestIsFull(t *testing.T) {
 			So(batch.IsFull(), ShouldBeFalse)
 			batch.Add(ctx, message)
 
-			Convey("The batch should be full.", func() {
+			Convey("Then the batch should be full.", func() {
 				So(batch.IsFull(), ShouldBeTrue)
 			})
 		})

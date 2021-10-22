@@ -2,6 +2,7 @@ package event
 
 import (
 	"context"
+	"errors"
 
 	"github.com/ONSdigital/dp-search-data-importer/models"
 	"github.com/ONSdigital/dp-search-data-importer/schema"
@@ -33,17 +34,17 @@ func NewBatch(batchSize int) *Batch {
 }
 
 // Add a message to the batch.
-func (batch *Batch) Add(ctx context.Context, message Message) {
+func (batch *Batch) Add(ctx context.Context, message Message) (err error) {
 
 	event, err := Unmarshal(message)
 	if err != nil {
 		log.Event(ctx, "failed to unmarshal event", log.ERROR, log.Error(err))
-		return
+		return errors.New("failed to unmarshal event while adding an event to batch")
 	}
 
 	batch.messages = append(batch.messages, message)
 	batch.events = append(batch.events, event)
-
+	return
 }
 
 // Size returns the number of events currently in the batch.
