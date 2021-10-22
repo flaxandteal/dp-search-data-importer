@@ -6,7 +6,7 @@ import (
 
 	"github.com/ONSdigital/dp-search-data-importer/models"
 	"github.com/ONSdigital/dp-search-data-importer/schema"
-	"github.com/ONSdigital/log.go/log"
+	"github.com/ONSdigital/log.go/v2/log"
 )
 
 // Batch handles adding raw messages to a batch of SearchDataImportModel events.
@@ -38,7 +38,9 @@ func (batch *Batch) Add(ctx context.Context, message Message) (err error) {
 
 	event, err := Unmarshal(message)
 	if err != nil {
-		log.Event(ctx, "failed to unmarshal event", log.ERROR, log.Error(err))
+		log.Event(ctx, "failed to unmarshal event", log.ERROR, log.Data{
+			"error": err,
+		})
 		return errors.New("failed to unmarshal event while adding an event to batch")
 	}
 
