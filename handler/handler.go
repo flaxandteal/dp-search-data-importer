@@ -52,21 +52,21 @@ func (batchHandler BatchHandler) Handle(ctx context.Context, events []*models.Se
 		title := fmt.Sprintf("SearchDataImportModel.Title, %s!", events[i].Title)
 		keywords := fmt.Sprintf("SearchDataImportModel.Keywords, %s!", events[i].Keywords)
 		traceId := fmt.Sprintf("SearchDataImportModel.TraceId, %s!", events[i].TraceID)
-		appendFile(dataType, searchIndex, keywords, title, traceId)
+		appendFile(ctx, dataType, searchIndex, keywords, title, traceId)
 	}
 
 	log.Event(ctx, "event successfully handled", log.INFO, logData)
 	return nil
 }
 
-func appendFile(datatype string, searchIndex string, keywords string, title string, traceId string) {
+func appendFile(ctx context.Context, datatype string, searchIndex string, keywords string, title string, traceId string) {
 	f, err := os.OpenFile("/tmp/dp-search-data-importer.txt", os.O_APPEND|os.O_WRONLY, 0644)
 	if err != nil {
-		fmt.Println(err)
+		log.Info(ctx, "Error while opening a file", log.Data{"err": err})
 		return
 	}
 	_, err = fmt.Fprintln(f, datatype, searchIndex, keywords, title, traceId)
 	if err != nil {
-		fmt.Println(err)
+		log.Info(ctx, "Error while appending the file", log.Data{"err": err})
 	}
 }

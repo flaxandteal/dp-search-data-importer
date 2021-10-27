@@ -27,9 +27,9 @@ An example event can be created using the helper script, `make produce`.
 | KAFKA_OFFSET_OLDEST          | true                              | Start processing Kafka messages in order from the oldest in the queue
 | KAFKA_NUM_WORKERS            | 1                                 | The maximum number of parallel kafka consumers
 | PUBLISHED_CONTENT_GROUP      | dp-search-data-importer           | The consumer group this application to consume ImageUploaded messages
-| PUBLISHED_CONTENT_TOPIC       | published-content                 | The name of the topic to consume messages from
+| PUBLISHED_CONTENT_TOPIC      | published-content                 | The name of the topic to consume messages from
 | BATCH_SIZE                   | 2                                 | The default total number of messages that should be buffered (in batches) before writing to the Kafka brokers.
-|BATCH_WAIT_TIME               | time.second                       | The defult wait time for preparing the batch.
+| BATCH_WAIT_TIME              | 5s                                | The default wait time for preparing the batch.
 
 ### Healthcheck
 
