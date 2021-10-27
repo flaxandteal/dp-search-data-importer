@@ -5,7 +5,6 @@ import (
 	"time"
 
 	kafka "github.com/ONSdigital/dp-kafka/v2"
-	"github.com/ONSdigital/dp-kafka/v2/kafkatest"
 	"github.com/ONSdigital/dp-search-data-importer/config"
 	"github.com/ONSdigital/dp-search-data-importer/event"
 	"github.com/ONSdigital/dp-search-data-importer/handler"
@@ -82,7 +81,11 @@ func Run(ctx context.Context, serviceList *ExternalServiceList, buildTime, gitCo
 
 	// handle a batch of events.
 	batchHandler := handler.NewBatchHandler(resultWriter)
-	messageconsumer := kafkatest.NewMessageConsumer(false)
+	messageconsumer, err := serviceList.GetKafkaConsumer(ctx, cfg)
+	if err != nil {
+		log.Fatal(ctx, "failed to initialise event consumer", err)
+		return nil, err
+	}
 
 	eventConsumer := event.NewConsumer()
 

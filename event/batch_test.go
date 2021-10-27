@@ -85,7 +85,7 @@ func TestCommit(t *testing.T) {
 
 			batch.Commit()
 
-			Convey("All messages that were present in batch are marked, and last one is committed", func() {
+			Convey("Then all messages that were present in batch are marked, and last one is committed", func() {
 				So(message1.IsMarked(), ShouldBeTrue)
 				So(message2.IsMarked(), ShouldBeTrue)
 				So(message2.IsCommitted(), ShouldBeTrue)
@@ -179,7 +179,7 @@ func TestToEvent(t *testing.T) {
 
 			event, err := event.Unmarshal(message)
 
-			Convey("The expectedEvent has the expected values", func() {
+			Convey("Then the expectedEvent has the expected values", func() {
 				So(err, ShouldBeNil)
 				So(event.DataType, ShouldEqual, expectedEvent.DataType)
 			})
