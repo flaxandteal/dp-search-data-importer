@@ -32,6 +32,10 @@ func TestConfig(t *testing.T) {
 				So(cfg.PublishedContentTopic, ShouldEqual, "search-data-import")
 				So(cfg.BatchSize, ShouldEqual, 4)
 				So(cfg.BatchWaitTime, ShouldEqual, time.Second*5)
+				So(cfg.ElasticSearchAPIURL, ShouldEqual, "http://localhost:9200")
+				So(cfg.AwsRegion, ShouldEqual, "eu-west-1")
+				So(cfg.AwsService, ShouldEqual, "es")
+				So(cfg.SignElasticsearchRequests, ShouldEqual, false)
 			})
 
 			Convey("Then a second call to config should return the same config", func() {

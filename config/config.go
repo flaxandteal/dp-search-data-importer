@@ -21,6 +21,10 @@ type Config struct {
 	OutputFilePath             string        `envconfig:"OUTPUT_FILE_PATH"`
 	BatchSize                  int           `envconfig:"BATCH_SIZE"`
 	BatchWaitTime              time.Duration `envconfig:"BATCH_WAIT_TIME"`
+	ElasticSearchAPIURL        string        `envconfig:"ELASTIC_SEARCH_URL"`
+	AwsRegion                  string        `envconfig:"AWS_REGION"`
+	AwsService                 string        `envconfig:"AWS_SERVICE"`
+	SignElasticsearchRequests  bool          `envconfig:"SIGN_ELASTICSEARCH_REQUESTS"`
 }
 
 var cfg *Config
@@ -45,6 +49,10 @@ func Get() (*Config, error) {
 		PublishedContentTopic:      "search-data-import",
 		BatchSize:                  4,
 		BatchWaitTime:              time.Second * 5,
+		ElasticSearchAPIURL:        "http://localhost:9200",
+		AwsRegion:                  "eu-west-1",
+		AwsService:                 "es",
+		SignElasticsearchRequests:  false,
 	}
 
 	return cfg, envconfig.Process("", cfg)

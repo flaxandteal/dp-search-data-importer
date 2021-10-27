@@ -7,8 +7,9 @@ import (
 	"net/http"
 	"time"
 
-	esauth "github.com/ONSdigital/dp-elasticsearch/v2/awsauth"
+	"github.com/ONSdigital/dp-elasticsearch/v2/awsauth"
 	dphttp "github.com/ONSdigital/dp-net/http"
+	"github.com/ONSdigital/log.go/v2/log"
 
 	"strings"
 
@@ -18,25 +19,21 @@ import (
 // ClientImpl provides a concrete implementation of the Client interface
 // Client represents an instance of the elasticsearch client
 type ClientImpl struct {
-	awsRegion    string
-	awsSDKSigner *esauth.Signer
-	awsService   string
+	awsSDKSigner *awsauth.Signer
 	url          string
 	client       dphttp.Clienter
 	signRequests bool
 }
 
 // NewClient returns a concrete implementation of the Client interface
-func NewClient(url string,
+func NewClient(
+	awsSDKSigner *awsauth.Signer,
+	url string,
 	client dphttp.Clienter,
 	signRequests bool,
-	awsSDKSigner *esauth.Signer,
-	awsService string,
-	awsRegion string) *ClientImpl {
+) *ClientImpl {
 	return &ClientImpl{
 		awsSDKSigner: awsSDKSigner,
-		awsRegion:    awsRegion,
-		awsService:   awsService,
 		url:          strings.TrimRight(url, "/"),
 		client:       client,
 		signRequests: signRequests,
@@ -44,19 +41,25 @@ func NewClient(url string,
 }
 
 // Search is a method that wraps the Search function of the elasticsearch package
-func (cli *ClientImpl) Search(ctx context.Context, index string, docType string, request []byte) ([]byte, error) {
-	return cli.post(ctx, index, docType, "_search", request)
+func (cli *ClientImpl) Search(ctx context.Context, index string, docType string, payload []byte) ([]byte, error) {
+	return cli.post(ctx, index, docType, "_search", payload)
 }
 
-func (cli *ClientImpl) post(ctx context.Context, index string, docType string, action string, request []byte) ([]byte, error) {
-	reader := bytes.NewReader(request)
-	req, err := http.NewRequest("POST", cli.url+"/"+buildContext(index, docType)+action, reader)
+func (cli *ClientImpl) post(ctx context.Context, index string, docType string, action string, payload []byte) ([]byte, error) {
+	bodyReader := bytes.NewReader(payload)
+	url := cli.url + "/" + buildContext(index, docType) + action
+	req, err := http.NewRequest("POST", url, bodyReader)
 	if err != nil {
 		return nil, err
 	}
+	
+	req.Header.Add("Content-type", "application/json")
+	req.Header.Add("Authorization", "testAuthorization")
 
 	if cli.signRequests {
-		if err = cli.awsSDKSigner.Sign(req, reader, time.Now()); err != nil {
+		if err = cli.awsSDKSigner.Sign(req, bodyReader, time.Now()); err != nil {
+			logData := log.Data{"url": url, "index": index}
+			log.Event(ctx, "failed to sign request", log.ERROR, logData)
 			return nil, err
 		}
 	}

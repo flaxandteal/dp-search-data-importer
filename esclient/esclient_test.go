@@ -8,67 +8,75 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	esauth "github.com/ONSdigital/dp-elasticsearch/v2/awsauth"
 	dphttp "github.com/ONSdigital/dp-net/http"
 
 	. "github.com/smartystreets/goconvey/convey"
 )
 
-func TestSearch(t *testing.T) {
+var (
+	ctx         context.Context
+	url         = "http://localhost:999"
+	expectedURL = "http://localhost:999/index/doctype/_search"
 
-	Convey("When Search is called", t, func() {
-		// Define a mock struct to be used in your unit tests of myFunc.
+	mockClient = &dphttp.ClienterMock{
+		DoFunc: doFuncWithValidResponse,
+	}
+	mockClientWithError = &dphttp.ClienterMock{
+		DoFunc: doFuncWithError,
+	}
 
-		Convey("Then a request with the search action should be posted", func() {
-			dphttpMock := &dphttp.ClienterMock{
-				DoFunc: func(ctx context.Context, req *http.Request) (*http.Response, error) {
-					return newResponse("moo"), nil
-				},
-			}
+	doFuncWithValidResponse = func(ctx context.Context, req *http.Request) (*http.Response, error) {
+		return testResponse("testResponse"), nil
+	}
+	doFuncWithError = func(ctx context.Context, req *http.Request) (*http.Response, error) {
+		return nil, errors.New("http error")
+	}
+)
 
-			var testSigner *esauth.Signer
+func TestSearchWithoutAwsSdkSigner(t *testing.T) {
 
-			client := NewClient("http://localhost:999", dphttpMock, false, testSigner, "es", "eu-west-1")
+	Convey("Given that we want a request with a non-aws-sdk signer client for a response", t, func() {
+		client := NewClient(nil, url, mockClient, false)
 
-			res, err := client.Search(context.Background(), "index", "doctype", []byte("search request"))
-			So(err, ShouldBeNil)
-			So(res, ShouldNotBeEmpty)
-			So(dphttpMock.DoCalls(), ShouldHaveLength, 1)
-			actualRequest := dphttpMock.DoCalls()[0].Req
-			So(actualRequest.URL.String(), ShouldResemble, "http://localhost:999/index/doctype/_search")
-			So(actualRequest.Method, ShouldResemble, "POST")
-			body, err := ioutil.ReadAll(actualRequest.Body)
-			So(err, ShouldBeNil)
-			So(string(body), ShouldResemble, "search request")
+		Convey("When Search is called", func() {
+			res, err := client.Search(ctx, "index", "doctype", []byte("search request"))
 
+			Convey("Then a request with the search action should be posted", func() {
+				So(err, ShouldBeNil)
+				So(res, ShouldNotBeEmpty)
+				So(mockClient.DoCalls(), ShouldHaveLength, 1)
+				actualRequest := mockClient.DoCalls()[0].Req
+				So(actualRequest.URL.String(), ShouldResemble, expectedURL)
+				So(actualRequest.Method, ShouldResemble, "POST")
+				body, err := ioutil.ReadAll(actualRequest.Body)
+				So(err, ShouldBeNil)
+				So(string(body), ShouldEqual, "search request")
+			})
 		})
+	})
+	Convey("Given that we want a request with a non-aws-sdk signer client for an error in response", t, func() {
+		client := NewClient(nil, url, mockClientWithError, false)
 
-		Convey("Then a returned error should be passed back", func() {
-			dphttpMock := &dphttp.ClienterMock{
-				DoFunc: func(ctx context.Context, req *http.Request) (*http.Response, error) {
-					return nil, errors.New("http error")
-				},
-			}
+		Convey("When Search is called", func() {
+			res, err := client.Search(ctx, "index", "doctype", []byte("search request"))
 
-			var testSigner *esauth.Signer
-
-			client := NewClient("http://localhost:999", dphttpMock, false, testSigner, "es", "eu-west-1")
-
-			_, err := client.Search(context.Background(), "index", "doctype", []byte("search request"))
-			So(err, ShouldNotBeNil)
-			So(err.Error(), ShouldResemble, "http error")
-			So(dphttpMock.DoCalls(), ShouldHaveLength, 1)
-			actualRequest := dphttpMock.DoCalls()[0].Req
-			So(actualRequest.URL.String(), ShouldResemble, "http://localhost:999/index/doctype/_search")
-			So(actualRequest.Method, ShouldResemble, "POST")
-			body, err := ioutil.ReadAll(actualRequest.Body)
-			So(err, ShouldBeNil)
-			So(string(body), ShouldResemble, "search request")
+			Convey("Then a request with the search action should be posted", func() {
+				So(err, ShouldNotBeNil)
+				So(res, ShouldBeNil)
+				So(err.Error(), ShouldResemble, "http error")
+				So(mockClientWithError.DoCalls(), ShouldHaveLength, 1)
+				actualRequest := mockClientWithError.DoCalls()[0].Req
+				So(actualRequest.URL.String(), ShouldResemble, expectedURL)
+				So(actualRequest.Method, ShouldResemble, "POST")
+				body, err := ioutil.ReadAll(actualRequest.Body)
+				So(err, ShouldBeNil)
+				So(string(body), ShouldEqual, "search request")
+			})
 		})
 	})
 }
 
-func newResponse(body string) *http.Response {
+func testResponse(body string) *http.Response {
 	recorder := httptest.NewRecorder()
 	recorder.WriteString(body)
 	return recorder.Result()
