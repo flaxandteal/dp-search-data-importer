@@ -38,9 +38,7 @@ func (batch *Batch) Add(ctx context.Context, message Message) (err error) {
 
 	event, err := Unmarshal(message)
 	if err != nil {
-		log.Event(ctx, "failed to unmarshal event", log.ERROR, log.Data{
-			"error": err,
-		})
+		log.Error(ctx, "failed to unmarshal event", err)
 		return errors.New("failed to unmarshal event while adding an event to batch")
 	}
 

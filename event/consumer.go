@@ -2,7 +2,6 @@ package event
 
 import (
 	"context"
-	"errors"
 	"time"
 
 	kafka "github.com/ONSdigital/dp-kafka/v2"
@@ -56,8 +55,7 @@ func (consumer *Consumer) Consume(
 		for {
 			select {
 			case msg := <-messageConsumer.Channels().Upstream:
-				ctx := context.Background()
-
+				log.Info(ctx, "add message to batch")
 				AddMessageToBatch(ctx, batch, msg, handler)
 				msg.Release()
 
@@ -65,14 +63,15 @@ func (consumer *Consumer) Consume(
 				if batch.IsEmpty() {
 					continue
 				}
-
-				ctx := context.Background()
-
-				log.Event(ctx, "batch wait time reached. proceeding with batch", log.INFO, log.Data{"batchsize": batch.Size()})
+				log.Info(ctx, "batch wait time reached. proceeding with batch", log.INFO,
+					log.Data{
+						"batch-wait-time": cfg.BatchWaitTime,
+						"batchsize":       batch.Size(),
+					})
 				ProcessBatch(ctx, handler, batch)
 
 			case eventClose := <-consumer.closing:
-				log.Event(eventClose.ctx, "closing event consumer loop", log.INFO)
+				log.Info(eventClose.ctx, "closing event consumer loop")
 				close(consumer.closing)
 				return
 			}
@@ -85,7 +84,7 @@ func AddMessageToBatch(ctx context.Context, batch *Batch, msg kafka.Message, han
 	log.Info(ctx, "add message to batch starts", log.Data{"add message to batch starts time": time.Now()})
 	batch.Add(ctx, msg)
 	if batch.IsFull() {
-		log.Event(ctx, "batch is full - processing batch", log.INFO, log.Data{"batchsize": batch.Size()})
+		log.Info(ctx, "batch is full - processing batch", log.INFO, log.Data{"batchsize": batch.Size()})
 		ProcessBatch(ctx, handler, batch)
 	}
 }
@@ -94,17 +93,16 @@ func AddMessageToBatch(ctx context.Context, batch *Batch, msg kafka.Message, han
 func ProcessBatch(ctx context.Context, handler Handler, batch *Batch) {
 	log.Info(ctx, "process batch starts", log.Data{
 		"process batch starts time": time.Now(),
-		"batch size":                batch.Size()})
+		"batch_size":                batch.Size()})
 	err := handler.Handle(ctx, batch.Events())
 	if err != nil {
-		log.Info(ctx, "error processing batch", log.Data{"err": err})
+		log.Error(ctx, "error processing batch", err)
 		return
 	}
 
 	//Handle Batch Events..committing " Ends"
 	end := time.Now()
 	log.Info(ctx, "batch event processed - committing message - with batchsize", log.Data{"batch end time": end, "batch-size": batch.Size()})
-
 	batch.Commit()
 }
 
@@ -119,10 +117,10 @@ func (consumer *Consumer) Close(ctx context.Context) (err error) {
 
 	select {
 	case <-consumer.closed:
-		log.Info(ctx, "successfully closed event consumer", log.Data{"consumer closed with no error": ""})
+		log.Info(ctx, "successfully closed event consumer")
 		return nil
 	case <-ctx.Done():
-		log.Info(ctx, "shutdown context time exceeded, skipping graceful shutdown of event consumer", log.Data{"Shutdown context timed out with error: ": err})
-		return errors.New("shutdown context timed out")
+		log.Error(ctx, "shutdown context time exceeded, skipping graceful shutdown of event consumer", ctx.Err())
+		return ctx.Err()
 	}
 }
