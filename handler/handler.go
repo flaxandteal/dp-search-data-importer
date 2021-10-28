@@ -33,18 +33,14 @@ func NewBatchHandler(
 
 // Handle the given slice of SearchDataImport Model.
 func (batchHandler BatchHandler) Handle(ctx context.Context, events []*models.SearchDataImportModel) error {
-
-	logData := log.Data{
-		"event": events,
-	}
-	log.Event(ctx, "events handler called", log.INFO, logData)
+	log.Info(ctx, "events handler called")
 
 	//TODO : temp output - integrating with Elastic search is addressed in separate task
 	f, err := os.Create("/tmp/dp-search-data-importer.txt")
 	if err != nil {
-		fmt.Println(err)
+		log.Error(ctx, "error while creating temp file", err)
 	}
-	log.Event(ctx, "file created", log.INFO, log.Data{"SearchDataImportModel": f})
+	log.Info(ctx, "temp file created")
 
 	for i := 0; i < len(events); i++ {
 		dataType := fmt.Sprintf("SearchDataImportModel.DataType, %s!", events[i].DataType)
@@ -55,7 +51,8 @@ func (batchHandler BatchHandler) Handle(ctx context.Context, events []*models.Se
 		appendFile(ctx, dataType, searchIndex, keywords, title, traceId)
 	}
 
-	log.Event(ctx, "event successfully handled", log.INFO, logData)
+	f.Close()
+	log.Info(ctx, "event successfully handled")
 	return nil
 }
 

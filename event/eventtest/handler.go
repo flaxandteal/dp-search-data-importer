@@ -31,7 +31,7 @@ type EventHandler struct {
 
 // Handle captures the given event and stores it for later assertions
 func (handler *EventHandler) Handle(ctx context.Context, events []*models.SearchDataImportModel) error {
-	log.Event(ctx, "handle called", log.INFO)
+	log.Info(ctx, "eventtest handler called")
 	handler.Events = events
 
 	handler.EventUpdated <- true

@@ -16,6 +16,20 @@ import (
 var (
 	testCtx = context.Background()
 
+	expectedEvent1 = models.SearchDataImportModel{
+		DataType:        "testDataType1",
+		JobID:           "",
+		SearchIndex:     "ONS",
+		CDID:            "",
+		DatasetID:       "",
+		Keywords:        []string{"testkeyword1", "testkeyword2"},
+		MetaDescription: "",
+		Summary:         "",
+		ReleaseDate:     "",
+		Title:           "testTitle1",
+		TraceID:         "",
+	}
+
 	expectedEvent = models.SearchDataImportModel{
 		DataType:        "testDataType",
 		JobID:           "",
@@ -57,9 +71,9 @@ func TestConsumeWithOneMessage(t *testing.T) {
 			Convey("The expected event is sent to the handler", func() {
 				So(len(eventHandler.Events), ShouldEqual, 1)
 
-				event := eventHandler.Events[0]
-				So(event.DataType, ShouldEqual, expectedEvent.DataType)
-				So(event.Title, ShouldEqual, expectedEvent.Title)
+				actual := eventHandler.Events[0]
+				So(actual.DataType, ShouldEqual, expectedEvent.DataType)
+				So(actual.Title, ShouldEqual, expectedEvent.Title)
 			})
 			Convey("The message is committed and the consumer is released", func() {
 				<-message.UpstreamDone()
@@ -67,7 +81,6 @@ func TestConsumeWithOneMessage(t *testing.T) {
 				So(len(message.ReleaseCalls()), ShouldEqual, 1)
 			})
 		})
-
 		consumer.Close(nil)
 	})
 }
@@ -89,7 +102,7 @@ func TestConsumeWithFullBatchSizeMessage(t *testing.T) {
 
 			go consumer.Consume(testCtx, messageConsumer, eventHandler, cfg)
 
-			message1 := kafkatest.NewMessage([]byte(marshal(expectedEvent)), 0)
+			message1 := kafkatest.NewMessage([]byte(marshal(expectedEvent1)), 0)
 			messageConsumer.Channels().Upstream <- message1
 
 			message2 := kafkatest.NewMessage([]byte(marshal(expectedEvent)), 0)
@@ -106,17 +119,17 @@ func TestConsumeWithFullBatchSizeMessage(t *testing.T) {
 			Convey("The expected event is sent to the handler", func() {
 				So(len(eventHandler.Events), ShouldEqual, 4)
 
-				event := eventHandler.Events[0]
-				So(event.DataType, ShouldEqual, expectedEvent.DataType)
-				So(event.Title, ShouldEqual, expectedEvent.Title)
+				actual := eventHandler.Events[0]
+				So(actual.DataType, ShouldEqual, expectedEvent1.DataType)
+				So(actual.Title, ShouldEqual, expectedEvent1.Title)
 			})
 			Convey("The message is committed and the consumer is released", func() {
 				<-message1.UpstreamDone()
 				So(len(message4.CommitCalls()), ShouldEqual, 1)
 				So(len(message4.ReleaseCalls()), ShouldEqual, 1)
 			})
-
 		})
+		consumer.Close(nil)
 	})
 }
 
