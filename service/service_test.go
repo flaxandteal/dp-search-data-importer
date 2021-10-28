@@ -1,22 +1,25 @@
 package service_test
 
 import (
+	"bytes"
 	"context"
 	"fmt"
+	"io/ioutil"
 	"net/http"
-	"net/http/httptest"
 	"sync"
 	"testing"
 
 	"github.com/ONSdigital/dp-elasticsearch/v2/elasticsearch"
 	"github.com/ONSdigital/dp-healthcheck/healthcheck"
-	kafka "github.com/ONSdigital/dp-kafka/v2"
 	"github.com/ONSdigital/dp-kafka/v2/kafkatest"
-	dphttp "github.com/ONSdigital/dp-net/http"
 	"github.com/ONSdigital/dp-search-data-importer/config"
 	"github.com/ONSdigital/dp-search-data-importer/service"
-	serviceMock "github.com/ONSdigital/dp-search-data-importer/service/mock"
 	"github.com/pkg/errors"
+
+	kafka "github.com/ONSdigital/dp-kafka/v2"
+	dphttp "github.com/ONSdigital/dp-net/http"
+	serviceMock "github.com/ONSdigital/dp-search-data-importer/service/mock"
+
 	. "github.com/smartystreets/goconvey/convey"
 )
 
@@ -46,33 +49,38 @@ var (
 		return nil, errElasticSearch
 	}
 
-	mockHttpClient = &dphttp.ClienterMock{
-		DoFunc: doFuncWithValidResponse,
+	doSuccessful = func(ctx context.Context, request *http.Request) (*http.Response, error) {
+		return resp("do successful", 200), nil
 	}
-
-	doFuncWithValidResponse = func(ctx context.Context, req *http.Request) (*http.Response, error) {
-		return testResponse("testResponse"), nil
+	emptyListOfPathsWithNoRetries = func() []string {
+		return []string{}
+	}
+	setListOfPathsWithNoRetries = func(listOfPaths []string) {
+		return
 	}
 )
+
+func resp(body string, code int) *http.Response {
+	return &http.Response{
+		Body:       ioutil.NopCloser(bytes.NewBufferString(body)),
+		StatusCode: code,
+	}
+}
+
+func clientMock(doFunc func(ctx context.Context, request *http.Request) (*http.Response, error)) *dphttp.ClienterMock {
+	return &dphttp.ClienterMock{
+		DoFunc:                    doFunc,
+		GetPathsWithNoRetriesFunc: emptyListOfPathsWithNoRetries,
+		SetPathsWithNoRetriesFunc: setListOfPathsWithNoRetries,
+	}
+}
 
 func TestRun(t *testing.T) {
 
 	Convey("Having a set of mocked dependencies", t, func() {
 
-		// elasticSearchMock := &dphttp.ClienterMock{
-		// 	DoFunc: func(ctx context.Context, req *http.Request) (*http.Response, error) { return nil, nil },
-		// }
-
-		// elasticSearchMock := esclient.NewClient(nil, "testurl.co.uk", mockHttpClient, false)
-
-		// The below line is useful if we define interface in our own esclient package
-		// But if we need to rely on dp-elastic-search then  need to find the mock for elastic-search
-
-		// elasticSearchMock := &mock.ElasticSearcherMock{
-		// 	SearchFunc: func(ctx context.Context, index string, docType string, request []byte) ([]byte, error) {
-		// 		return []byte(`{"dummy":"response"`), nil
-		// 	},
-		// }
+		httpCli := clientMock(doSuccessful)
+		elasticSearchMock := elasticsearch.NewClientWithHTTPClient("testurl.co.uk", false, httpCli)
 
 		consumerMock := &kafkatest.IConsumerGroupMock{
 			CheckerFunc:  func(ctx context.Context, state *healthcheck.CheckState) error { return nil },
@@ -93,7 +101,7 @@ func TestRun(t *testing.T) {
 		}
 
 		funcElasticSearchMockOk := func(ctx context.Context, cfg *config.Config) (*elasticsearch.Client, error) {
-			return nil, nil
+			return elasticSearchMock, nil
 		}
 
 		funcDoGetKafkaConsumerOk := func(ctx context.Context, cfg *config.Config) (kafka.IConsumerGroup, error) {
@@ -122,6 +130,24 @@ func TestRun(t *testing.T) {
 				So(err, ShouldResemble, errKafkaConsumer)
 				So(svcList.ElasticSearch, ShouldBeFalse)
 				So(svcList.KafkaConsumer, ShouldBeFalse)
+				So(svcList.HealthCheck, ShouldBeFalse)
+			})
+		})
+
+		Convey("Given that initialising ElasticSearch returns an error", func() {
+			initMock := &serviceMock.InitialiserMock{
+				DoGetHTTPServerFunc:          funcDoGetHTTPServerNil,
+				DoGetKafkaConsumerFunc:       funcDoGetKafkaConsumerOk,
+				DoGetElasticSearchClientFunc: funDoGetElasticSearchClientErr,
+			}
+			svcErrors := make(chan error, 1)
+			svcList := service.NewServiceList(initMock)
+			_, err := service.Run(ctx, svcList, testBuildTime, testGitCommit, testVersion, svcErrors)
+
+			Convey("Then service Run fails with the same error and the flag is not set", func() {
+				So(err, ShouldResemble, errElasticSearch)
+				So(svcList.ElasticSearch, ShouldBeFalse)
+				So(svcList.KafkaConsumer, ShouldBeTrue)
 				So(svcList.HealthCheck, ShouldBeFalse)
 			})
 		})
@@ -296,10 +322,4 @@ func TestClose(t *testing.T) {
 			So(len(failingserverMock.ShutdownCalls()), ShouldEqual, 1)
 		})
 	})
-}
-
-func testResponse(body string) *http.Response {
-	recorder := httptest.NewRecorder()
-	recorder.WriteString(body)
-	return recorder.Result()
 }

@@ -16,14 +16,6 @@ import (
 	"github.com/pkg/errors"
 )
 
-//go:generate moq -out mock/elastic_searcher.go -pkg mock . ElasticSearcher
-
-// ElasticSearcher provides client methods for the elasticsearch package
-type ElasticSearcher interface {
-	Search(ctx context.Context, index string, docType string, request []byte) ([]byte, error)
-	SubmitBulkToES(ctx context.Context, bulk []byte, titles []byte, esDestURL string, esDestIndex string) ([]byte, error)
-}
-
 // ClientImpl represents an instance of the elasticsearch client
 type ClientImpl struct {
 	awsSDKSigner *awsauth.Signer
