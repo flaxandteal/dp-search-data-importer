@@ -18,7 +18,7 @@ var (
 	url         = "http://localhost:999"
 	expectedURL = "http://localhost:999/index/doctype/_search"
 
-	mockClient = &dphttp.ClienterMock{
+	mockHttpClient = &dphttp.ClienterMock{
 		DoFunc: doFuncWithValidResponse,
 	}
 	mockClientWithError = &dphttp.ClienterMock{
@@ -36,16 +36,16 @@ var (
 func TestSearchWithoutAwsSdkSigner(t *testing.T) {
 
 	Convey("Given that we want a request with a non-aws-sdk signer client for a response", t, func() {
-		client := NewClient(nil, url, mockClient, false)
+		esClientMock := NewClient(nil, url, mockHttpClient, false)
 
 		Convey("When Search is called", func() {
-			res, err := client.Search(ctx, "index", "doctype", []byte("search request"))
+			res, err := esClientMock.Search(ctx, "index", "doctype", []byte("search request"))
 
 			Convey("Then a request with the search action should be posted", func() {
 				So(err, ShouldBeNil)
 				So(res, ShouldNotBeEmpty)
-				So(mockClient.DoCalls(), ShouldHaveLength, 1)
-				actualRequest := mockClient.DoCalls()[0].Req
+				So(mockHttpClient.DoCalls(), ShouldHaveLength, 1)
+				actualRequest := mockHttpClient.DoCalls()[0].Req
 				So(actualRequest.URL.String(), ShouldResemble, expectedURL)
 				So(actualRequest.Method, ShouldResemble, "POST")
 				body, err := ioutil.ReadAll(actualRequest.Body)
@@ -55,10 +55,10 @@ func TestSearchWithoutAwsSdkSigner(t *testing.T) {
 		})
 	})
 	Convey("Given that we want a request with a non-aws-sdk signer client for an error in response", t, func() {
-		client := NewClient(nil, url, mockClientWithError, false)
+		esClientMock := NewClient(nil, url, mockClientWithError, false)
 
 		Convey("When Search is called", func() {
-			res, err := client.Search(ctx, "index", "doctype", []byte("search request"))
+			res, err := esClientMock.Search(ctx, "index", "doctype", []byte("search request"))
 
 			Convey("Then a request with the search action should be posted", func() {
 				So(err, ShouldNotBeNil)

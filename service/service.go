@@ -4,6 +4,7 @@ import (
 	"context"
 	"time"
 
+	"github.com/ONSdigital/dp-elasticsearch/v2/elasticsearch"
 	kafka "github.com/ONSdigital/dp-kafka/v2"
 	"github.com/ONSdigital/dp-search-data-importer/config"
 	"github.com/ONSdigital/dp-search-data-importer/event"
@@ -52,6 +53,13 @@ func Run(ctx context.Context, serviceList *ExternalServiceList, buildTime, gitCo
 		return nil, err
 	}
 
+	// Get Elastic Search Client
+	elasticSearchClient, err := serviceList.GetElasticSearchClient(ctx, cfg)
+	if err != nil {
+		log.Fatal(ctx, "failed to initialise Elastic Search Client", err)
+		return nil, err
+	}
+
 	// Get HealthCheck
 	hc, err := serviceList.GetHealthCheck(cfg, buildTime, gitCommit, version)
 	if err != nil {
@@ -59,7 +67,7 @@ func Run(ctx context.Context, serviceList *ExternalServiceList, buildTime, gitCo
 		return nil, err
 	}
 
-	if err := registerCheckers(ctx, hc, kafkaConsumer); err != nil {
+	if err := registerCheckers(ctx, hc, kafkaConsumer, elasticSearchClient); err != nil {
 		return nil, errors.Wrap(err, "unable to register checkers")
 	}
 
@@ -171,9 +179,15 @@ func (svc *Service) Close(ctx context.Context) error {
 
 func registerCheckers(ctx context.Context,
 	hc HealthChecker,
-	consumer kafka.IConsumerGroup) (err error) {
+	consumer kafka.IConsumerGroup,
+	esclient *elasticsearch.Client) (err error) {
 
 	hasErrors := false
+
+	if err = hc.AddCheck("Elasticsearch", esclient.Checker); err != nil {
+		log.Error(ctx, "error creating elasticsearch health check", err)
+		hasErrors = true
+	}
 
 	if err := hc.AddCheck("Kafka consumer", consumer.Checker); err != nil {
 		hasErrors = true

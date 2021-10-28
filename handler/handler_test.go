@@ -7,7 +7,7 @@ import (
 	"testing"
 
 	"github.com/ONSdigital/dp-search-data-importer/handler"
-	"github.com/ONSdigital/dp-search-data-importer/handler/eventtest"
+	"github.com/ONSdigital/dp-search-data-importer/handler/mock"
 	"github.com/ONSdigital/dp-search-data-importer/models"
 	. "github.com/smartystreets/goconvey/convey"
 )
@@ -48,7 +48,7 @@ var expectedEvents = []*models.SearchDataImportModel{
 func TestPublishedContentExtractedHandler_Handle(t *testing.T) {
 
 	Convey("Given a handler configured with a mock mapper", t, func() {
-		mockResultWriter := &eventtest.ResultWriterMock{}
+		mockResultWriter := &mock.ResultWriterMock{}
 
 		batchHandler := handler.NewBatchHandler(mockResultWriter)
 		filePath := "/tmp/dp-search-data-importer.txt"

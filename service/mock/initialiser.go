@@ -5,6 +5,7 @@ package mock
 
 import (
 	"context"
+	"github.com/ONSdigital/dp-elasticsearch/v2/elasticsearch"
 	"github.com/ONSdigital/dp-kafka/v2"
 	"github.com/ONSdigital/dp-search-data-importer/config"
 	"github.com/ONSdigital/dp-search-data-importer/service"
@@ -13,12 +14,13 @@ import (
 )
 
 var (
-	lockInitialiserMockDoGetHTTPServer    sync.RWMutex
-	lockInitialiserMockDoGetHealthCheck   sync.RWMutex
-	lockInitialiserMockDoGetKafkaConsumer sync.RWMutex
+	lockInitialiserMockDoGetElasticSearchClient sync.RWMutex
+	lockInitialiserMockDoGetHTTPServer          sync.RWMutex
+	lockInitialiserMockDoGetHealthCheck         sync.RWMutex
+	lockInitialiserMockDoGetKafkaConsumer       sync.RWMutex
 )
 
-// Ensure, that InitialiserMock does implement service.Initialiser.
+// Ensure, that InitialiserMock does implement Initialiser.
 // If this is not the case, regenerate this file with moq.
 var _ service.Initialiser = &InitialiserMock{}
 
@@ -28,6 +30,9 @@ var _ service.Initialiser = &InitialiserMock{}
 //
 //         // make and configure a mocked service.Initialiser
 //         mockedInitialiser := &InitialiserMock{
+//             DoGetElasticSearchClientFunc: func(ctx context.Context, cfg *config.Config) (*elasticsearch.Client, error) {
+// 	               panic("mock out the DoGetElasticSearchClient method")
+//             },
 //             DoGetHTTPServerFunc: func(bindAddr string, router http.Handler) service.HTTPServer {
 // 	               panic("mock out the DoGetHTTPServer method")
 //             },
@@ -44,6 +49,9 @@ var _ service.Initialiser = &InitialiserMock{}
 //
 //     }
 type InitialiserMock struct {
+	// DoGetElasticSearchClientFunc mocks the DoGetElasticSearchClient method.
+	DoGetElasticSearchClientFunc func(ctx context.Context, cfg *config.Config) (*elasticsearch.Client, error)
+
 	// DoGetHTTPServerFunc mocks the DoGetHTTPServer method.
 	DoGetHTTPServerFunc func(bindAddr string, router http.Handler) service.HTTPServer
 
@@ -55,6 +63,13 @@ type InitialiserMock struct {
 
 	// calls tracks calls to the methods.
 	calls struct {
+		// DoGetElasticSearchClient holds details about calls to the DoGetElasticSearchClient method.
+		DoGetElasticSearchClient []struct {
+			// Ctx is the ctx argument value.
+			Ctx context.Context
+			// Cfg is the cfg argument value.
+			Cfg *config.Config
+		}
 		// DoGetHTTPServer holds details about calls to the DoGetHTTPServer method.
 		DoGetHTTPServer []struct {
 			// BindAddr is the bindAddr argument value.
@@ -81,6 +96,41 @@ type InitialiserMock struct {
 			Cfg *config.Config
 		}
 	}
+}
+
+// DoGetElasticSearchClient calls DoGetElasticSearchClientFunc.
+func (mock *InitialiserMock) DoGetElasticSearchClient(ctx context.Context, cfg *config.Config) (*elasticsearch.Client, error) {
+	if mock.DoGetElasticSearchClientFunc == nil {
+		panic("InitialiserMock.DoGetElasticSearchClientFunc: method is nil but Initialiser.DoGetElasticSearchClient was just called")
+	}
+	callInfo := struct {
+		Ctx context.Context
+		Cfg *config.Config
+	}{
+		Ctx: ctx,
+		Cfg: cfg,
+	}
+	lockInitialiserMockDoGetElasticSearchClient.Lock()
+	mock.calls.DoGetElasticSearchClient = append(mock.calls.DoGetElasticSearchClient, callInfo)
+	lockInitialiserMockDoGetElasticSearchClient.Unlock()
+	return mock.DoGetElasticSearchClientFunc(ctx, cfg)
+}
+
+// DoGetElasticSearchClientCalls gets all the calls that were made to DoGetElasticSearchClient.
+// Check the length with:
+//     len(mockedInitialiser.DoGetElasticSearchClientCalls())
+func (mock *InitialiserMock) DoGetElasticSearchClientCalls() []struct {
+	Ctx context.Context
+	Cfg *config.Config
+} {
+	var calls []struct {
+		Ctx context.Context
+		Cfg *config.Config
+	}
+	lockInitialiserMockDoGetElasticSearchClient.RLock()
+	calls = mock.calls.DoGetElasticSearchClient
+	lockInitialiserMockDoGetElasticSearchClient.RUnlock()
+	return calls
 }
 
 // DoGetHTTPServer calls DoGetHTTPServerFunc.

@@ -25,6 +25,8 @@ type Config struct {
 	AwsRegion                  string        `envconfig:"AWS_REGION"`
 	AwsService                 string        `envconfig:"AWS_SERVICE"`
 	SignElasticsearchRequests  bool          `envconfig:"SIGN_ELASTICSEARCH_REQUESTS"`
+	AwsAccessKeyId             string        `envconfig:"AWS_ACCESS_KEY_ID"`
+	AwsSecretAccessKey         string        `envconfig:"AWS_SECRET_ACCESSS_KEY"`
 }
 
 var cfg *Config
@@ -53,6 +55,8 @@ func Get() (*Config, error) {
 		AwsRegion:                  "eu-west-1",
 		AwsService:                 "es",
 		SignElasticsearchRequests:  false,
+		AwsAccessKeyId:             "accessKeyId",
+		AwsSecretAccessKey:         "secretAccessKey",
 	}
 
 	return cfg, envconfig.Process("", cfg)

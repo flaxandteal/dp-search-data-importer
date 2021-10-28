@@ -3,17 +3,22 @@ package service
 import (
 	"context"
 	"net/http"
+	"os"
 
+	"github.com/ONSdigital/dp-elasticsearch/v2/awsauth"
+	"github.com/ONSdigital/dp-elasticsearch/v2/elasticsearch"
 	"github.com/ONSdigital/dp-healthcheck/healthcheck"
 	dpkafka "github.com/ONSdigital/dp-kafka/v2"
 	dphttp "github.com/ONSdigital/dp-net/http"
 	"github.com/ONSdigital/dp-search-data-importer/config"
+	"github.com/ONSdigital/log.go/v2/log"
 )
 
 // ExternalServiceList holds the initialiser and initialisation state of external services.
 type ExternalServiceList struct {
 	HealthCheck   bool
 	KafkaConsumer bool
+	ElasticSearch bool
 	Init          Initialiser
 }
 
@@ -22,6 +27,7 @@ func NewServiceList(initialiser Initialiser) *ExternalServiceList {
 	return &ExternalServiceList{
 		HealthCheck:   false,
 		KafkaConsumer: false,
+		ElasticSearch: false,
 		Init:          initialiser,
 	}
 }
@@ -43,6 +49,16 @@ func (e *ExternalServiceList) GetKafkaConsumer(ctx context.Context, cfg *config.
 	}
 	e.KafkaConsumer = true
 	return consumer, nil
+}
+
+// GetElasticSearchClient creates a ElasticSearchClient and sets the ElasticSearchClient flag to true
+func (e *ExternalServiceList) GetElasticSearchClient(ctx context.Context, cfg *config.Config) (*elasticsearch.Client, error) {
+	esClient, err := e.Init.DoGetElasticSearchClient(ctx, cfg)
+	if err != nil {
+		return nil, err
+	}
+	e.ElasticSearch = true
+	return esClient, nil
 }
 
 // GetHealthCheck creates a healthcheck with versionInfo and sets teh HealthCheck flag to true
@@ -99,4 +115,44 @@ func (e *Init) DoGetHealthCheck(cfg *config.Config, buildTime, gitCommit, versio
 	}
 	hc := healthcheck.New(versionInfo, cfg.HealthCheckCriticalTimeout, cfg.HealthCheckInterval)
 	return &hc, nil
+}
+
+// DoGetElasticSearchClient returns a Elastic Search Client
+func (e *Init) DoGetElasticSearchClient(ctx context.Context, cfg *config.Config) (*elasticsearch.Client, error) {
+
+	elasticHTTPClient := dphttp.NewClient()
+
+	if cfg.SignElasticsearchRequests {
+		awsSigner, err := createAWSSigner(ctx)
+		if err != nil {
+			log.Error(ctx, "Error getting aws signer", err)
+			return nil, err
+		}
+		esClientWithAwsSigner := elasticsearch.NewClientWithHTTPClientAndAwsSigner(
+			cfg.ElasticSearchAPIURL, awsSigner, cfg.SignElasticsearchRequests, elasticHTTPClient)
+
+		log.Info(ctx, "returning esClientWithAwsSigner")
+		return esClientWithAwsSigner, nil
+	}
+
+	elasticSearchClient := elasticsearch.NewClientWithHTTPClient(
+		cfg.ElasticSearchAPIURL, false, elasticHTTPClient)
+
+	log.Info(ctx, "returning esClientWithNonAwsSigner")
+	return elasticSearchClient, nil
+}
+
+func createAWSSigner(ctx context.Context) (*awsauth.Signer, error) {
+	// Get Config
+	cfg, err := config.Get()
+	if err != nil {
+		log.Fatal(ctx, "error getting config", err)
+		os.Exit(1)
+	}
+
+	return awsauth.NewAwsSigner(
+		cfg.AwsAccessKeyId,
+		cfg.AwsSecretAccessKey,
+		cfg.AwsRegion,
+		cfg.AwsService)
 }

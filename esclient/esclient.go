@@ -16,8 +16,15 @@ import (
 	"github.com/pkg/errors"
 )
 
-// ClientImpl provides a concrete implementation of the Client interface
-// Client represents an instance of the elasticsearch client
+//go:generate moq -out mock/elastic_searcher.go -pkg mock . ElasticSearcher
+
+// ElasticSearcher provides client methods for the elasticsearch package
+type ElasticSearcher interface {
+	Search(ctx context.Context, index string, docType string, request []byte) ([]byte, error)
+	SubmitBulkToES(ctx context.Context, bulk []byte, titles []byte, esDestURL string, esDestIndex string) ([]byte, error)
+}
+
+// ClientImpl represents an instance of the elasticsearch client
 type ClientImpl struct {
 	awsSDKSigner *awsauth.Signer
 	url          string
@@ -52,7 +59,7 @@ func (cli *ClientImpl) post(ctx context.Context, index string, docType string, a
 	if err != nil {
 		return nil, err
 	}
-	
+
 	req.Header.Add("Content-type", "application/json")
 	req.Header.Add("Authorization", "testAuthorization")
 

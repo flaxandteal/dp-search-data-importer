@@ -10,7 +10,7 @@ import (
 	"github.com/ONSdigital/log.go/v2/log"
 )
 
-//go:generate moq -out eventtest/result_writer.go -pkg eventtest . ResultWriter
+//go:generate moq -out mock/result_writer.go -pkg mock . ResultWriter
 
 var _ event.Handler = (*BatchHandler)(nil)
 
