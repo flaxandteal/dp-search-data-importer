@@ -3,87 +3,107 @@ package esclient
 import (
 	"bytes"
 	"context"
+	"fmt"
 	"io/ioutil"
 	"net/http"
 	"time"
 
-	"github.com/ONSdigital/dp-elasticsearch/v2/awsauth"
+	dpAwsauth "github.com/ONSdigital/dp-elasticsearch/v2/awsauth"
 	dphttp "github.com/ONSdigital/dp-net/http"
 	"github.com/ONSdigital/log.go/v2/log"
-
-	"strings"
 
 	"github.com/pkg/errors"
 )
 
+const applicationJSON = "application/json"
+
+// Client provides an interface with which to communicate with Elastic Search by way of HTTP requests
+type Client interface {
+	SubmitBulkToES(ctx context.Context, esDestIndex string, esDestURL string, bulk []byte) ([]byte, error)
+}
+
 // ClientImpl represents an instance of the elasticsearch client
 type ClientImpl struct {
-	awsSDKSigner *awsauth.Signer
-	url          string
+	awsSDKSigner *dpAwsauth.Signer
 	client       dphttp.Clienter
 	signRequests bool
+	requester    Requester
 }
 
 // NewClient returns a concrete implementation of the Client interface
-func NewClient(
-	awsSDKSigner *awsauth.Signer,
-	url string,
-	client dphttp.Clienter,
-	signRequests bool,
-) *ClientImpl {
+func NewClient(awsSDKSigner *dpAwsauth.Signer, client dphttp.Clienter, signRequests bool) Client {
+
 	return &ClientImpl{
 		awsSDKSigner: awsSDKSigner,
-		url:          strings.TrimRight(url, "/"),
 		client:       client,
 		signRequests: signRequests,
+		requester:    NewRequester(),
 	}
 }
 
-// Search is a method that wraps the Search function of the elasticsearch package
-func (cli *ClientImpl) Search(ctx context.Context, index string, docType string, payload []byte) ([]byte, error) {
-	return cli.post(ctx, index, docType, "_search", payload)
+// NewClientWithRequester returns a concrete implementation of the Client interface, taking a custom Requester
+func NewClientWithRequester(awsSDKSigner *dpAwsauth.Signer, client dphttp.Clienter, signRequests bool, requester Requester) Client {
+
+	return &ClientImpl{
+		awsSDKSigner: awsSDKSigner,
+		client:       client,
+		signRequests: signRequests,
+		requester:    requester,
+	}
 }
 
-func (cli *ClientImpl) post(ctx context.Context, index string, docType string, action string, payload []byte) ([]byte, error) {
-	bodyReader := bytes.NewReader(payload)
-	url := cli.url + "/" + buildContext(index, docType) + action
-	req, err := http.NewRequest("POST", url, bodyReader)
+// SubmitBulkToES uses an HTTP post request to submit data to Elastic Search
+func (cli *ClientImpl) SubmitBulkToES(
+	ctx context.Context, esDestIndex string, esDestURL string, bulk []byte) ([]byte, error) {
+
+	uri := fmt.Sprintf("%s/%s/_bulk", esDestURL, esDestIndex)
+	bodyReader := bytes.NewReader(bulk)
+
+	req, err := http.NewRequest("POST", uri, bodyReader)
 	if err != nil {
+		log.Error(ctx, "Error while getting new Request", err)
 		return nil, err
 	}
 
-	req.Header.Add("Content-type", "application/json")
-	req.Header.Add("Authorization", "testAuthorization")
-
 	if cli.signRequests {
-		if err = cli.awsSDKSigner.Sign(req, bodyReader, time.Now()); err != nil {
-			logData := log.Data{"url": url, "index": index}
+		err := cli.awsSDKSigner.Sign(req, bodyReader, time.Now())
+		if err != nil {
+			logData := log.Data{"uri": uri, "index": esDestIndex}
 			log.Event(ctx, "failed to sign request", log.ERROR, logData)
 			return nil, err
 		}
 	}
 
-	resp, err := cli.client.Do(ctx, req)
+	res, err := cli.requester.Post(bulk, uri)
+	if err != nil {
+		log.Info(ctx, "error posting request", log.Data{
+			"bulk data": string(bulk),
+			"err":       err})
+		log.Error(ctx, "error posting request %s", err)
+		return nil, err
+	}
+
+	defer func() {
+		err = res.Body.Close()
+		if err != nil {
+			log.Error(ctx, "failed to close response body after posting bulk to ES: %s", err)
+		}
+	}()
+
+	b, err := ioutil.ReadAll(res.Body)
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
 
-	response, err := ioutil.ReadAll(resp.Body)
-	if err != nil {
-		return nil, errors.Wrap(err, "elaticsearchClient error reading post response body")
+	if res.StatusCode > 299 {
+		log.Info(ctx, "unexpected put response", log.Data{
+			"Res Status": res.Status,
+			"bulk data":  string(bulk),
+		})
+		log.Error(ctx, "unexpected put response", errors.New("invalid response"))
+		return nil, errors.New("invalid response")
 	}
 
-	return response, nil
-}
+	return b, err
 
-func buildContext(index string, docType string) string {
-	context := ""
-	if len(index) > 0 {
-		context = index + "/"
-		if len(docType) > 0 {
-			context += docType + "/"
-		}
-	}
-	return context
 }
