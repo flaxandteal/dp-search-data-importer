@@ -34,6 +34,8 @@ An example event can be created using the helper script, `make produce`.
 | KAFKA_SEC_SKIP_VERIFY         | false                             | ignore server certificate issues if set to `true` [[1]](#notes_1)
 | KAFKA_PUBLISHED_CONTENT_GROUP | dp-search-data-import             | The consumer group this application to consume ImageUploaded messages
 | KAFKA_PUBLISHED_CONTENT_TOPIC | search-data-import                | The name of the topic to consume messages from
+| BATCH_SIZE                   | 2                                 | The default total number of messages that should be buffered (in batches) before writing to the Kafka brokers.
+| BATCH_WAIT_TIME              | 5s                                | The default wait time for preparing the batch.
 
 **Notes:**
 

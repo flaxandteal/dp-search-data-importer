@@ -9,7 +9,7 @@ import (
 
 	kafka "github.com/ONSdigital/dp-kafka/v2"
 	"github.com/ONSdigital/dp-search-data-importer/config"
-	"github.com/ONSdigital/dp-search-data-importer/event"
+	"github.com/ONSdigital/dp-search-data-importer/models"
 	"github.com/ONSdigital/dp-search-data-importer/schema"
 	"github.com/ONSdigital/log.go/v2/log"
 )
@@ -56,11 +56,11 @@ func main() {
 	scanner := bufio.NewScanner(os.Stdin)
 	for {
 		e := scanEvent(scanner)
-		log.Info(ctx, "sending hello-called event", log.Data{"helloCalledEvent": e})
+		log.Info(ctx, "sending search data import event", log.Data{"searchDataImportEvent": e})
 
-		bytes, err := schema.HelloCalledEvent.Marshal(e)
+		bytes, err := schema.SearchDataImportEvent.Marshal(e)
 		if err != nil {
-			log.Fatal(ctx, "hello-called event error", err)
+			log.Fatal(ctx, "search data import event error", err)
 			os.Exit(1)
 		}
 
@@ -70,16 +70,49 @@ func main() {
 	}
 }
 
-// scanEvent creates a HelloCalled event according to the user input
-func scanEvent(scanner *bufio.Scanner) *event.HelloCalled {
-	fmt.Println("--- [Send Kafka HelloCalled] ---")
+// scanEvent creates a searchDataImport event according to the user input
+func scanEvent(scanner *bufio.Scanner) *models.SearchDataImportModel {
+	fmt.Println("--- [Send Kafka PublishedContent] ---")
 
-	fmt.Println("Please type the recipient name")
+	fmt.Println("Type the Data Type")
 	fmt.Printf("$ ")
 	scanner.Scan()
-	name := scanner.Text()
+	dataType := scanner.Text()
 
-	return &event.HelloCalled{
-		RecipientName: name,
+	fmt.Println("Type the JobID")
+	fmt.Printf("$ ")
+	scanner.Scan()
+	jobID := scanner.Text()
+
+	fmt.Println("Type the CDID")
+	fmt.Printf("$ ")
+	scanner.Scan()
+	cdid := scanner.Text()
+
+	fmt.Println("Type the DatasetID")
+	fmt.Printf("$ ")
+	scanner.Scan()
+	datasetID := scanner.Text()
+
+	fmt.Println("Type the Summary")
+	fmt.Printf("$ ")
+	scanner.Scan()
+	summary := scanner.Text()
+
+	fmt.Println("Type the title")
+	fmt.Printf("$ ")
+	scanner.Scan()
+	title := scanner.Text()
+
+	return &models.SearchDataImportModel{
+		DataType:    dataType,
+		JobID:       jobID,
+		SearchIndex: "ONS",
+		CDID:        cdid,
+		DatasetID:   datasetID,
+		Keywords:    []string{"keyword1", "keyword2"},
+		Summary:     summary,
+		ReleaseDate: "2017-09-07",
+		Title:       title,
 	}
 }

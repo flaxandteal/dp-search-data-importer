@@ -1,19 +1,28 @@
 package schema
 
 import (
-	"github.com/ONSdigital/go-ns/avro"
+	"github.com/ONSdigital/dp-kafka/v2/avro"
 )
 
-// TODO: remove or replace hello called structure and model with app specific
-var helloCalledEvent = `{
+var searchDataImportEvent = `{
   "type": "record",
-  "name": "hello-called",
+  "name": "search-data-import",
   "fields": [
-    {"name": "recipient_name", "type": "string", "default": ""}
+    {"name": "type", "type": "string", "default": ""},
+    {"name": "job_id", "type": "string", "default": ""},
+    {"name": "search_index", "type": "string", "default": ""},
+    {"name": "cdid", "type": "string", "default": ""},
+    {"name": "dataset_id", "type": "string", "default": ""},
+    {"name": "keywords","type":["null",{"type":"array","items":"string"}]},
+    {"name": "meta_description", "type": "string", "default": ""},
+    {"name": "release_date", "type": "string", "default": ""},
+    {"name": "summary", "type": "string", "default": ""},
+    {"name": "title", "type": "string", "default": ""},
+    {"name": "trace_id", "type": "string", "default": ""}
   ]
 }`
 
-// HelloCalledEvent is the Avro schema for Hello Called messages.
-var HelloCalledEvent = &avro.Schema{
-	Definition: helloCalledEvent,
+// SearchDataImportEvent is the Avro schema for Search Data Import messages.
+var SearchDataImportEvent = &avro.Schema{
+	Definition: searchDataImportEvent,
 }

@@ -9,7 +9,7 @@ import (
 	"time"
 
 	"github.com/ONSdigital/dp-kafka/v2/kafkatest"
-	"github.com/ONSdigital/dp-search-data-importer/event"
+	"github.com/ONSdigital/dp-search-data-importer/models"
 	"github.com/ONSdigital/dp-search-data-importer/schema"
 	"github.com/ONSdigital/dp-search-data-importer/service"
 	"github.com/cucumber/godog"
@@ -18,24 +18,24 @@ import (
 )
 
 func (c *Component) RegisterSteps(ctx *godog.ScenarioContext) {
-	ctx.Step(`^these hello events are consumed:$`, c.theseHelloEventsAreConsumed)
-	ctx.Step(`^I should receive a hello-world response$`, c.iShouldReceiveAHelloworldResponse)
+	ctx.Step(`^these published contents are consumed:$`, c.theseSearchImportEventsAreConsumed)
+	ctx.Step(`^I should receive a published-content response$`, c.iShouldReceiveAPublishedContentResponse)
 }
 
-func (c *Component) iShouldReceiveAHelloworldResponse() error {
+func (c *Component) iShouldReceiveAPublishedContentResponse() error {
 	content, err := ioutil.ReadFile(c.cfg.OutputFilePath)
 	if err != nil {
 		return err
 	}
 
-	assert.Equal(c, "Hello, Tim!", string(content))
+	assert.Equal(c, "Search Data Import, Tim!", string(content))
 
 	return c.StepError()
 }
 
-func (c *Component) theseHelloEventsAreConsumed(table *godog.Table) error {
+func (c *Component) theseSearchImportEventsAreConsumed(table *godog.Table) error {
 
-	observationEvents, err := c.convertToHelloEvents(table)
+	SearchDataImportEvents, err := c.convertToSearchDataImportEvents(table)
 	if err != nil {
 		return err
 	}
@@ -47,8 +47,8 @@ func (c *Component) theseHelloEventsAreConsumed(table *godog.Table) error {
 		c.svc, err = service.Run(context.Background(), c.serviceList, "", "", "", c.errorChan)
 	}()
 
-	// consume extracted observations
-	for _, e := range observationEvents {
+	// consume extracted SearchDataImportEvents
+	for _, e := range SearchDataImportEvents {
 		if err := c.sendToConsumer(e); err != nil {
 			return err
 		}
@@ -62,17 +62,17 @@ func (c *Component) theseHelloEventsAreConsumed(table *godog.Table) error {
 	return nil
 }
 
-func (c *Component) convertToHelloEvents(table *godog.Table) ([]*event.HelloCalled, error) {
+func (c *Component) convertToSearchDataImportEvents(table *godog.Table) ([]*models.SearchDataImportModel, error) {
 	assist := assistdog.NewDefault()
-	events, err := assist.CreateSlice(&event.HelloCalled{}, table)
+	events, err := assist.CreateSlice(&models.SearchDataImportModel{}, table)
 	if err != nil {
 		return nil, err
 	}
-	return events.([]*event.HelloCalled), nil
+	return events.([]*models.SearchDataImportModel), nil
 }
 
-func (c *Component) sendToConsumer(e *event.HelloCalled) error {
-	bytes, err := schema.HelloCalledEvent.Marshal(e)
+func (c *Component) sendToConsumer(e *models.SearchDataImportModel) error {
+	bytes, err := schema.SearchDataImportEvent.Marshal(e)
 	if err != nil {
 		return err
 	}

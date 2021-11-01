@@ -7,6 +7,7 @@ import (
 	kafka "github.com/ONSdigital/dp-kafka/v2"
 	"github.com/ONSdigital/dp-search-data-importer/config"
 	"github.com/ONSdigital/dp-search-data-importer/event"
+	"github.com/ONSdigital/dp-search-data-importer/handler"
 	"github.com/ONSdigital/log.go/v2/log"
 	"github.com/gorilla/mux"
 	"github.com/pkg/errors"
@@ -22,9 +23,20 @@ type Service struct {
 	shutdownTimeout time.Duration
 }
 
+// MessageWriter writes publishedContent events as messages
+type MessageWriter struct {
+}
+
+// NewResultWriter returns a new publishedContent  message writer.
+func NewResultWriter() *MessageWriter {
+	return &MessageWriter{}
+}
+
 // Run the service
-func Run(ctx context.Context, serviceList *ExternalServiceList, buildTime, gitCommit, version string, svcErrors chan error) (*Service, error) {
-	log.Info(ctx, "running service")
+func Run(ctx context.Context, serviceList *ExternalServiceList, buildTime, gitCommit, version string,
+	svcErrors chan error) (*Service, error) {
+
+	log.Info(ctx, "starting dp-search-data-importer service")
 
 	// Read config
 	cfg, err := config.Get()
@@ -33,22 +45,12 @@ func Run(ctx context.Context, serviceList *ExternalServiceList, buildTime, gitCo
 	}
 	log.Info(ctx, "got service configuration", log.Data{"config": cfg})
 
-	// Get HTTP Server with collectionID checkHeader middleware
-	r := mux.NewRouter()
-	s := serviceList.GetHTTPServer(cfg.BindAddr, r)
-
 	// Get Kafka consumer
-	consumer, err := serviceList.GetKafkaConsumer(ctx, cfg)
+	kafkaConsumer, err := serviceList.GetKafkaConsumer(ctx, cfg)
 	if err != nil {
 		log.Fatal(ctx, "failed to initialise kafka consumer", err)
 		return nil, err
 	}
-
-	// Event Handler for Kafka Consumer
-	event.Consume(ctx, consumer, &event.HelloCalledHandler{}, cfg)
-
-	// Kafka error logging go-routine
-	consumer.Channels().LogErrors(ctx, "kafka consumer")
 
 	// Get HealthCheck
 	hc, err := serviceList.GetHealthCheck(cfg, buildTime, gitCommit, version)
@@ -57,10 +59,13 @@ func Run(ctx context.Context, serviceList *ExternalServiceList, buildTime, gitCo
 		return nil, err
 	}
 
-	if err := registerCheckers(ctx, hc, consumer); err != nil {
+	if err := registerCheckers(ctx, hc, kafkaConsumer); err != nil {
 		return nil, errors.Wrap(err, "unable to register checkers")
 	}
 
+	// Get HTTP Server with collectionID checkHeader middleware
+	r := mux.NewRouter()
+	s := serviceList.GetHTTPServer(cfg.BindAddr, r)
 	r.StrictSlash(true).Path("/health").HandlerFunc(hc.Handler)
 	hc.Start(ctx)
 
@@ -71,12 +76,31 @@ func Run(ctx context.Context, serviceList *ExternalServiceList, buildTime, gitCo
 		}
 	}()
 
+	// write import results to the output.
+	resultWriter := NewResultWriter()
+
+	// handle a batch of events.
+	batchHandler := handler.NewBatchHandler(resultWriter)
+	messageconsumer, err := serviceList.GetKafkaConsumer(ctx, cfg)
+	if err != nil {
+		log.Fatal(ctx, "failed to initialise event consumer", err)
+		return nil, err
+	}
+
+	eventConsumer := event.NewConsumer()
+
+	// Start listening for event messages.
+	eventConsumer.Consume(ctx, messageconsumer, batchHandler, cfg)
+
+	// Kafka error logging go-routine
+	kafkaConsumer.Channels().LogErrors(ctx, "error received from kafka consumer, topic: "+cfg.PublishedContentTopic)
+
 	return &Service{
 		server:          s,
 		router:          r,
 		serviceList:     serviceList,
 		healthCheck:     hc,
-		consumer:        consumer,
+		consumer:        kafkaConsumer,
 		shutdownTimeout: cfg.GracefulShutdownTimeout,
 	}, nil
 }

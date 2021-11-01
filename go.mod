@@ -10,7 +10,6 @@ require (
 	github.com/ONSdigital/dp-healthcheck v1.1.3
 	github.com/ONSdigital/dp-kafka/v2 v2.4.2
 	github.com/ONSdigital/dp-net v1.2.0
-	github.com/ONSdigital/go-ns v0.0.0-20210916104633-ac1c1c52327e
 	github.com/ONSdigital/log.go/v2 v2.0.9
 	github.com/Shopify/sarama v1.30.0 // indirect
 	github.com/cucumber/godog v0.12.1
@@ -24,7 +23,7 @@ require (
 	github.com/maxcnunes/httpfake v1.2.3 // indirect
 	github.com/pkg/errors v0.9.1
 	github.com/rdumont/assistdog v0.0.0-20201106100018-168b06230d14
-	github.com/smartystreets/goconvey v1.6.4
+	github.com/smartystreets/goconvey v1.7.2
 	github.com/stretchr/testify v1.7.0
 	github.com/youmark/pkcs8 v0.0.0-20201027041543-1326539a0a0a // indirect
 	go.mongodb.org/mongo-driver v1.7.3 // indirect

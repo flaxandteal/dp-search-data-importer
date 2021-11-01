@@ -27,6 +27,8 @@ type Config struct {
 	PublishedContentGroup      string        `envconfig:"KAFKA_PUBLISHED_CONTENT_GROUP"`
 	PublishedContentTopic      string        `envconfig:"KAFKA_PUBLISHED_CONTENT_TOPIC"`
 	OutputFilePath             string        `envconfig:"OUTPUT_FILE_PATH"`
+	BatchSize                  int           `envconfig:"BATCH_SIZE"`
+	BatchWaitTime              time.Duration `envconfig:"BATCH_WAIT_TIME"`
 }
 
 var cfg *Config
@@ -55,6 +57,8 @@ func Get() (*Config, error) {
 		PublishedContentGroup:      "dp-search-data-importer",
 		PublishedContentTopic:      "search-data-import",
 		OutputFilePath:             "/tmp/search-data-importer.txt",
+		BatchSize:                  4,
+		BatchWaitTime:              time.Second * 5,
 	}
 
 	return cfg, envconfig.Process("", cfg)
