@@ -56,6 +56,7 @@ func TestConsumeWithOneMessage(t *testing.T) {
 			t.Log(ctx, "failed to retrieve configuration", err)
 			t.Fail()
 		}
+		So(err, ShouldBeNil)
 
 		consumer := event.NewConsumer()
 
