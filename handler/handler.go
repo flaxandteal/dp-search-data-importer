@@ -9,25 +9,16 @@ import (
 	"github.com/ONSdigital/log.go/v2/log"
 )
 
-//go:generate moq -out eventtest/result_writer.go -pkg eventtest . ResultWriter
-
 var _ event.Handler = (*BatchHandler)(nil)
 
 // BatchHandler handles batches of SearchDataImportModel events that contain CSV row data.
 type BatchHandler struct {
-	resultWriter ResultWriter
 }
 
-// TODO : ResultWriter dependency that outputs results
-type ResultWriter interface{}
+// NewBatchHandler returns a BatchHandler.
+func NewBatchHandler() *BatchHandler {
 
-// NewBatchHandler returns a resultWriter TBD.
-func NewBatchHandler(
-	resultWriter ResultWriter) *BatchHandler {
-
-	return &BatchHandler{
-		resultWriter: resultWriter,
-	}
+	return &BatchHandler{}
 }
 
 // Handle the given slice of SearchDataImport Model.
