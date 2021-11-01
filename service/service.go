@@ -24,15 +24,6 @@ type Service struct {
 	shutdownTimeout time.Duration
 }
 
-// MessageWriter writes publishedContent events as messages
-type MessageWriter struct {
-}
-
-// NewResultWriter returns a new publishedContent  message writer.
-func NewResultWriter() *MessageWriter {
-	return &MessageWriter{}
-}
-
 // Run the service
 func Run(ctx context.Context, serviceList *ExternalServiceList, buildTime, gitCommit, version string,
 	svcErrors chan error) (*Service, error) {

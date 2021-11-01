@@ -50,7 +50,7 @@ type esBulkItemResponseData struct {
 type BatchHandler struct {
 }
 
-// NewBatchHandler returns a resultWriter TBD.
+// NewBatchHandler returns a BatchHandler.
 func NewBatchHandler() *BatchHandler {
 
 	return &BatchHandler{}

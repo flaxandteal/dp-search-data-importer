@@ -49,7 +49,7 @@ func Get() (*Config, error) {
 		KafkaNumWorkers:            1,
 		PublishedContentGroup:      "dp-search-data-importer",
 		PublishedContentTopic:      "search-data-import",
-		BatchSize:                  4,
+		BatchSize:                  500,
 		BatchWaitTime:              time.Second * 5,
 		ElasticSearchAPIURL:        "http://localhost:9200",
 		AwsRegion:                  "eu-west-1",

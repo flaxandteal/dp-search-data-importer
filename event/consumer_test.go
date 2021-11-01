@@ -30,13 +30,13 @@ var (
 		TraceID:         "",
 	}
 
-	expectedEvent = models.SearchDataImportModel{
+	expectedEvent2 = models.SearchDataImportModel{
 		DataType:        "testDataType2",
 		JobID:           "",
 		SearchIndex:     "ONS",
 		CDID:            "",
 		DatasetID:       "",
-		Keywords:        []string{"testkeyword3", "testkeyword4"},
+		Keywords:        []string{"testkeyword21", "testkeyword22"},
 		MetaDescription: "",
 		Summary:         "",
 		ReleaseDate:     "",
@@ -53,8 +53,7 @@ func TestConsumeWithOneMessage(t *testing.T) {
 		eventHandler := eventtest.NewEventHandler()
 		cfg, err := config.Get()
 		if err != nil {
-			t.Log(ctx, "failed to retrieve configuration", err)
-			t.Fail()
+			t.Fatalf("failed to retrieve configuration: %v", err)
 		}
 		So(err, ShouldBeNil)
 
@@ -64,7 +63,7 @@ func TestConsumeWithOneMessage(t *testing.T) {
 
 			go consumer.Consume(testCtx, messageConsumer, eventHandler, cfg)
 
-			message := kafkatest.NewMessage([]byte(marshal(expectedEvent)), 0)
+			message := kafkatest.NewMessage([]byte(marshal(expectedEvent2)), 0)
 			messageConsumer.Channels().Upstream <- message
 
 			<-eventHandler.EventUpdated
@@ -73,8 +72,8 @@ func TestConsumeWithOneMessage(t *testing.T) {
 				So(len(eventHandler.Events), ShouldEqual, 1)
 
 				actual := eventHandler.Events[0]
-				So(actual.DataType, ShouldEqual, expectedEvent.DataType)
-				So(actual.Title, ShouldEqual, expectedEvent.Title)
+				So(actual.DataType, ShouldEqual, expectedEvent2.DataType)
+				So(actual.Title, ShouldEqual, expectedEvent2.Title)
 			})
 			Convey("The message is committed and the consumer is released", func() {
 				<-message.UpstreamDone()
@@ -86,39 +85,31 @@ func TestConsumeWithOneMessage(t *testing.T) {
 	})
 }
 
-func TestConsumeWithFullBatchSizeMessage(t *testing.T) {
-	Convey("Given a consumer with a mocked message producer with an expected message", t, func() {
+func TestConsumeWithTwoMessage(t *testing.T) {
 
+	Convey("Given a consumer with a mocked message producer with an expected message", t, func() {
 		messageConsumer := kafkatest.NewMessageConsumer(false)
 		eventHandler := eventtest.NewEventHandler()
 		cfg, err := config.Get()
 		if err != nil {
-			t.Log(ctx, "failed to retrieve configuration", err)
-			t.Fail()
+			t.Fatalf("failed to retrieve configuration: %v", err)
 		}
 
 		consumer := event.NewConsumer()
 
 		Convey("When consume is called", func() {
-
 			go consumer.Consume(testCtx, messageConsumer, eventHandler, cfg)
 
 			message1 := kafkatest.NewMessage([]byte(marshal(expectedEvent1)), 0)
 			messageConsumer.Channels().Upstream <- message1
 
-			message2 := kafkatest.NewMessage([]byte(marshal(expectedEvent)), 0)
+			message2 := kafkatest.NewMessage([]byte(marshal(expectedEvent2)), 0)
 			messageConsumer.Channels().Upstream <- message2
-
-			message3 := kafkatest.NewMessage([]byte(marshal(expectedEvent)), 0)
-			messageConsumer.Channels().Upstream <- message3
-
-			message4 := kafkatest.NewMessage([]byte(marshal(expectedEvent)), 0)
-			messageConsumer.Channels().Upstream <- message4
 
 			<-eventHandler.EventUpdated
 
 			Convey("The expected event is sent to the handler", func() {
-				So(len(eventHandler.Events), ShouldEqual, 4)
+				So(len(eventHandler.Events), ShouldEqual, 2)
 
 				actual := eventHandler.Events[0]
 				So(actual.DataType, ShouldEqual, expectedEvent1.DataType)
@@ -126,8 +117,8 @@ func TestConsumeWithFullBatchSizeMessage(t *testing.T) {
 			})
 			Convey("The message is committed and the consumer is released", func() {
 				<-message1.UpstreamDone()
-				So(len(message4.CommitCalls()), ShouldEqual, 1)
-				So(len(message4.ReleaseCalls()), ShouldEqual, 1)
+				So(len(message2.CommitCalls()), ShouldEqual, 1)
+				So(len(message2.ReleaseCalls()), ShouldEqual, 1)
 			})
 		})
 		consumer.Close(nil)
@@ -141,8 +132,7 @@ func TestClose(t *testing.T) {
 		eventHandler := eventtest.NewEventHandler()
 		cfg, err := config.Get()
 		if err != nil {
-			t.Log(ctx, "failed to retrieve configuration", err)
-			t.Fail()
+			t.Fatalf("failed to retrieve configuration: %v", err)
 		}
 		consumer := event.NewConsumer()
 		go consumer.Consume(testCtx, messageConsumer, eventHandler, cfg)

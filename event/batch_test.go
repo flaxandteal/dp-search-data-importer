@@ -87,8 +87,8 @@ func TestCommit(t *testing.T) {
 
 			Convey("Then all messages that were present in batch are marked, and last one is committed", func() {
 				So(message1.IsMarked(), ShouldBeTrue)
+
 				So(message1.IsCommitted(), ShouldBeFalse)
-				So(message2.IsMarked(), ShouldBeTrue)
 				So(message2.IsCommitted(), ShouldBeTrue)
 			})
 
