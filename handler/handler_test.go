@@ -2,7 +2,6 @@ package handler_test
 
 import (
 	"context"
-	"fmt"
 	"os"
 	"testing"
 
@@ -59,14 +58,6 @@ func TestPublishedContentExtractedHandler_Handle(t *testing.T) {
 
 			Convey("The expected calls to the publish content mapper", func() {
 				So(err, ShouldBeNil)
-			})
-			Convey("And the expected file is created", func() {
-				if _, err := os.Stat(filePath); err != nil {
-					if os.IsNotExist(err) {
-						fmt.Printf("file does not exists")
-						t.Fail()
-					}
-				}
 			})
 		})
 	})
