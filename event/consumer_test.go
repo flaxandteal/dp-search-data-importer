@@ -31,12 +31,12 @@ var (
 	}
 
 	expectedEvent = models.SearchDataImportModel{
-		DataType:        "testDataType",
+		DataType:        "testDataType2",
 		JobID:           "",
 		SearchIndex:     "ONS",
 		CDID:            "",
 		DatasetID:       "",
-		Keywords:        []string{"testkeyword1", "testkeyword2"},
+		Keywords:        []string{"testkeyword3", "testkeyword4"},
 		MetaDescription: "",
 		Summary:         "",
 		ReleaseDate:     "",

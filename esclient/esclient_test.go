@@ -7,10 +7,10 @@ import (
 	"net/http"
 	"testing"
 
-	dphttp "github.com/ONSdigital/dp-net/http"
 	"github.com/golang/mock/gomock"
 	"github.com/pkg/errors"
 
+	dphttp "github.com/ONSdigital/dp-net/http"
 	. "github.com/smartystreets/goconvey/convey"
 )
 
@@ -22,7 +22,7 @@ var (
 	}
 
 	doFuncWithValidResponse = func(ctx context.Context, req *http.Request) (*http.Response, error) {
-		return testHttpResponse("testResponse"), nil
+		return successESResponse(), nil
 	}
 )
 
@@ -90,15 +90,6 @@ func TestUnitSubmitBulkToES(t *testing.T) {
 			})
 		})
 	})
-}
-
-func testHttpResponse(body string) *http.Response {
-
-	return &http.Response{
-		StatusCode: 201,
-		Body:       ioutil.NopCloser(bytes.NewBufferString(`Created`)),
-		Header:     make(http.Header),
-	}
 }
 
 func successESResponse() *http.Response {

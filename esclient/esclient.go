@@ -69,7 +69,7 @@ func (cli *ClientImpl) SubmitBulkToES(
 		err := cli.awsSDKSigner.Sign(req, bodyReader, time.Now())
 		if err != nil {
 			logData := log.Data{"uri": uri, "index": esDestIndex}
-			log.Event(ctx, "failed to sign request", log.ERROR, logData)
+			log.Info(ctx, "failed to sign request", logData)
 			return nil, err
 		}
 	}
@@ -77,8 +77,7 @@ func (cli *ClientImpl) SubmitBulkToES(
 	res, err := cli.requester.Post(bulk, uri)
 	if err != nil {
 		log.Info(ctx, "error posting request", log.Data{
-			"bulk data": string(bulk),
-			"err":       err})
+			"err": err})
 		log.Error(ctx, "error posting request %s", err)
 		return nil, err
 	}

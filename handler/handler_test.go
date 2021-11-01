@@ -2,71 +2,90 @@ package handler_test
 
 import (
 	"context"
-	"fmt"
-	"os"
 	"testing"
 
 	"github.com/ONSdigital/dp-search-data-importer/handler"
-	"github.com/ONSdigital/dp-search-data-importer/handler/mock"
 	"github.com/ONSdigital/dp-search-data-importer/models"
 	. "github.com/smartystreets/goconvey/convey"
 )
 
-var expectedEvent1 = &models.SearchDataImportModel{
-	DataType:        "testDataType",
-	JobID:           "",
-	SearchIndex:     "ONS",
-	CDID:            "",
-	DatasetID:       "",
-	Keywords:        []string{"testkeyword1"},
-	MetaDescription: "",
-	Summary:         "",
-	ReleaseDate:     "",
-	Title:           "testTilte",
-	TraceID:         "testTraceID",
-}
+var (
+	testContext = context.Background()
 
-var expectedEvent2 = &models.SearchDataImportModel{
-	DataType:        "testDataType2",
-	JobID:           "",
-	SearchIndex:     "ONS",
-	CDID:            "",
-	DatasetID:       "",
-	Keywords:        []string{"testkeyword2"},
-	MetaDescription: "",
-	Summary:         "",
-	ReleaseDate:     "",
-	Title:           "testTilte2",
-	TraceID:         "testTraceID2",
-}
+	expectedEvent1 = &models.SearchDataImportModel{
+		DataType:        "testDataType1",
+		JobID:           "",
+		SearchIndex:     "ONS",
+		CDID:            "",
+		DatasetID:       "",
+		Keywords:        []string{"testkeyword1"},
+		MetaDescription: "",
+		Summary:         "",
+		ReleaseDate:     "",
+		Title:           "testTilte1",
+		TraceID:         "testTraceID1",
+	}
 
-var expectedEvents = []*models.SearchDataImportModel{
-	expectedEvent1,
-	expectedEvent2,
-}
+	expectedEvent2 = &models.SearchDataImportModel{
+		DataType:        "testDataType2",
+		JobID:           "",
+		SearchIndex:     "ONS",
+		CDID:            "",
+		DatasetID:       "",
+		Keywords:        []string{"testkeyword2"},
+		MetaDescription: "",
+		Summary:         "",
+		ReleaseDate:     "",
+		Title:           "testTilte2",
+		TraceID:         "testTraceID2",
+	}
 
-func TestPublishedContentExtractedHandler_Handle(t *testing.T) {
+	expectedEvent3 = &models.SearchDataImportModel{
+		DataType:        "testDataType3",
+		JobID:           "",
+		SearchIndex:     "ONS",
+		CDID:            "",
+		DatasetID:       "",
+		Keywords:        []string{"testkeyword3"},
+		MetaDescription: "",
+		Summary:         "",
+		ReleaseDate:     "",
+		Title:           "testTitle3",
+		TraceID:         "testTraceID3",
+	}
+
+	expectedEvent4 = &models.SearchDataImportModel{
+		DataType:        "testDataType4",
+		JobID:           "",
+		SearchIndex:     "ONS",
+		CDID:            "",
+		DatasetID:       "",
+		Keywords:        []string{"testkeyword4"},
+		MetaDescription: "",
+		Summary:         "",
+		ReleaseDate:     "",
+		Title:           "testTilte4",
+		TraceID:         "testTraceID4",
+	}
+
+	testEvents = []*models.SearchDataImportModel{
+		expectedEvent1,
+		expectedEvent2,
+		expectedEvent3,
+		expectedEvent4,
+	}
+)
+
+func TestDataImporterHandler_Handle(t *testing.T) {
 
 	Convey("Given a handler configured with a mock mapper", t, func() {
-		mockResultWriter := &mock.ResultWriterMock{}
-
-		batchHandler := handler.NewBatchHandler(mockResultWriter)
-		filePath := "/tmp/dp-search-data-importer.txt"
-		os.Remove(filePath)
+		batchHandler := handler.NewBatchHandler()
 
 		Convey("When handle is called", func() {
-			err := batchHandler.Handle(context.Background(), expectedEvents)
+			err := batchHandler.Handle(testContext, testEvents)
 
-			Convey("The expected calls to the publish content mapper", func() {
+			Convey("Then the error is nil", func() {
 				So(err, ShouldBeNil)
-			})
-			Convey("And the expected file is created", func() {
-				if _, err := os.Stat(filePath); err != nil {
-					if os.IsNotExist(err) {
-						fmt.Printf("file does not exists")
-						t.Fail()
-					}
-				}
 			})
 		})
 	})

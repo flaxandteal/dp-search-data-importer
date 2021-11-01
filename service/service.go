@@ -84,11 +84,8 @@ func Run(ctx context.Context, serviceList *ExternalServiceList, buildTime, gitCo
 		}
 	}()
 
-	// write import results to the output.
-	resultWriter := NewResultWriter()
-
 	// handle a batch of events.
-	batchHandler := handler.NewBatchHandler(resultWriter)
+	batchHandler := handler.NewBatchHandler()
 	messageconsumer, err := serviceList.GetKafkaConsumer(ctx, cfg)
 	if err != nil {
 		log.Fatal(ctx, "failed to initialise event consumer", err)
