@@ -62,15 +62,10 @@ func (consumer *Consumer) Consume(
 				if batch.IsEmpty() {
 					continue
 				}
-				log.Info(ctx, "batch wait time reached. proceeding with batch", log.INFO,
-					log.Data{
-						"batch-wait-time": cfg.BatchWaitTime,
-						"batchsize":       batch.Size(),
-					})
 				ProcessBatch(ctx, handler, batch, "timeout")
 
-			case eventClose := <-consumer.closing:
-				log.Info(eventClose.ctx, "closing event consumer loop")
+			case <-consumer.closing:
+				log.Info(ctx, "closing event consumer loop")
 				close(consumer.closing)
 				return
 			}
@@ -90,12 +85,11 @@ func AddMessageToBatch(ctx context.Context, batch *Batch, msg kafka.Message, han
 // ProcessBatch will attempt to handle and commit the batch, or shutdown if something goes horribly wrong.
 func ProcessBatch(ctx context.Context, handler Handler, batch *Batch, reason string) {
 	log.Info(ctx, "process batch starts", log.Data{
-		"process batch starts time": time.Now(),
 		"batch_size":                batch.Size(),
 		"reason":                    reason})
 	err := handler.Handle(ctx, batch.Events())
 	if err != nil {
-		log.Error(ctx, "error processing batch", err)
+		log.Error(ctx, "error handling batch", err)
 		return
 	}
 
