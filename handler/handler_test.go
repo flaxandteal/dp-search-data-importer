@@ -1,11 +1,16 @@
 package handler_test
 
 import (
+	"bytes"
 	"context"
+	"io/ioutil"
+	"net/http"
 	"testing"
 
+	"github.com/ONSdigital/dp-search-data-importer/esclient/mock"
 	"github.com/ONSdigital/dp-search-data-importer/handler"
 	"github.com/ONSdigital/dp-search-data-importer/models"
+
 	. "github.com/smartystreets/goconvey/convey"
 )
 
@@ -40,51 +45,45 @@ var (
 		TraceID:         "testTraceID2",
 	}
 
-	expectedEvent3 = &models.SearchDataImportModel{
-		DataType:        "testDataType3",
-		JobID:           "",
-		SearchIndex:     "ONS",
-		CDID:            "",
-		DatasetID:       "",
-		Keywords:        []string{"testkeyword3"},
-		MetaDescription: "",
-		Summary:         "",
-		ReleaseDate:     "",
-		Title:           "testTitle3",
-		TraceID:         "testTraceID3",
-	}
-
-	expectedEvent4 = &models.SearchDataImportModel{
-		DataType:        "testDataType4",
-		JobID:           "",
-		SearchIndex:     "ONS",
-		CDID:            "",
-		DatasetID:       "",
-		Keywords:        []string{"testkeyword4"},
-		MetaDescription: "",
-		Summary:         "",
-		ReleaseDate:     "",
-		Title:           "testTilte4",
-		TraceID:         "testTraceID4",
-	}
-
 	testEvents = []*models.SearchDataImportModel{
 		expectedEvent1,
 		expectedEvent2,
-		expectedEvent3,
-		expectedEvent4,
+	}
+
+	testData = `{"cdid": "testCDID","summary": "testSummary","type": "testDataType"}`
+
+	doFuncWithESResponse = func(ctx context.Context, esDestIndex string, esDestURL string, bulk []byte) ([]byte, error) {
+		testByteData := []byte(testData)
+		return testByteData, nil
 	}
 )
 
-func TestDataImporterHandler_Handle(t *testing.T) {
+func unsuccessfulESResponse() *http.Response {
 
-	Convey("Given a handler configured with a mock mapper", t, func() {
-		batchHandler := handler.NewBatchHandler()
+	return &http.Response{
+		StatusCode: 500,
+		Body:       ioutil.NopCloser(bytes.NewBufferString(`Internal server error`)),
+		Header:     make(http.Header),
+	}
+}
+
+func TestDataImporterHandle(t *testing.T) {
+
+	Convey("Given a handler configured with sucessful es updates", t, func() {
+
+		esClientMock := &mock.ClientMock{
+			SubmitBulkToESFunc: doFuncWithESResponse,
+		}
+		batchHandler := handler.NewBatchHandler(esClientMock)
 
 		Convey("When handle is called", func() {
 			err := batchHandler.Handle(testContext, testEvents)
 
-			Convey("Then the error is nil", func() {
+			Convey("Then the bulk is inserted into elastic search", func() {
+				So(esClientMock.SubmitBulkToESCalls(), ShouldNotBeEmpty)
+				So(esClientMock.SubmitBulkToESCalls(), ShouldHaveLength, 1)
+			})
+			Convey("And the error is nil", func() {
 				So(err, ShouldBeNil)
 			})
 		})

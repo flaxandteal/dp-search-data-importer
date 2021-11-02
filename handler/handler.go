@@ -14,10 +14,6 @@ import (
 	"github.com/ONSdigital/dp-search-data-importer/models"
 	"github.com/ONSdigital/dp-search-data-importer/transform"
 	"github.com/ONSdigital/log.go/v2/log"
-	"github.com/pkg/errors"
-
-	dpAwsauth "github.com/ONSdigital/dp-elasticsearch/v2/awsauth"
-	dphttp "github.com/ONSdigital/dp-net/http"
 )
 
 var _ event.Handler = (*BatchHandler)(nil)
@@ -31,6 +27,19 @@ var (
 	semaphore     = make(chan int, 5)
 )
 
+// BatchHandler handles batches of SearchDataImportModel events that contain CSV row data.
+type BatchHandler struct {
+	ElasticSearchCli esclient.Client
+}
+
+// NewBatchHandler returns a BatchHandler.
+func NewBatchHandler(ElasticSearchCli esclient.Client) *BatchHandler {
+
+	return &BatchHandler{
+		ElasticSearchCli: ElasticSearchCli,
+	}
+}
+
 type esBulkResponse struct {
 	Took   int                  `json:"took"`
 	Errors bool                 `json:"errors"`
@@ -41,19 +50,8 @@ type esBulkItemResponse map[string]esBulkItemResponseData
 
 type esBulkItemResponseData struct {
 	Index  string `json:"_index"`
-	ID     string `json:"_id"`
 	Status int    `json:"status"`
 	Error  string `json:"error"`
-}
-
-// BatchHandler handles batches of SearchDataImportModel events that contain CSV row data.
-type BatchHandler struct {
-}
-
-// NewBatchHandler returns a BatchHandler.
-func NewBatchHandler() *BatchHandler {
-
-	return &BatchHandler{}
 }
 
 // Handle the given slice of SearchDataImport Model.
@@ -65,22 +63,23 @@ func (batchHandler BatchHandler) Handle(ctx context.Context, events []*models.Se
 		log.Info(ctx, "there are no events to handle")
 		return nil
 	}
-	go status()
+	go status(ctx)
 
 	// This will block if we've reached our concurrency limit (sem buffer size)
-	err := SendToES(ctx, events, len(events))
+	err := batchHandler.SendToES(ctx, events, len(events))
 	if err != nil {
 		log.Fatal(ctx, "failed to send event to Elastic Search", err)
+		return err
 	}
 
-	time.Sleep(5 * time.Second)
+	time.Sleep(4 * time.Second)
 	syncWaitGroup.Wait()
 
 	log.Info(ctx, "event successfully handled")
 	return nil
 }
 
-func SendToES(ctx context.Context, events []*models.SearchDataImportModel, length int) error {
+func (bh BatchHandler) SendToES(ctx context.Context, events []*models.SearchDataImportModel, length int) error {
 
 	// Wait on semaphore if we've reached our concurrency limit
 	syncWaitGroup.Add(1)
@@ -90,22 +89,17 @@ func SendToES(ctx context.Context, events []*models.SearchDataImportModel, lengt
 	cfg, err := config.Get()
 	if err != nil {
 		log.Fatal(ctx, "error getting config", err)
-		return errors.Wrap(err, "unable to retrieve service configuration")
+		os.Exit(1)
 	}
 
 	esDestURL := cfg.ElasticSearchAPIURL
-	esDestIndex := "esDestIndex"
-	// esDestType  := "docType"
+	esIndex := "esIndex"
+	esDestType := "docType"
 
-	awsSDKSigner, err := createAWSSigner(ctx)
-	if err != nil {
-		log.Error(ctx, "error getting awsSDKSigner", err)
-		return errors.Wrap(err, "error getting awsSDKSigner")
-	}
+	esDestIndex := fmt.Sprintf("%s/%s", esIndex, esDestType)
+	log.Info(ctx, "esDestIndex ", log.Data{"esDestIndex": esDestIndex})
 
 	t := transform.NewTransformer()
-	esHttpClient := dphttp.NewClient()
-	elasticsearchcli := esclient.NewClient(awsSDKSigner, esHttpClient, cfg.SignElasticsearchRequests)
 
 	go func() {
 		defer func() {
@@ -121,11 +115,10 @@ func SendToES(ctx context.Context, events []*models.SearchDataImportModel, lengt
 		for i < length {
 
 			if events[i].Title == "" {
-				log.Info(ctx, "No title for inbound event, no transformation possible", log.Data{"title": events[i].Title})
+				log.Info(ctx, "No title for inbound event, no transformation possible")
 				continue // break here
 			}
 
-			//ToDo : title as context
 			esmodel := t.TransformEventModelToEsModel(events[i])
 
 			if esmodel != nil {
@@ -145,9 +138,9 @@ func SendToES(ctx context.Context, events []*models.SearchDataImportModel, lengt
 			i++
 		}
 
-		b, err := elasticsearchcli.SubmitBulkToES(ctx, esDestIndex, esDestURL, bulk)
+		b, err := bh.ElasticSearchCli.SubmitBulkToES(ctx, esDestIndex, esDestURL, bulk)
 		if err != nil {
-			log.Fatal(ctx, "error SubmitBulkToES", err)
+			log.Fatal(ctx, "error in submitting bulk in ES", err)
 			return
 		}
 
@@ -167,32 +160,13 @@ func SendToES(ctx context.Context, events []*models.SearchDataImportModel, lengt
 				}
 			}
 		}
-		log.Info(ctx, "3. +++++++++++++++++esDestURL", log.Data{"bulk": string(bulk)})
-
 		insertChannel <- target
 	}()
 
 	return nil
 }
 
-func createAWSSigner(ctx context.Context) (*dpAwsauth.Signer, error) {
-	// Get Config
-	cfg, err := config.Get()
-	if err != nil {
-		log.Fatal(ctx, "error getting config", err)
-		os.Exit(1)
-	}
-
-	return dpAwsauth.NewAwsSigner(
-		cfg.AwsAccessKeyId,
-		cfg.AwsSecretAccessKey,
-		cfg.AwsRegion,
-		cfg.AwsService)
-}
-
-// ---------------------------------------------------------------------------
-
-func status() {
+func status(ctx context.Context) {
 	var (
 		rpsCounter  = 0
 		insCounter  = 0
@@ -216,12 +190,18 @@ func status() {
 			insCounter += n
 			insTotal += n
 		case <-t.C:
-			fmt.Printf("\nRead: %6d  Written: %6d  Skipped: %6d  |  rps: %6d  ips: %6d  sps: %6d", reqTotal, insTotal, skipTotal, rpsCounter, insCounter, skipCounter)
+			logData := log.Data{
+				"Read":        reqTotal,
+				"Written":     insTotal,
+				"skipTotal":   skipTotal,
+				"rpsCounter":  rpsCounter,
+				"insCounter":  insCounter,
+				"skipCounter": skipCounter,
+			}
+			log.Info(ctx, "Elastic Search Summary", log.INFO, logData)
 			rpsCounter = 0
 			insCounter = 0
 			skipCounter = 0
 		}
 	}
 }
-
-// ------------------------------------------------------------------------------

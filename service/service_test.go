@@ -9,13 +9,13 @@ import (
 	"sync"
 	"testing"
 
-	"github.com/ONSdigital/dp-elasticsearch/v2/elasticsearch"
 	"github.com/ONSdigital/dp-healthcheck/healthcheck"
 	"github.com/ONSdigital/dp-kafka/v2/kafkatest"
 	"github.com/ONSdigital/dp-search-data-importer/config"
 	"github.com/ONSdigital/dp-search-data-importer/service"
 	"github.com/pkg/errors"
 
+	dpElasticSearch "github.com/ONSdigital/dp-elasticsearch/v2/elasticsearch"
 	kafka "github.com/ONSdigital/dp-kafka/v2"
 	dphttp "github.com/ONSdigital/dp-net/http"
 	serviceMock "github.com/ONSdigital/dp-search-data-importer/service/mock"
@@ -45,7 +45,7 @@ var (
 		return nil
 	}
 
-	funDoGetElasticSearchClientErr = func(ctx context.Context, cfg *config.Config) (*elasticsearch.Client, error) {
+	funDoGetElasticSearchClientErr = func(ctx context.Context, cfg *config.Config) (*dpElasticSearch.Client, error) {
 		return nil, errElasticSearch
 	}
 
@@ -80,7 +80,7 @@ func TestRun(t *testing.T) {
 	Convey("Having a set of mocked dependencies", t, func() {
 
 		httpCli := clientMock(doSuccessful)
-		elasticSearchMock := elasticsearch.NewClientWithHTTPClient("testurl.co.uk", false, httpCli)
+		elasticSearchMock := dpElasticSearch.NewClientWithHTTPClient("testurl.co.uk", false, httpCli)
 
 		consumerMock := &kafkatest.IConsumerGroupMock{
 			CheckerFunc:  func(ctx context.Context, state *healthcheck.CheckState) error { return nil },
@@ -100,7 +100,7 @@ func TestRun(t *testing.T) {
 			},
 		}
 
-		funcElasticSearchMockOk := func(ctx context.Context, cfg *config.Config) (*elasticsearch.Client, error) {
+		funcElasticSearchMockOk := func(ctx context.Context, cfg *config.Config) (*dpElasticSearch.Client, error) {
 			return elasticSearchMock, nil
 		}
 
@@ -240,7 +240,7 @@ func TestClose(t *testing.T) {
 
 		hcStopped := false
 
-		funcElasticSearchMockOk := func(ctx context.Context, cfg *config.Config) (*elasticsearch.Client, error) {
+		funcElasticSearchMockOk := func(ctx context.Context, cfg *config.Config) (*dpElasticSearch.Client, error) {
 			return nil, nil
 		}
 

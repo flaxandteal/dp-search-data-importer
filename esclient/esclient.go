@@ -10,12 +10,15 @@ import (
 
 	dpAwsauth "github.com/ONSdigital/dp-elasticsearch/v2/awsauth"
 	dphttp "github.com/ONSdigital/dp-net/http"
+	"github.com/ONSdigital/dp-search-data-importer/config"
 	"github.com/ONSdigital/log.go/v2/log"
 
 	"github.com/pkg/errors"
 )
 
 const applicationJSON = "application/json"
+
+//go:generate moq -out mock/Client.go -pkg mock . Client
 
 // Client provides an interface with which to communicate with Elastic Search by way of HTTP requests
 type Client interface {
@@ -24,31 +27,25 @@ type Client interface {
 
 // ClientImpl represents an instance of the elasticsearch client
 type ClientImpl struct {
-	awsSDKSigner *dpAwsauth.Signer
-	client       dphttp.Clienter
-	signRequests bool
-	requester    Requester
+	client    dphttp.Clienter
+	requester Requester
 }
 
 // NewClient returns a concrete implementation of the Client interface
-func NewClient(awsSDKSigner *dpAwsauth.Signer, client dphttp.Clienter, signRequests bool) Client {
+func NewClient(client dphttp.Clienter) Client {
 
 	return &ClientImpl{
-		awsSDKSigner: awsSDKSigner,
-		client:       client,
-		signRequests: signRequests,
-		requester:    NewRequester(),
+		client:    client,
+		requester: NewRequester(),
 	}
 }
 
 // NewClientWithRequester returns a concrete implementation of the Client interface, taking a custom Requester
-func NewClientWithRequester(awsSDKSigner *dpAwsauth.Signer, client dphttp.Clienter, signRequests bool, requester Requester) Client {
+func NewClientWithRequester(client dphttp.Clienter, requester Requester) Client {
 
 	return &ClientImpl{
-		awsSDKSigner: awsSDKSigner,
-		client:       client,
-		signRequests: signRequests,
-		requester:    requester,
+		client:    client,
+		requester: requester,
 	}
 }
 
@@ -57,17 +54,28 @@ func (cli *ClientImpl) SubmitBulkToES(
 	ctx context.Context, esDestIndex string, esDestURL string, bulk []byte) ([]byte, error) {
 
 	uri := fmt.Sprintf("%s/%s/_bulk", esDestURL, esDestIndex)
-	bodyReader := bytes.NewReader(bulk)
+	cfg, err := config.Get()
+	if err != nil {
+		log.Fatal(ctx, "error getting config", err)
+		return nil, err
+	}
 
+	bodyReader := bytes.NewReader(bulk)
 	req, err := http.NewRequest("POST", uri, bodyReader)
 	if err != nil {
 		log.Error(ctx, "Error while getting new Request", err)
 		return nil, err
 	}
 
-	if cli.signRequests {
-		err := cli.awsSDKSigner.Sign(req, bodyReader, time.Now())
-		if err != nil {
+	awsSDKSigner, err := createAWSSigner(ctx)
+	if err != nil {
+		log.Error(ctx, "error getting awsSDKSigner", err)
+		return nil, err
+	}
+
+	if cfg.SignElasticsearchRequests {
+		reader := bytes.NewReader([]byte{})
+		if err = awsSDKSigner.Sign(req, reader, time.Now()); err != nil {
 			logData := log.Data{"uri": uri, "index": esDestIndex}
 			log.Info(ctx, "failed to sign request", logData)
 			return nil, err
@@ -104,5 +112,19 @@ func (cli *ClientImpl) SubmitBulkToES(
 	}
 
 	return b, err
+}
 
+func createAWSSigner(ctx context.Context) (*dpAwsauth.Signer, error) {
+	// Get Config
+	cfg, err := config.Get()
+	if err != nil {
+		log.Fatal(ctx, "error getting config", err)
+		return nil, err
+	}
+
+	return dpAwsauth.NewAwsSigner(
+		cfg.AwsAccessKeyId,
+		cfg.AwsSecretAccessKey,
+		cfg.AwsRegion,
+		cfg.AwsService)
 }

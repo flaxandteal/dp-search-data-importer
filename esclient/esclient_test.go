@@ -3,6 +3,7 @@ package esclient
 import (
 	"bytes"
 	"context"
+	"fmt"
 	"io/ioutil"
 	"net/http"
 	"testing"
@@ -31,11 +32,14 @@ func TestUnitSubmitBulkToES(t *testing.T) {
 	ctrl := gomock.NewController(t)
 
 	mr := NewMockRequester(ctrl)
-	mc := NewClientWithRequester(nil, testHttpClient, false, mr)
+	mc := NewClientWithRequester(testHttpClient, mr)
 
 	bulk := make([]byte, 1)
 	esDestURL := "esDestURL"
-	esDestIndex := "esDestIndex"
+	esIndex := "esIndex"
+	esDestType := "docType"
+	esDestIndex := fmt.Sprintf("%s/%s", esIndex, esDestType)
+
 	uri := esDestURL + "/" + esDestIndex + "/_bulk"
 
 	Convey("Given a successful post of bulks to Elastic Search", t, func() {

@@ -5,13 +5,16 @@ import (
 	"time"
 
 	"github.com/ONSdigital/dp-elasticsearch/v2/elasticsearch"
-	kafka "github.com/ONSdigital/dp-kafka/v2"
 	"github.com/ONSdigital/dp-search-data-importer/config"
+	"github.com/ONSdigital/dp-search-data-importer/esclient"
 	"github.com/ONSdigital/dp-search-data-importer/event"
 	"github.com/ONSdigital/dp-search-data-importer/handler"
 	"github.com/ONSdigital/log.go/v2/log"
 	"github.com/gorilla/mux"
 	"github.com/pkg/errors"
+
+	kafka "github.com/ONSdigital/dp-kafka/v2"
+	dphttp "github.com/ONSdigital/dp-net/http"
 )
 
 // Service contains all the configs, server and clients to run the event handler service
@@ -75,8 +78,13 @@ func Run(ctx context.Context, serviceList *ExternalServiceList, buildTime, gitCo
 		}
 	}()
 
+	//ES Client initialisation
+	httpClient := dphttp.NewClient()
+	requester := esclient.NewRequester()
+	esClient := esclient.NewClientWithRequester(httpClient, requester)
+
 	// handle a batch of events.
-	batchHandler := handler.NewBatchHandler()
+	batchHandler := handler.NewBatchHandler(esClient)
 	messageconsumer, err := serviceList.GetKafkaConsumer(ctx, cfg)
 	if err != nil {
 		log.Fatal(ctx, "failed to initialise event consumer", err)
