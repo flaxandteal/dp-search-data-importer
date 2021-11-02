@@ -65,15 +65,9 @@ func TestCommit(t *testing.T) {
 
 	Convey("Given a batch with two valid messages", t, func() {
 
-		expectedEvent1 := getExpectedEvent()
-		expectedEvent2 := getExpectedEvent()
-		expectedEvent3 := getExpectedEvent()
-		expectedEvent4 := getExpectedEvent()
-
-		message1 := kafkatest.NewMessage([]byte(marshal(expectedEvent1)), 0)
-		message2 := kafkatest.NewMessage([]byte(marshal(expectedEvent2)), 0)
-		message3 := kafkatest.NewMessage([]byte(marshal(expectedEvent3)), 0)
-		message4 := kafkatest.NewMessage([]byte(marshal(expectedEvent4)), 0)
+		expectedEvent := getExpectedEvent()
+		message1 := kafkatest.NewMessage([]byte(marshal(expectedEvent)), 0)
+		message2 := kafkatest.NewMessage([]byte(marshal(expectedEvent)), 0)
 
 		batchSize := 2
 		batch := event.NewBatch(batchSize)
@@ -87,7 +81,7 @@ func TestCommit(t *testing.T) {
 
 			Convey("Then all messages that were present in batch are marked, and last one is committed", func() {
 				So(message1.IsMarked(), ShouldBeTrue)
-
+				So(message2.IsMarked(), ShouldBeTrue)
 				So(message1.IsCommitted(), ShouldBeFalse)
 				So(message2.IsCommitted(), ShouldBeTrue)
 			})
@@ -99,21 +93,21 @@ func TestCommit(t *testing.T) {
 			})
 
 			Convey("Then the batch can be reused", func() {
-				batch.Add(ctx, message3)
+				batch.Add(ctx, message1)
 
 				So(batch.IsEmpty(), ShouldBeFalse)
 				So(batch.IsFull(), ShouldBeFalse)
 				So(batch.Size(), ShouldEqual, 1)
 
-				So(batch.Events()[0].DataType, ShouldEqual, expectedEvent3.DataType)
+				So(batch.Events()[0].DataType, ShouldEqual, expectedEvent.DataType)
 
-				batch.Add(ctx, message4)
+				batch.Add(ctx, message2)
 
 				So(batch.IsEmpty(), ShouldBeFalse)
 				So(batch.IsFull(), ShouldBeTrue)
 				So(batch.Size(), ShouldEqual, 2)
 
-				So(batch.Events()[1].Title, ShouldEqual, expectedEvent4.Title)
+				So(batch.Events()[1].Title, ShouldEqual, expectedEvent.Title)
 			})
 		})
 	})

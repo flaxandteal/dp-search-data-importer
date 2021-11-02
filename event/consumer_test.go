@@ -3,6 +3,7 @@ package event_test
 import (
 	"context"
 	"testing"
+	"time"
 
 	"github.com/ONSdigital/dp-search-data-importer/config"
 	"github.com/ONSdigital/dp-search-data-importer/event/eventtest"
@@ -94,6 +95,8 @@ func TestConsumeWithTwoMessage(t *testing.T) {
 		if err != nil {
 			t.Fatalf("failed to retrieve configuration: %v", err)
 		}
+		cfg.BatchWaitTime = time.Second * 2
+		cfg.BatchSize = 2
 
 		consumer := event.NewConsumer()
 
