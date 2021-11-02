@@ -56,8 +56,7 @@ func Get() (*Config, error) {
 		KafkaSecSkipVerify:         false,
 		PublishedContentGroup:      "dp-search-data-importer",
 		PublishedContentTopic:      "search-data-import",
-		OutputFilePath:             "/tmp/search-data-importer.txt",
-		BatchSize:                  4,
+		BatchSize:                  500,
 		BatchWaitTime:              time.Second * 5,
 	}
 

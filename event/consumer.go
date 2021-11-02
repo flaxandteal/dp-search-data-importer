@@ -55,7 +55,6 @@ func (consumer *Consumer) Consume(
 		for {
 			select {
 			case msg := <-messageConsumer.Channels().Upstream:
-				log.Info(ctx, "add message to batch")
 				AddMessageToBatch(ctx, batch, msg, handler)
 				msg.Release()
 

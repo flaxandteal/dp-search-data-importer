@@ -2,11 +2,9 @@ package handler_test
 
 import (
 	"context"
-	"os"
 	"testing"
 
 	"github.com/ONSdigital/dp-search-data-importer/handler"
-	"github.com/ONSdigital/dp-search-data-importer/handler/eventtest"
 	"github.com/ONSdigital/dp-search-data-importer/models"
 	. "github.com/smartystreets/goconvey/convey"
 )
@@ -21,7 +19,7 @@ var expectedEvent1 = &models.SearchDataImportModel{
 	MetaDescription: "",
 	Summary:         "",
 	ReleaseDate:     "",
-	Title:           "testTilte",
+	Title:           "testTitle1",
 	TraceID:         "testTraceID",
 }
 
@@ -35,7 +33,7 @@ var expectedEvent2 = &models.SearchDataImportModel{
 	MetaDescription: "",
 	Summary:         "",
 	ReleaseDate:     "",
-	Title:           "testTilte2",
+	Title:           "testTitle2",
 	TraceID:         "testTraceID2",
 }
 
@@ -47,11 +45,7 @@ var expectedEvents = []*models.SearchDataImportModel{
 func TestPublishedContentExtractedHandler_Handle(t *testing.T) {
 
 	Convey("Given a handler configured with a mock mapper", t, func() {
-		mockResultWriter := &eventtest.ResultWriterMock{}
-
-		batchHandler := handler.NewBatchHandler(mockResultWriter)
-		filePath := "/tmp/dp-search-data-importer.txt"
-		os.Remove(filePath)
+		batchHandler := handler.NewBatchHandler()
 
 		Convey("When handle is called", func() {
 			err := batchHandler.Handle(context.Background(), expectedEvents)

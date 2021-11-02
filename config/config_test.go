@@ -35,7 +35,7 @@ func TestConfig(t *testing.T) {
 				So(cfg.KafkaSecSkipVerify, ShouldBeFalse)
 				So(cfg.PublishedContentGroup, ShouldEqual, "dp-search-data-importer")
 				So(cfg.PublishedContentTopic, ShouldEqual, "search-data-import")
-				So(cfg.BatchSize, ShouldEqual, 4)
+				So(cfg.BatchSize, ShouldEqual, 500)
 				So(cfg.BatchWaitTime, ShouldEqual, time.Second*5)
 			})
 
