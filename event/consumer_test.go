@@ -56,7 +56,6 @@ func TestConsumeWithOneMessage(t *testing.T) {
 		if err != nil {
 			t.Fatalf("failed to retrieve configuration: %v", err)
 		}
-		So(err, ShouldBeNil)
 
 		consumer := event.NewConsumer()
 
