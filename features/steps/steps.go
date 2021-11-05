@@ -23,7 +23,7 @@ func (c *Component) RegisterSteps(ctx *godog.ScenarioContext) {
 }
 
 func (c *Component) iShouldReceiveAPublishedContentResponse() error {
-	content, err := ioutil.ReadFile(c.cfg.OutputFilePath)
+	content, err := ioutil.ReadFile("")
 	if err != nil {
 		return err
 	}

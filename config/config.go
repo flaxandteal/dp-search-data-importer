@@ -26,7 +26,6 @@ type Config struct {
 	KafkaSecSkipVerify         bool          `envconfig:"KAFKA_SEC_SKIP_VERIFY"`
 	PublishedContentGroup      string        `envconfig:"KAFKA_PUBLISHED_CONTENT_GROUP"`
 	PublishedContentTopic      string        `envconfig:"KAFKA_PUBLISHED_CONTENT_TOPIC"`
-	OutputFilePath             string        `envconfig:"OUTPUT_FILE_PATH"`
 	BatchSize                  int           `envconfig:"BATCH_SIZE"`
 	BatchWaitTime              time.Duration `envconfig:"BATCH_WAIT_TIME"`
 }
