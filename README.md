@@ -31,6 +31,10 @@ An example event can be created using the helper script, `make produce`.
 | BATCH_SIZE                   | 500                               | The default total number of messages that should be buffered (in batches) before writing to the search engine.
 | BATCH_WAIT_TIME              | 5s                                | The default wait time for preparing the batch.
 
+**Notes:**
+
+1. <a name="notes_1">For more info, see the [kafka TLS examples documentation](https://github.com/ONSdigital/dp-kafka/tree/main/examples#tls)</a>
+
 ### Healthcheck
 
  The `/health` endpoint returns the current status of the service. Dependent services are health checked on an interval defined by the `HEALTHCHECK_INTERVAL` environment variable.

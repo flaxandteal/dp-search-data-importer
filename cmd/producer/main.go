@@ -29,11 +29,23 @@ func main() {
 
 	// Create Kafka Producer
 	pChannels := kafka.CreateProducerChannels()
-	kafkaProducer, err := kafka.NewProducer(ctx, cfg.KafkaAddr, cfg.PublishedContentGroup, pChannels, &kafka.ProducerConfig{
+	pConfig := &kafka.ProducerConfig{
 		KafkaVersion: &cfg.KafkaVersion,
-	})
+	}
+
+	// KafkaTLSProtocol informs service to use TLS protocol for kafka
+	if cfg.KafkaSecProtocol == config.KafkaTLSProtocol {
+		pConfig.SecurityConfig = kafka.GetSecurityConfig(
+			cfg.KafkaSecCACerts,
+			cfg.KafkaSecClientCert,
+			cfg.KafkaSecClientKey,
+			cfg.KafkaSecSkipVerify,
+		)
+	}
+
+	kafkaProducer, err := kafka.NewProducer(ctx, cfg.KafkaAddr, cfg.PublishedContentTopic, pChannels, pConfig)
 	if err != nil {
-		log.Fatal(ctx, "fatal error trying to create kafka producer", err, log.Data{"topic": cfg.PublishedContentGroup})
+		log.Fatal(ctx, "fatal error trying to create kafka producer", err, log.Data{"topic": cfg.PublishedContentTopic})
 		os.Exit(1)
 	}
 

@@ -17,20 +17,16 @@ type MessageConsumer interface {
 
 // Consumer consumes event messages.
 type Consumer struct {
-	closing chan eventClose
+	closing chan bool
 	closed  chan bool
 }
 
 // NewConsumer returns a new consumer instance.
 func NewConsumer() *Consumer {
 	return &Consumer{
-		closing: make(chan eventClose),
+		closing: make(chan bool),
 		closed:  make(chan bool),
 	}
-}
-
-type eventClose struct {
-	ctx context.Context
 }
 
 // Handler represents a handler for processing a single event.
@@ -62,15 +58,10 @@ func (consumer *Consumer) Consume(
 				if batch.IsEmpty() {
 					continue
 				}
-				log.Info(ctx, "batch wait time reached. proceeding with batch", log.INFO,
-					log.Data{
-						"batch-wait-time": cfg.BatchWaitTime,
-						"batchsize":       batch.Size(),
-					})
 				ProcessBatch(ctx, handler, batch, "timeout")
 
-			case eventClose := <-consumer.closing:
-				log.Info(eventClose.ctx, "closing event consumer loop")
+			case <-consumer.closing:
+				log.Info(ctx, "closing event consumer loop")
 				close(consumer.closing)
 				return
 			}
@@ -90,12 +81,12 @@ func AddMessageToBatch(ctx context.Context, batch *Batch, msg kafka.Message, han
 // ProcessBatch will attempt to handle and commit the batch, or shutdown if something goes horribly wrong.
 func ProcessBatch(ctx context.Context, handler Handler, batch *Batch, reason string) {
 	log.Info(ctx, "process batch starts", log.Data{
-		"process batch starts time": time.Now(),
-		"batch_size":                batch.Size(),
-		"reason":                    reason})
+		"batch_size": batch.Size(),
+		"reason":     reason})
 	err := handler.Handle(ctx, batch.Events())
 	if err != nil {
-		log.Error(ctx, "error processing batch", err)
+		log.Error(ctx, "error handling batch", err)
+		batch.Commit()
 		return
 	}
 
@@ -111,7 +102,7 @@ func (consumer *Consumer) Close(ctx context.Context) (err error) {
 		ctx = context.Background()
 	}
 
-	consumer.closing <- eventClose{ctx: ctx}
+	consumer.closing <- true
 
 	select {
 	case <-consumer.closed:

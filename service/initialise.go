@@ -80,16 +80,26 @@ func (e *Init) DoGetHTTPServer(bindAddr string, router http.Handler) HTTPServer 
 
 // DoGetKafkaConsumer returns a Kafka Consumer group
 func (e *Init) DoGetKafkaConsumer(ctx context.Context, cfg *config.Config) (dpkafka.IConsumerGroup, error) {
-
-	cgChannels := dpkafka.CreateConsumerGroupChannels(cfg.BatchSize)
+	cgChannels := dpkafka.CreateConsumerGroupChannels(1)
 
 	kafkaOffset := dpkafka.OffsetNewest
 	if cfg.KafkaOffsetOldest {
 		kafkaOffset = dpkafka.OffsetOldest
 	}
-	cgConfig := &dpkafka.ConsumerGroupConfig{
+
+	cConfig := &dpkafka.ConsumerGroupConfig{
 		KafkaVersion: &cfg.KafkaVersion,
-		Offset:       &kafkaOffset,
+		Offset: &kafkaOffset,
+	}
+
+	// KafkaTLSProtocol informs service to use TLS protocol for kafka
+	if cfg.KafkaSecProtocol == config.KafkaTLSProtocol {
+		cConfig.SecurityConfig = dpkafka.GetSecurityConfig(
+			cfg.KafkaSecCACerts,
+			cfg.KafkaSecClientCert,
+			cfg.KafkaSecClientKey,
+			cfg.KafkaSecSkipVerify,
+		)
 	}
 
 	kafkaConsumer, err := dpkafka.NewConsumerGroup(
@@ -98,7 +108,7 @@ func (e *Init) DoGetKafkaConsumer(ctx context.Context, cfg *config.Config) (dpka
 		cfg.PublishedContentTopic,
 		cfg.PublishedContentGroup,
 		cgChannels,
-		cgConfig,
+		cConfig,
 	)
 	if err != nil {
 		return nil, err

@@ -61,7 +61,37 @@ func TestAdd(t *testing.T) {
 	})
 }
 
-func TestCommit(t *testing.T) {
+func TestCommitWithOneMessage(t *testing.T) {
+
+	Convey("Given a batch with one valid messages", t, func() {
+
+		expectedEvent := getExpectedEvent()
+		message1 := kafkatest.NewMessage([]byte(marshal(expectedEvent)), 0)
+
+		batchSize := 1
+		batch := event.NewBatch(batchSize)
+
+		batch.Add(ctx, message1)
+
+		Convey("When commit is called", func() {
+
+			batch.Commit()
+
+			Convey("Then a messages that is present in batch are marked and committed", func() {
+				So(message1.IsMarked(), ShouldBeTrue)
+				So(message1.IsCommitted(), ShouldBeTrue)
+			})
+
+			Convey("And the batch is emptied.", func() {
+				So(batch.IsEmpty(), ShouldBeTrue)
+				So(batch.IsFull(), ShouldBeFalse)
+				So(batch.Size(), ShouldEqual, 0)
+			})
+		})
+	})
+}
+
+func TestCommitWithTwoMessage(t *testing.T) {
 
 	Convey("Given a batch with two valid messages", t, func() {
 
@@ -86,13 +116,13 @@ func TestCommit(t *testing.T) {
 				So(message2.IsCommitted(), ShouldBeTrue)
 			})
 
-			Convey("Then the batch is emptied.", func() {
+			Convey("And the batch is emptied.", func() {
 				So(batch.IsEmpty(), ShouldBeTrue)
 				So(batch.IsFull(), ShouldBeFalse)
 				So(batch.Size(), ShouldEqual, 0)
 			})
 
-			Convey("Then the batch can be reused", func() {
+			Convey("And the batch can be reused", func() {
 				batch.Add(ctx, message1)
 
 				So(batch.IsEmpty(), ShouldBeFalse)

@@ -17,13 +17,16 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
+// outputFilePath is used for event received by the service.
+const outputFilePath = "/tmp/dpSearchDataImporter.txt"
+
 func (c *Component) RegisterSteps(ctx *godog.ScenarioContext) {
 	ctx.Step(`^these published contents are consumed:$`, c.theseSearchImportEventsAreConsumed)
 	ctx.Step(`^I should receive a published-content response$`, c.iShouldReceiveAPublishedContentResponse)
 }
 
 func (c *Component) iShouldReceiveAPublishedContentResponse() error {
-	content, err := ioutil.ReadFile(c.cfg.OutputFilePath)
+	content, err := ioutil.ReadFile(outputFilePath)
 	if err != nil {
 		return err
 	}

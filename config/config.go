@@ -6,19 +6,26 @@ import (
 	"github.com/kelseyhightower/envconfig"
 )
 
+// KafkaTLSProtocol is a constant describing the TLS protocol used for kafka
+const KafkaTLSProtocol = "TLS"
+
 // Config represents service configuration for dp-search-data-importer
 type Config struct {
 	BindAddr                   string        `envconfig:"BIND_ADDR"`
 	GracefulShutdownTimeout    time.Duration `envconfig:"GRACEFUL_SHUTDOWN_TIMEOUT"`
 	HealthCheckInterval        time.Duration `envconfig:"HEALTHCHECK_INTERVAL"`
 	HealthCheckCriticalTimeout time.Duration `envconfig:"HEALTHCHECK_CRITICAL_TIMEOUT"`
-	KafkaAddr                  []string      `envconfig:"KAFKA_ADDR"                     json:"-"`
+	KafkaAddr                  []string      `envconfig:"KAFKA_ADDR"`
 	KafkaVersion               string        `envconfig:"KAFKA_VERSION"`
 	KafkaOffsetOldest          bool          `envconfig:"KAFKA_OFFSET_OLDEST"`
 	KafkaNumWorkers            int           `envconfig:"KAFKA_NUM_WORKERS"`
-	PublishedContentGroup      string        `envconfig:"PUBLISHED_CONTENT_GROUP"`
-	PublishedContentTopic      string        `envconfig:"PUBLISHED_CONTENT_TOPIC"`
-	OutputFilePath             string        `envconfig:"OUTPUT_FILE_PATH"`
+	KafkaSecProtocol           string        `envconfig:"KAFKA_SEC_PROTO"`
+	KafkaSecCACerts            string        `envconfig:"KAFKA_SEC_CA_CERTS"`
+	KafkaSecClientCert         string        `envconfig:"KAFKA_SEC_CLIENT_CERT"`
+	KafkaSecClientKey          string        `envconfig:"KAFKA_SEC_CLIENT_KEY"          json:"-"`
+	KafkaSecSkipVerify         bool          `envconfig:"KAFKA_SEC_SKIP_VERIFY"`
+	PublishedContentGroup      string        `envconfig:"KAFKA_PUBLISHED_CONTENT_GROUP"`
+	PublishedContentTopic      string        `envconfig:"KAFKA_PUBLISHED_CONTENT_TOPIC"`
 	BatchSize                  int           `envconfig:"BATCH_SIZE"`
 	BatchWaitTime              time.Duration `envconfig:"BATCH_WAIT_TIME"`
 	ElasticSearchAPIURL        string        `envconfig:"ELASTIC_SEARCH_URL"`
@@ -47,6 +54,11 @@ func Get() (*Config, error) {
 		KafkaVersion:               "1.0.2",
 		KafkaOffsetOldest:          true,
 		KafkaNumWorkers:            1,
+		KafkaSecProtocol:           "",
+		KafkaSecCACerts:            "",
+		KafkaSecClientCert:         "",
+		KafkaSecClientKey:          "",
+		KafkaSecSkipVerify:         false,
 		PublishedContentGroup:      "dp-search-data-importer",
 		PublishedContentTopic:      "search-data-import",
 		BatchSize:                  500,
