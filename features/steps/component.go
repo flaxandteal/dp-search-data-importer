@@ -53,11 +53,11 @@ func NewComponent() *Component {
 }
 
 func (c *Component) Close() {
-	os.Remove("")
+	os.Remove(outputFilePath)
 }
 
 func (c *Component) Reset() {
-	os.Remove("")
+	os.Remove(outputFilePath)
 }
 
 func (c *Component) DoGetHealthCheck(cfg *config.Config, buildTime string, gitCommit string, version string) (service.HealthChecker, error) {
