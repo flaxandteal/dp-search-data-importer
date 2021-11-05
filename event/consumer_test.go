@@ -81,7 +81,7 @@ func TestConsumeWithOneMessage(t *testing.T) {
 				So(len(message.ReleaseCalls()), ShouldEqual, 1)
 			})
 		})
-		consumer.Close(nil)
+		consumer.Close(testCtx)
 	})
 }
 
@@ -123,7 +123,7 @@ func TestConsumeWithTwoMessages(t *testing.T) {
 				So(len(message2.ReleaseCalls()), ShouldEqual, 1)
 			})
 		})
-		consumer.Close(nil)
+		consumer.Close(testCtx)
 	})
 }
 
@@ -140,7 +140,7 @@ func TestClose(t *testing.T) {
 		go consumer.Consume(testCtx, messageConsumer, eventHandler, cfg)
 
 		Convey("When close is called", func() {
-			err := consumer.Close(nil)
+			err := consumer.Close(testCtx)
 
 			Convey("The expected event is sent to the handler", func() {
 				So(err, ShouldBeNil)
