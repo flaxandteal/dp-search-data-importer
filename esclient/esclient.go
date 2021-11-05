@@ -67,7 +67,7 @@ func (cli *ClientImpl) SubmitBulkToES(
 		return nil, err
 	}
 
-	awsSDKSigner, err := createAWSSigner(ctx)
+	awsSDKSigner, err := createAWSSigner(ctx, cfg)
 	if err != nil {
 		log.Error(ctx, "error getting awsSDKSigner", err)
 		return nil, err
@@ -114,13 +114,7 @@ func (cli *ClientImpl) SubmitBulkToES(
 	return b, err
 }
 
-func createAWSSigner(ctx context.Context) (*dpAwsauth.Signer, error) {
-	// Get Config
-	cfg, err := config.Get()
-	if err != nil {
-		log.Fatal(ctx, "error getting config", err)
-		return nil, err
-	}
+func createAWSSigner(ctx context.Context, cfg *config.Config) (*dpAwsauth.Signer, error) {
 
 	return dpAwsauth.NewAwsSigner(
 		cfg.AwsAccessKeyId,
