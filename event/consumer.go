@@ -18,14 +18,14 @@ type MessageConsumer interface {
 // Consumer consumes event messages.
 type Consumer struct {
 	closing chan bool
-	closed  chan bool
+	Closed  chan bool
 }
 
 // NewConsumer returns a new consumer instance.
 func NewConsumer() *Consumer {
 	return &Consumer{
 		closing: make(chan bool),
-		closed:  make(chan bool),
+		Closed:  make(chan bool),
 	}
 }
 
@@ -43,7 +43,7 @@ func (consumer *Consumer) Consume(
 	cfg *config.Config) {
 
 	go func() {
-		defer close(consumer.closed)
+		defer close(consumer.Closed)
 
 		batch := NewBatch(cfg.BatchSize)
 		// Wait a batch full of messages.
@@ -105,7 +105,7 @@ func (consumer *Consumer) Close(ctx context.Context) (err error) {
 	consumer.closing <- true
 
 	select {
-	case <-consumer.closed:
+	case <-consumer.Closed:
 		log.Info(ctx, "successfully closed event consumer")
 		return nil
 	case <-ctx.Done():

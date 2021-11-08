@@ -27,7 +27,7 @@ var (
 		MetaDescription: "",
 		Summary:         "",
 		ReleaseDate:     "",
-		Title:           "testTilte1",
+		Title:           "testTitle1",
 		TraceID:         "testTraceID1",
 	}
 
@@ -41,7 +41,7 @@ var (
 		MetaDescription: "",
 		Summary:         "",
 		ReleaseDate:     "",
-		Title:           "testTilte2",
+		Title:           "testTitle2",
 		TraceID:         "testTraceID2",
 	}
 

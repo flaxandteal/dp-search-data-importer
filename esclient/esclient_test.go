@@ -43,35 +43,31 @@ func TestUnitSubmitBulkToES(t *testing.T) {
 	uri := esDestURL + "/" + esDestIndex + "/_bulk"
 
 	Convey("Given a successful post of bulks to Elastic Search", t, func() {
-
 		mr.EXPECT().Post(bulk, uri).Return(successESResponse(), nil)
+
 		Convey("When SubmitBulkToES is called", func() {
 			returnedBytes, err := mc.SubmitBulkToES(ctx, esDestIndex, esDestURL, bulk)
 
 			Convey("Then returnedBytes should not be nil", func() {
 				So(returnedBytes, ShouldNotBeNil)
-
-				Convey("And err should be nil", func() {
-					So(err, ShouldBeNil)
-				})
+			})
+			Convey("And err should be nil", func() {
+				So(err, ShouldBeNil)
 			})
 		})
 	})
+
 	Convey("Given an unsuccessful post of bulks to Elastic Search", t, func() {
 		mr.EXPECT().Post(bulk, uri).Return(unsuccessfulESResponse(), errors.New("error posting bulk"))
 
-		Convey("Then the post error should be logged", func() {
+		Convey("When SubmitBulkToES is called", func() {
+			returnedBytes, err := mc.SubmitBulkToES(ctx, esDestIndex, esDestURL, bulk)
 
-			Convey("When SubmitBulkToES is called", func() {
-				returnedBytes, err := mc.SubmitBulkToES(ctx, esDestIndex, esDestURL, bulk)
-
-				Convey("And returnedBytes should be nil", func() {
-					So(returnedBytes, ShouldBeNil)
-
-					Convey("And err should not be nil", func() {
-						So(err, ShouldNotBeNil)
-					})
-				})
+			Convey("Then returnedBytes should be nil", func() {
+				So(returnedBytes, ShouldBeNil)
+			})
+			Convey("And err should not be nil", func() {
+				So(err, ShouldNotBeNil)
 			})
 		})
 	})
@@ -79,18 +75,14 @@ func TestUnitSubmitBulkToES(t *testing.T) {
 	Convey("Given an unexpected response when posting bulks to Elastic Search", t, func() {
 		mr.EXPECT().Post(bulk, uri).Return(unsuccessfulESResponse(), nil)
 
-		Convey("Then the unexpected response should be logged", func() {
+		Convey("When SubmitBulkToES is called", func() {
+			returnedBytes, err := mc.SubmitBulkToES(ctx, esDestIndex, esDestURL, bulk)
 
-			Convey("When SubmitBulkToES is called", func() {
-				returnedBytes, err := mc.SubmitBulkToES(ctx, esDestIndex, esDestURL, bulk)
-
-				Convey("And returnedBytes should be nil", func() {
-					So(returnedBytes, ShouldBeNil)
-
-					Convey("And err should not be nil", func() {
-						So(err, ShouldNotBeNil)
-					})
-				})
+			Convey("Then returnedBytes should be nil", func() {
+				So(returnedBytes, ShouldBeNil)
+			})
+			Convey("And err should not be nil", func() {
+				So(err, ShouldNotBeNil)
 			})
 		})
 	})

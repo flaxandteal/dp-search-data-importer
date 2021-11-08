@@ -2,7 +2,6 @@ package event_test
 
 import (
 	"context"
-	"sync"
 	"testing"
 	"time"
 
@@ -68,25 +67,25 @@ func TestConsumeWithOneMessage(t *testing.T) {
 			messageConsumer.Channels().Upstream <- message
 
 			<-eventHandler.EventUpdated
+			consumer.Close(testCtx)
 
-			Convey("The expected event is sent to the handler", func() {
+			Convey("Then the expected event is sent to the handler", func() {
 				So(len(eventHandler.Events), ShouldEqual, 1)
 
 				actual := eventHandler.Events[0]
 				So(actual.DataType, ShouldEqual, expectedEvent2.DataType)
 				So(actual.Title, ShouldEqual, expectedEvent2.Title)
 			})
-			Convey("The message is committed and the consumer is released", func() {
-				<-message.UpstreamDone()
+			Convey("And the message is committed and the consumer is released", func() {
+				<-consumer.Closed
 				So(len(message.CommitCalls()), ShouldEqual, 1)
 				So(len(message.ReleaseCalls()), ShouldEqual, 1)
 			})
 		})
-		consumer.Close(testCtx)
 	})
 }
 
-func TestConsumeWithTwoMessage(t *testing.T) {
+func TestConsumeWithTwoMessages(t *testing.T) {
 
 	Convey("Given a consumer with a mocked message producer with an expected message", t, func() {
 		messageConsumer := kafkatest.NewMessageConsumer(false)
@@ -101,14 +100,7 @@ func TestConsumeWithTwoMessage(t *testing.T) {
 		consumer := event.NewConsumer()
 
 		Convey("When consume is called", func() {
-			syncWaitGroup := sync.WaitGroup{}
-			syncWaitGroup.Add(1)
-
-			go func (){
-				defer syncWaitGroup.Done()
-				consumer.Consume(testCtx, messageConsumer, eventHandler, cfg)
-			}()
-
+			go consumer.Consume(testCtx, messageConsumer, eventHandler, cfg)
 
 			message1 := kafkatest.NewMessage([]byte(marshal(expectedEvent1)), 0)
 			messageConsumer.Channels().Upstream <- message1
@@ -117,6 +109,7 @@ func TestConsumeWithTwoMessage(t *testing.T) {
 			messageConsumer.Channels().Upstream <- message2
 
 			<-eventHandler.EventUpdated
+			consumer.Close(testCtx)
 
 			Convey("The expected event is sent to the handler", func() {
 				So(len(eventHandler.Events), ShouldEqual, 2)
@@ -126,13 +119,13 @@ func TestConsumeWithTwoMessage(t *testing.T) {
 				So(actual.Title, ShouldEqual, expectedEvent1.Title)
 			})
 			Convey("The message is committed and the consumer is released", func() {
-				syncWaitGroup.Wait()
+				<-consumer.Closed
 				So(len(message2.CommitCalls()), ShouldEqual, 1)
 				So(len(message1.ReleaseCalls()), ShouldEqual, 1)
 				So(len(message2.ReleaseCalls()), ShouldEqual, 1)
 			})
 		})
-		consumer.Close(testCtx)
+
 	})
 }
 

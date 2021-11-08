@@ -5,7 +5,7 @@ go 1.16
 replace github.com/coreos/etcd => github.com/coreos/etcd v3.3.24+incompatible
 
 require (
-	github.com/ONSdigital/dp-component-test v0.3.0
+	github.com/ONSdigital/dp-component-test v0.6.0
 	github.com/ONSdigital/dp-elasticsearch/v2 v2.2.1
 	github.com/ONSdigital/dp-healthcheck v1.1.0
 	github.com/ONSdigital/dp-kafka/v2 v2.4.2
@@ -14,7 +14,6 @@ require (
 	github.com/aws/aws-sdk-go v1.38.45 // indirect
 	github.com/cucumber/godog v0.11.0
 	github.com/gofrs/uuid v4.0.0+incompatible // indirect
-	github.com/gogo/protobuf v1.3.2 // indirect
 	github.com/golang/mock v1.6.0
 	github.com/gorilla/mux v1.8.0
 	github.com/hashicorp/go-immutable-radix v1.3.1 // indirect
