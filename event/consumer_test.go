@@ -2,6 +2,7 @@ package event_test
 
 import (
 	"context"
+	"sync"
 	"testing"
 	"time"
 
@@ -100,7 +101,14 @@ func TestConsumeWithTwoMessage(t *testing.T) {
 		consumer := event.NewConsumer()
 
 		Convey("When consume is called", func() {
-			go consumer.Consume(testCtx, messageConsumer, eventHandler, cfg)
+			syncWaitGroup := sync.WaitGroup{}
+			syncWaitGroup.Add(1)
+
+			go func (){
+				defer syncWaitGroup.Done()
+				consumer.Consume(testCtx, messageConsumer, eventHandler, cfg)
+			}()
+
 
 			message1 := kafkatest.NewMessage([]byte(marshal(expectedEvent1)), 0)
 			messageConsumer.Channels().Upstream <- message1
@@ -118,8 +126,9 @@ func TestConsumeWithTwoMessage(t *testing.T) {
 				So(actual.Title, ShouldEqual, expectedEvent1.Title)
 			})
 			Convey("The message is committed and the consumer is released", func() {
-				<-message1.UpstreamDone()
+				syncWaitGroup.Wait()
 				So(len(message2.CommitCalls()), ShouldEqual, 1)
+				So(len(message1.ReleaseCalls()), ShouldEqual, 1)
 				So(len(message2.ReleaseCalls()), ShouldEqual, 1)
 			})
 		})
