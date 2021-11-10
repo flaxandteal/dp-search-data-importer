@@ -39,7 +39,7 @@ type Handler interface {
 func (consumer *Consumer) Consume(
 	ctx context.Context,
 	messageConsumer MessageConsumer,
-	handler Handler,
+	batchHandler Handler,
 	cfg *config.Config) {
 
 	go func() {
@@ -51,14 +51,14 @@ func (consumer *Consumer) Consume(
 		for {
 			select {
 			case msg := <-messageConsumer.Channels().Upstream:
-				AddMessageToBatch(ctx, batch, msg, handler)
+				AddMessageToBatch(ctx, batch, msg, batchHandler)
 				msg.Release()
 
 			case <-time.After(cfg.BatchWaitTime):
 				if batch.IsEmpty() {
 					continue
 				}
-				ProcessBatch(ctx, handler, batch, "timeout")
+				ProcessBatch(ctx, batchHandler, batch, "timeout")
 
 			case <-consumer.closing:
 				log.Info(ctx, "closing event consumer loop")

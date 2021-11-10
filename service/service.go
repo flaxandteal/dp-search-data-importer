@@ -43,6 +43,16 @@ func Run(ctx context.Context, serviceList *ExternalServiceList, buildTime, gitCo
 		return nil, err
 	}
 
+	// handle a batch of events.
+	batchHandler := handler.NewBatchHandler()
+	eventConsumer := event.NewConsumer()
+
+	// Start listening for event messages.
+	eventConsumer.Consume(ctx, kafkaConsumer, batchHandler, cfg)
+
+	// Kafka error logging go-routine
+	kafkaConsumer.Channels().LogErrors(ctx, "error received from kafka consumer, topic: "+cfg.PublishedContentTopic)
+
 	// Get HealthCheck
 	hc, err := serviceList.GetHealthCheck(cfg, buildTime, gitCommit, version)
 	if err != nil {
@@ -56,32 +66,17 @@ func Run(ctx context.Context, serviceList *ExternalServiceList, buildTime, gitCo
 
 	// Get HTTP Server with collectionID checkHeader middleware
 	r := mux.NewRouter()
-	s := serviceList.GetHTTPServer(cfg.BindAddr, r)
 	r.StrictSlash(true).Path("/health").HandlerFunc(hc.Handler)
+
 	hc.Start(ctx)
 
 	// Run the http server in a new go-routine
+	s := serviceList.GetHTTPServer(cfg.BindAddr, r)
 	go func() {
 		if err := s.ListenAndServe(); err != nil {
 			svcErrors <- errors.Wrap(err, "failure in http listen and serve")
 		}
 	}()
-
-	// handle a batch of events.
-	batchHandler := handler.NewBatchHandler()
-	messageconsumer, err := serviceList.GetKafkaConsumer(ctx, cfg)
-	if err != nil {
-		log.Fatal(ctx, "failed to initialise event consumer", err)
-		return nil, err
-	}
-
-	eventConsumer := event.NewConsumer()
-
-	// Start listening for event messages.
-	eventConsumer.Consume(ctx, messageconsumer, batchHandler, cfg)
-
-	// Kafka error logging go-routine
-	kafkaConsumer.Channels().LogErrors(ctx, "error received from kafka consumer, topic: "+cfg.PublishedContentTopic)
 
 	return &Service{
 		server:          s,
