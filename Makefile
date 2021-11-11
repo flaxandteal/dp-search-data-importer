@@ -17,8 +17,12 @@ audit:
 lint:
 	exit
 
+.PHONY: fmt
+fmt:
+	go fmt ./...
+
 .PHONY: build
-build:
+build: fmt
 	go build -tags 'production' $(LDFLAGS) -o $(BINPATH)/dp-search-data-importer
 
 .PHONY: debug
@@ -27,7 +31,7 @@ debug:
 	HUMAN_LOG=1 DEBUG=1 $(BINPATH)/dp-search-data-importer
 
 .PHONY: test
-test:
+test: fmt
 	go test -count=1 -race -cover ./...
 
 .PHONY: produce

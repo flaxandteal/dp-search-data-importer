@@ -89,7 +89,7 @@ func (e *Init) DoGetKafkaConsumer(ctx context.Context, cfg *config.Config) (dpka
 
 	cConfig := &dpkafka.ConsumerGroupConfig{
 		KafkaVersion: &cfg.KafkaVersion,
-		Offset: &kafkaOffset,
+		Offset:       &kafkaOffset,
 	}
 
 	// KafkaTLSProtocol informs service to use TLS protocol for kafka

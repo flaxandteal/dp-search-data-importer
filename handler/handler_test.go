@@ -1,12 +1,10 @@
 package handler_test
 
 import (
-	"bytes"
 	"context"
-	"io/ioutil"
-	"net/http"
 	"testing"
 
+	"github.com/ONSdigital/dp-search-data-importer/config"
 	"github.com/ONSdigital/dp-search-data-importer/esclient/mock"
 	"github.com/ONSdigital/dp-search-data-importer/handler"
 	"github.com/ONSdigital/dp-search-data-importer/models"
@@ -52,20 +50,14 @@ var (
 
 	testData = `{"cdid": "testCDID","summary": "testSummary","type": "testDataType"}`
 
-	doFuncWithESResponse = func(ctx context.Context, esDestIndex string, esDestURL string, bulk []byte) ([]byte, error) {
+	doFuncWithESResponse = func(ctx context.Context, cfg *config.Config, esDestIndex string, esDestURL string, bulk []byte) ([]byte, error) {
 		testByteData := []byte(testData)
 		return testByteData, nil
 	}
+
+	// Get Config
+	testCfg, err = config.Get()
 )
-
-func unsuccessfulESResponse() *http.Response {
-
-	return &http.Response{
-		StatusCode: 500,
-		Body:       ioutil.NopCloser(bytes.NewBufferString(`Internal server error`)),
-		Header:     make(http.Header),
-	}
-}
 
 func TestDataImporterHandle(t *testing.T) {
 
@@ -77,7 +69,7 @@ func TestDataImporterHandle(t *testing.T) {
 		batchHandler := handler.NewBatchHandler(esClientMock)
 
 		Convey("When handle is called", func() {
-			err := batchHandler.Handle(testContext, testEvents)
+			err := batchHandler.Handle(testContext, testCfg, testEvents)
 
 			Convey("Then the bulk is inserted into elastic search", func() {
 				So(esClientMock.SubmitBulkToESCalls(), ShouldNotBeEmpty)

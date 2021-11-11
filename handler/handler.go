@@ -4,7 +4,6 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"os"
 	"sync"
 	"time"
 
@@ -55,7 +54,7 @@ type esBulkItemResponseData struct {
 }
 
 // Handle the given slice of SearchDataImport Model.
-func (batchHandler BatchHandler) Handle(ctx context.Context, events []*models.SearchDataImportModel) error {
+func (batchHandler BatchHandler) Handle(ctx context.Context, cfg *config.Config, events []*models.SearchDataImportModel) error {
 	log.Info(ctx, "events handler called")
 
 	//no events receeived. Nothing more to do.
@@ -63,10 +62,13 @@ func (batchHandler BatchHandler) Handle(ctx context.Context, events []*models.Se
 		log.Info(ctx, "there are no events to handle")
 		return nil
 	}
+	log.Info(ctx, "Events received ", log.Data{
+		"events received": len(events),
+	})
 	go status(ctx)
 
 	// This will block if we've reached our concurrency limit (sem buffer size)
-	err := batchHandler.SendToES(ctx, events, len(events))
+	err := batchHandler.SendToES(ctx, cfg, events)
 	if err != nil {
 		log.Fatal(ctx, "failed to send event to Elastic Search", err)
 		return err
@@ -79,18 +81,11 @@ func (batchHandler BatchHandler) Handle(ctx context.Context, events []*models.Se
 	return nil
 }
 
-func (bh BatchHandler) SendToES(ctx context.Context, events []*models.SearchDataImportModel, length int) error {
+func (bh BatchHandler) SendToES(ctx context.Context, cfg *config.Config, events []*models.SearchDataImportModel) error {
 
 	// Wait on semaphore if we've reached our concurrency limit
 	syncWaitGroup.Add(1)
 	semaphore <- 1
-
-	// Get Config
-	cfg, err := config.Get()
-	if err != nil {
-		log.Fatal(ctx, "error getting config", err)
-		os.Exit(1)
-	}
 
 	esDestURL := cfg.ElasticSearchAPIURL
 	esIndex := "esIndex"
@@ -102,17 +97,20 @@ func (bh BatchHandler) SendToES(ctx context.Context, events []*models.SearchData
 	t := transform.NewTransformer()
 
 	go func() {
+
 		defer func() {
 			<-semaphore
 			syncWaitGroup.Done()
 		}()
 
-		countChannel <- length
-		target := length
+		log.Info(ctx, "go routine for inserting into ES starts")
+
+		countChannel <- len(events)
+		target := len(events)
 		var bulk []byte
 
 		i := 0
-		for i < length {
+		for i < len(events) {
 
 			if events[i].Title == "" {
 				log.Info(ctx, "No title for inbound event, no transformation possible")
@@ -138,7 +136,7 @@ func (bh BatchHandler) SendToES(ctx context.Context, events []*models.SearchData
 			i++
 		}
 
-		b, err := bh.ElasticSearchCli.SubmitBulkToES(ctx, esDestIndex, esDestURL, bulk)
+		b, err := bh.ElasticSearchCli.SubmitBulkToES(ctx, cfg, esDestIndex, esDestURL, bulk)
 		if err != nil {
 			log.Fatal(ctx, "error in submitting bulk in ES", err)
 			return
@@ -153,14 +151,18 @@ func (bh BatchHandler) SendToES(ctx context.Context, events []*models.SearchData
 			log.Error(ctx, "error unmarshaling json", err)
 		}
 
+		//TODO : handle failed updates to elasticsearch. The plan will be to re-queue these failed events
 		if bulkRes.Errors {
 			for _, r := range bulkRes.Items {
 				if r["create"].Status != 201 {
-					log.Fatal(ctx, "error inserting doc to ES", err)
+					log.Error(ctx, "error inserting doc to ES", err)
 				}
 			}
 		}
 		insertChannel <- target
+
+		log.Info(ctx, "go routine for inserting into ES ends with insertChannel")
+
 	}()
 
 	return nil

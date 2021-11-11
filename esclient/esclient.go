@@ -22,7 +22,7 @@ const applicationJSON = "application/json"
 
 // Client provides an interface with which to communicate with Elastic Search by way of HTTP requests
 type Client interface {
-	SubmitBulkToES(ctx context.Context, esDestIndex string, esDestURL string, bulk []byte) ([]byte, error)
+	SubmitBulkToES(ctx context.Context, cfg *config.Config, esDestIndex string, esDestURL string, bulk []byte) ([]byte, error)
 }
 
 // ClientImpl represents an instance of the elasticsearch client
@@ -51,14 +51,9 @@ func NewClientWithRequester(client dphttp.Clienter, requester Requester) Client 
 
 // SubmitBulkToES uses an HTTP post request to submit data to Elastic Search
 func (cli *ClientImpl) SubmitBulkToES(
-	ctx context.Context, esDestIndex string, esDestURL string, bulk []byte) ([]byte, error) {
+	ctx context.Context, cfg *config.Config, esDestIndex string, esDestURL string, bulk []byte) ([]byte, error) {
 
 	uri := fmt.Sprintf("%s/%s/_bulk", esDestURL, esDestIndex)
-	cfg, err := config.Get()
-	if err != nil {
-		log.Fatal(ctx, "error getting config", err)
-		return nil, err
-	}
 
 	bodyReader := bytes.NewReader(bulk)
 	req, err := http.NewRequest("POST", uri, bodyReader)

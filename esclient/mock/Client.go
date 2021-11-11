@@ -5,6 +5,7 @@ package mock
 
 import (
 	"context"
+	"github.com/ONSdigital/dp-search-data-importer/config"
 	"github.com/ONSdigital/dp-search-data-importer/esclient"
 	"sync"
 )
@@ -23,7 +24,7 @@ var _ esclient.Client = &ClientMock{}
 //
 //         // make and configure a mocked esclient.Client
 //         mockedClient := &ClientMock{
-//             SubmitBulkToESFunc: func(ctx context.Context, esDestIndex string, esDestURL string, bulk []byte) ([]byte, error) {
+//             SubmitBulkToESFunc: func(ctx context.Context, cfg *config.Config, esDestIndex string, esDestURL string, bulk []byte) ([]byte, error) {
 // 	               panic("mock out the SubmitBulkToES method")
 //             },
 //         }
@@ -34,7 +35,7 @@ var _ esclient.Client = &ClientMock{}
 //     }
 type ClientMock struct {
 	// SubmitBulkToESFunc mocks the SubmitBulkToES method.
-	SubmitBulkToESFunc func(ctx context.Context, esDestIndex string, esDestURL string, bulk []byte) ([]byte, error)
+	SubmitBulkToESFunc func(ctx context.Context, cfg *config.Config, esDestIndex string, esDestURL string, bulk []byte) ([]byte, error)
 
 	// calls tracks calls to the methods.
 	calls struct {
@@ -42,6 +43,8 @@ type ClientMock struct {
 		SubmitBulkToES []struct {
 			// Ctx is the ctx argument value.
 			Ctx context.Context
+			// Cfg is the cfg argument value.
+			Cfg *config.Config
 			// EsDestIndex is the esDestIndex argument value.
 			EsDestIndex string
 			// EsDestURL is the esDestURL argument value.
@@ -53,17 +56,19 @@ type ClientMock struct {
 }
 
 // SubmitBulkToES calls SubmitBulkToESFunc.
-func (mock *ClientMock) SubmitBulkToES(ctx context.Context, esDestIndex string, esDestURL string, bulk []byte) ([]byte, error) {
+func (mock *ClientMock) SubmitBulkToES(ctx context.Context, cfg *config.Config, esDestIndex string, esDestURL string, bulk []byte) ([]byte, error) {
 	if mock.SubmitBulkToESFunc == nil {
 		panic("ClientMock.SubmitBulkToESFunc: method is nil but Client.SubmitBulkToES was just called")
 	}
 	callInfo := struct {
 		Ctx         context.Context
+		Cfg         *config.Config
 		EsDestIndex string
 		EsDestURL   string
 		Bulk        []byte
 	}{
 		Ctx:         ctx,
+		Cfg:         cfg,
 		EsDestIndex: esDestIndex,
 		EsDestURL:   esDestURL,
 		Bulk:        bulk,
@@ -71,7 +76,7 @@ func (mock *ClientMock) SubmitBulkToES(ctx context.Context, esDestIndex string, 
 	lockClientMockSubmitBulkToES.Lock()
 	mock.calls.SubmitBulkToES = append(mock.calls.SubmitBulkToES, callInfo)
 	lockClientMockSubmitBulkToES.Unlock()
-	return mock.SubmitBulkToESFunc(ctx, esDestIndex, esDestURL, bulk)
+	return mock.SubmitBulkToESFunc(ctx, cfg, esDestIndex, esDestURL, bulk)
 }
 
 // SubmitBulkToESCalls gets all the calls that were made to SubmitBulkToES.
@@ -79,12 +84,14 @@ func (mock *ClientMock) SubmitBulkToES(ctx context.Context, esDestIndex string, 
 //     len(mockedClient.SubmitBulkToESCalls())
 func (mock *ClientMock) SubmitBulkToESCalls() []struct {
 	Ctx         context.Context
+	Cfg         *config.Config
 	EsDestIndex string
 	EsDestURL   string
 	Bulk        []byte
 } {
 	var calls []struct {
 		Ctx         context.Context
+		Cfg         *config.Config
 		EsDestIndex string
 		EsDestURL   string
 		Bulk        []byte

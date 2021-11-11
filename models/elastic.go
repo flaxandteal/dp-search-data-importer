@@ -1,6 +1,6 @@
 package models
 
-// EsItem holds an individual company's data
+// EsModel holds an individual content data
 type EsModel struct {
 	DataType        string   `json:"type"`
 	JobID           string   `json:"job_id"`

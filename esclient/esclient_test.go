@@ -12,6 +12,7 @@ import (
 	"github.com/pkg/errors"
 
 	dphttp "github.com/ONSdigital/dp-net/http"
+	"github.com/ONSdigital/dp-search-data-importer/config"
 	. "github.com/smartystreets/goconvey/convey"
 )
 
@@ -42,11 +43,17 @@ func TestUnitSubmitBulkToES(t *testing.T) {
 
 	uri := esDestURL + "/" + esDestIndex + "/_bulk"
 
+	cfg, err := config.Get()
+	if err != nil {
+		t.Fatal(ctx, "error getting config", err)
+		t.Fail()
+	}
+
 	Convey("Given a successful post of bulks to Elastic Search", t, func() {
 		mr.EXPECT().Post(bulk, uri).Return(successESResponse(), nil)
 
 		Convey("When SubmitBulkToES is called", func() {
-			returnedBytes, err := mc.SubmitBulkToES(ctx, esDestIndex, esDestURL, bulk)
+			returnedBytes, err := mc.SubmitBulkToES(ctx, cfg, esDestIndex, esDestURL, bulk)
 
 			Convey("Then returnedBytes should not be nil", func() {
 				So(returnedBytes, ShouldNotBeNil)
@@ -61,7 +68,7 @@ func TestUnitSubmitBulkToES(t *testing.T) {
 		mr.EXPECT().Post(bulk, uri).Return(unsuccessfulESResponse(), errors.New("error posting bulk"))
 
 		Convey("When SubmitBulkToES is called", func() {
-			returnedBytes, err := mc.SubmitBulkToES(ctx, esDestIndex, esDestURL, bulk)
+			returnedBytes, err := mc.SubmitBulkToES(ctx, cfg, esDestIndex, esDestURL, bulk)
 
 			Convey("Then returnedBytes should be nil", func() {
 				So(returnedBytes, ShouldBeNil)
@@ -76,7 +83,7 @@ func TestUnitSubmitBulkToES(t *testing.T) {
 		mr.EXPECT().Post(bulk, uri).Return(unsuccessfulESResponse(), nil)
 
 		Convey("When SubmitBulkToES is called", func() {
-			returnedBytes, err := mc.SubmitBulkToES(ctx, esDestIndex, esDestURL, bulk)
+			returnedBytes, err := mc.SubmitBulkToES(ctx, cfg, esDestIndex, esDestURL, bulk)
 
 			Convey("Then returnedBytes should be nil", func() {
 				So(returnedBytes, ShouldBeNil)

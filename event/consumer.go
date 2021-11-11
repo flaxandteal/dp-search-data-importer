@@ -32,6 +32,7 @@ func NewConsumer() *Consumer {
 // Handler represents a handler for processing a single event.
 type Handler interface {
 	Handle(ctx context.Context,
+		cfg *config.Config,
 		SearchDataImportModel []*models.SearchDataImportModel) error
 }
 
@@ -51,14 +52,14 @@ func (consumer *Consumer) Consume(
 		for {
 			select {
 			case msg := <-messageConsumer.Channels().Upstream:
-				AddMessageToBatch(ctx, batch, msg, batchHandler)
+				AddMessageToBatch(ctx, cfg, batch, msg, batchHandler)
 				msg.Release()
 
 			case <-time.After(cfg.BatchWaitTime):
 				if batch.IsEmpty() {
 					continue
 				}
-				ProcessBatch(ctx, batchHandler, batch, "timeout")
+				ProcessBatch(ctx, cfg, batchHandler, batch, "timeout")
 
 			case <-consumer.closing:
 				log.Info(ctx, "closing event consumer loop")
@@ -70,20 +71,20 @@ func (consumer *Consumer) Consume(
 }
 
 // AddMessageToBatch will attempt to add the message to the batch and determine if it should be processed.
-func AddMessageToBatch(ctx context.Context, batch *Batch, msg kafka.Message, handler Handler) {
+func AddMessageToBatch(ctx context.Context, cfg *config.Config, batch *Batch, msg kafka.Message, handler Handler) {
 	log.Info(ctx, "add message to batch starts")
 	batch.Add(ctx, msg)
 	if batch.IsFull() {
-		ProcessBatch(ctx, handler, batch, "full-batch")
+		ProcessBatch(ctx, cfg, handler, batch, "full-batch")
 	}
 }
 
 // ProcessBatch will attempt to handle and commit the batch, or shutdown if something goes horribly wrong.
-func ProcessBatch(ctx context.Context, handler Handler, batch *Batch, reason string) {
+func ProcessBatch(ctx context.Context, cfg *config.Config, handler Handler, batch *Batch, reason string) {
 	log.Info(ctx, "process batch starts", log.Data{
 		"batch_size": batch.Size(),
 		"reason":     reason})
-	err := handler.Handle(ctx, batch.Events())
+	err := handler.Handle(ctx, cfg, batch.Events())
 	if err != nil {
 		log.Error(ctx, "error handling batch", err)
 		batch.Commit()

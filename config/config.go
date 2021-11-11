@@ -63,7 +63,7 @@ func Get() (*Config, error) {
 		PublishedContentTopic:      "search-data-import",
 		BatchSize:                  500,
 		BatchWaitTime:              time.Second * 5,
-		ElasticSearchAPIURL:        "http://localhost:9200",
+		ElasticSearchAPIURL:        "http://localhost:11200",
 		AwsRegion:                  "eu-west-1",
 		AwsService:                 "es",
 		SignElasticsearchRequests:  false,

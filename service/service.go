@@ -95,7 +95,6 @@ func Run(ctx context.Context, serviceList *ExternalServiceList, buildTime, gitCo
 		}
 	}()
 
-	
 	return &Service{
 		server:          s,
 		router:          r,
