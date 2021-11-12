@@ -6,7 +6,7 @@ import (
 	"os"
 
 	"github.com/ONSdigital/dp-elasticsearch/v2/awsauth"
-	"github.com/ONSdigital/dp-elasticsearch/v2/elasticsearch"
+	dpelasticsearch "github.com/ONSdigital/dp-elasticsearch/v2/elasticsearch"
 	"github.com/ONSdigital/dp-healthcheck/healthcheck"
 	dpkafka "github.com/ONSdigital/dp-kafka/v2"
 	dphttp "github.com/ONSdigital/dp-net/http"
@@ -52,7 +52,7 @@ func (e *ExternalServiceList) GetKafkaConsumer(ctx context.Context, cfg *config.
 }
 
 // GetElasticSearchClient creates a ElasticSearchClient and sets the ElasticSearchClient flag to true
-func (e *ExternalServiceList) GetElasticSearchClient(ctx context.Context, cfg *config.Config) (*elasticsearch.Client, error) {
+func (e *ExternalServiceList) GetElasticSearchClient(ctx context.Context, cfg *config.Config) (*dpelasticsearch.Client, error) {
 	esClient, err := e.Init.DoGetElasticSearchClient(ctx, cfg)
 	if err != nil {
 		return nil, err
@@ -128,7 +128,7 @@ func (e *Init) DoGetHealthCheck(cfg *config.Config, buildTime, gitCommit, versio
 }
 
 // DoGetElasticSearchClient returns a Elastic Search Client
-func (e *Init) DoGetElasticSearchClient(ctx context.Context, cfg *config.Config) (*elasticsearch.Client, error) {
+func (e *Init) DoGetElasticSearchClient(ctx context.Context, cfg *config.Config) (*dpelasticsearch.Client, error) {
 
 	elasticHTTPClient := dphttp.NewClient()
 
@@ -138,14 +138,14 @@ func (e *Init) DoGetElasticSearchClient(ctx context.Context, cfg *config.Config)
 			log.Error(ctx, "Error getting aws signer", err)
 			return nil, err
 		}
-		esClientWithAwsSigner := elasticsearch.NewClientWithHTTPClientAndAwsSigner(
+		esClientWithAwsSigner := dpelasticsearch.NewClientWithHTTPClientAndAwsSigner(
 			cfg.ElasticSearchAPIURL, awsSigner, cfg.SignElasticsearchRequests, elasticHTTPClient)
 
 		log.Info(ctx, "returning esClientWithAwsSigner")
 		return esClientWithAwsSigner, nil
 	}
 
-	elasticSearchClient := elasticsearch.NewClientWithHTTPClient(
+	elasticSearchClient := dpelasticsearch.NewClientWithHTTPClient(
 		cfg.ElasticSearchAPIURL, false, elasticHTTPClient)
 
 	log.Info(ctx, "returning esClientWithNonAwsSigner")

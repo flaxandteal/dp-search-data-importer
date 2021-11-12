@@ -4,7 +4,7 @@ import (
 	"context"
 	"net/http"
 
-	"github.com/ONSdigital/dp-elasticsearch/v2/elasticsearch"
+	dpelasticsearch "github.com/ONSdigital/dp-elasticsearch/v2/elasticsearch"
 	"github.com/ONSdigital/dp-healthcheck/healthcheck"
 	kafka "github.com/ONSdigital/dp-kafka/v2"
 	"github.com/ONSdigital/dp-search-data-importer/config"
@@ -19,7 +19,7 @@ type Initialiser interface {
 	DoGetHTTPServer(bindAddr string, router http.Handler) HTTPServer
 	DoGetHealthCheck(cfg *config.Config, buildTime, gitCommit, version string) (HealthChecker, error)
 	DoGetKafkaConsumer(ctx context.Context, cfg *config.Config) (kafka.IConsumerGroup, error)
-	DoGetElasticSearchClient(ctx context.Context, cfg *config.Config) (*elasticsearch.Client, error)
+	DoGetElasticSearchClient(ctx context.Context, cfg *config.Config) (*dpelasticsearch.Client, error)
 }
 
 // HTTPServer defines the required methods from the HTTP server

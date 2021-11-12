@@ -1,14 +1,19 @@
 package handler_test
 
 import (
+	"bytes"
 	"context"
+	"io/ioutil"
+	"net/http"
 	"testing"
 
+	"github.com/ONSdigital/dp-elasticsearch/v2/awsauth"
 	"github.com/ONSdigital/dp-search-data-importer/config"
-	"github.com/ONSdigital/dp-search-data-importer/esclient/mock"
 	"github.com/ONSdigital/dp-search-data-importer/handler"
 	"github.com/ONSdigital/dp-search-data-importer/models"
 
+	dpelasticSearch "github.com/ONSdigital/dp-elasticsearch/v2/elasticsearch"
+	dphttp "github.com/ONSdigital/dp-net/http"
 	. "github.com/smartystreets/goconvey/convey"
 )
 
@@ -48,33 +53,53 @@ var (
 		expectedEvent2,
 	}
 
-	testData = `{"cdid": "testCDID","summary": "testSummary","type": "testDataType"}`
+	testSigner *awsauth.Signer
 
-	doFuncWithESResponse = func(ctx context.Context, cfg *config.Config, esDestIndex string, esDestURL string, bulk []byte) ([]byte, error) {
-		testByteData := []byte(testData)
-		return testByteData, nil
+	testCfg, _ = config.Get()
+
+	emptyListOfPathsWithNoRetries = func() []string {
+		return []string{}
 	}
 
-	// Get Config
-	testCfg, err = config.Get()
+	setListOfPathsWithNoRetries = func(listOfPaths []string) {
+		return
+	}
 )
+
+func successESResponse() *http.Response {
+
+	return &http.Response{
+		StatusCode: 201,
+		Body:       ioutil.NopCloser(bytes.NewBufferString(`Created`)),
+		Header:     make(http.Header),
+	}
+}
+
+func clientMock(doFunc func(ctx context.Context, request *http.Request) (*http.Response, error)) *dphttp.ClienterMock {
+	return &dphttp.ClienterMock{
+		DoFunc:                    doFunc,
+		GetPathsWithNoRetriesFunc: emptyListOfPathsWithNoRetries,
+		SetPathsWithNoRetriesFunc: setListOfPathsWithNoRetries,
+	}
+}
 
 func TestDataImporterHandle(t *testing.T) {
 
 	Convey("Given a handler configured with sucessful es updates", t, func() {
+		esDestURL := "locahost:9999"
 
-		esClientMock := &mock.ClientMock{
-			SubmitBulkToESFunc: doFuncWithESResponse,
+		//ES Client initialisation : this needs to be mock
+		doFuncWithInValidResponse := func(ctx context.Context, req *http.Request) (*http.Response, error) {
+			return successESResponse(), nil
 		}
-		batchHandler := handler.NewBatchHandler(esClientMock)
+		httpCli := clientMock(doFuncWithInValidResponse)
+		esTestclient := dpelasticSearch.NewClientWithHTTPClientAndAwsSigner(esDestURL, testSigner, true, httpCli)
+
+		batchHandler := handler.NewBatchHandler(esTestclient)
 
 		Convey("When handle is called", func() {
 			err := batchHandler.Handle(testContext, testCfg, testEvents)
 
-			Convey("Then the bulk is inserted into elastic search", func() {
-				So(esClientMock.SubmitBulkToESCalls(), ShouldNotBeEmpty)
-				So(esClientMock.SubmitBulkToESCalls(), ShouldHaveLength, 1)
-			})
 			Convey("And the error is nil", func() {
 				So(err, ShouldBeNil)
 			})

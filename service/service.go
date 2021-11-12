@@ -4,17 +4,15 @@ import (
 	"context"
 	"time"
 
-	"github.com/ONSdigital/dp-elasticsearch/v2/elasticsearch"
 	"github.com/ONSdigital/dp-search-data-importer/config"
-	"github.com/ONSdigital/dp-search-data-importer/esclient"
 	"github.com/ONSdigital/dp-search-data-importer/event"
 	"github.com/ONSdigital/dp-search-data-importer/handler"
 	"github.com/ONSdigital/log.go/v2/log"
 	"github.com/gorilla/mux"
 	"github.com/pkg/errors"
 
-	kafka "github.com/ONSdigital/dp-kafka/v2"
-	dphttp "github.com/ONSdigital/dp-net/http"
+	dpelasticsearch "github.com/ONSdigital/dp-elasticsearch/v2/elasticsearch"
+	dpkafka "github.com/ONSdigital/dp-kafka/v2"
 )
 
 // Service contains all the configs, server and clients to run the event handler service
@@ -23,7 +21,7 @@ type Service struct {
 	router          *mux.Router
 	serviceList     *ExternalServiceList
 	healthCheck     HealthChecker
-	consumer        kafka.IConsumerGroup
+	consumer        dpkafka.IConsumerGroup
 	shutdownTimeout time.Duration
 }
 
@@ -54,14 +52,8 @@ func Run(ctx context.Context, serviceList *ExternalServiceList, buildTime, gitCo
 		return nil, err
 	}
 
-	//ES Client initialisation
-	httpClient := dphttp.NewClient()
-	requester := esclient.NewRequester()
-	esClient := esclient.NewClientWithRequester(httpClient, requester)
-
 	// handle a batch of events.
-	batchHandler := handler.NewBatchHandler(esClient)
-
+	batchHandler := handler.NewBatchHandler(elasticSearchClient)
 	eventConsumer := event.NewConsumer()
 
 	// Start listening for event messages.
@@ -171,8 +163,8 @@ func (svc *Service) Close(ctx context.Context) error {
 
 func registerCheckers(ctx context.Context,
 	hc HealthChecker,
-	consumer kafka.IConsumerGroup,
-	esclient *elasticsearch.Client) (err error) {
+	consumer dpkafka.IConsumerGroup,
+	esclient *dpelasticsearch.Client) (err error) {
 
 	hasErrors := false
 

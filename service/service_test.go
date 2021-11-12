@@ -49,21 +49,24 @@ var (
 		return nil, errElasticSearch
 	}
 
-	doSuccessful = func(ctx context.Context, request *http.Request) (*http.Response, error) {
-		return resp("do successful", 200), nil
-	}
 	emptyListOfPathsWithNoRetries = func() []string {
 		return []string{}
 	}
 	setListOfPathsWithNoRetries = func(listOfPaths []string) {
 		return
 	}
+
+	doFuncWithValidResponse = func(ctx context.Context, req *http.Request) (*http.Response, error) {
+		return successESResponse(), nil
+	}
 )
 
-func resp(body string, code int) *http.Response {
+func successESResponse() *http.Response {
+
 	return &http.Response{
-		Body:       ioutil.NopCloser(bytes.NewBufferString(body)),
-		StatusCode: code,
+		StatusCode: 201,
+		Body:       ioutil.NopCloser(bytes.NewBufferString(`Created`)),
+		Header:     make(http.Header),
 	}
 }
 
@@ -77,10 +80,11 @@ func clientMock(doFunc func(ctx context.Context, request *http.Request) (*http.R
 
 func TestRun(t *testing.T) {
 
-	Convey("Having a set of mocked dependencies", t, func() {
+	Convey("Given a set of mocked dependencies", t, func() {
 
-		httpCli := clientMock(doSuccessful)
-		elasticSearchMock := dpElasticSearch.NewClientWithHTTPClient("testurl.co.uk", false, httpCli)
+		esDestURL := "http://locahost:9999"
+		httpCli := clientMock(doFuncWithValidResponse)
+		elasticSearchMock := dpElasticSearch.NewClientWithHTTPClient(esDestURL, false, httpCli)
 
 		consumerMock := &kafkatest.IConsumerGroupMock{
 			CheckerFunc:  func(ctx context.Context, state *healthcheck.CheckState) error { return nil },

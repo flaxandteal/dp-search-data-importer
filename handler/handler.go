@@ -8,11 +8,12 @@ import (
 	"time"
 
 	"github.com/ONSdigital/dp-search-data-importer/config"
-	"github.com/ONSdigital/dp-search-data-importer/esclient"
 	"github.com/ONSdigital/dp-search-data-importer/event"
 	"github.com/ONSdigital/dp-search-data-importer/models"
 	"github.com/ONSdigital/dp-search-data-importer/transform"
 	"github.com/ONSdigital/log.go/v2/log"
+
+	dpelasticsearch "github.com/ONSdigital/dp-elasticsearch/v2/elasticsearch"
 )
 
 var _ event.Handler = (*BatchHandler)(nil)
@@ -28,29 +29,15 @@ var (
 
 // BatchHandler handles batches of SearchDataImportModel events that contain CSV row data.
 type BatchHandler struct {
-	ElasticSearchCli esclient.Client
+	esClient *dpelasticsearch.Client
 }
 
 // NewBatchHandler returns a BatchHandler.
-func NewBatchHandler(ElasticSearchCli esclient.Client) *BatchHandler {
+func NewBatchHandler(esClient *dpelasticsearch.Client) *BatchHandler {
 
 	return &BatchHandler{
-		ElasticSearchCli: ElasticSearchCli,
+		esClient: esClient,
 	}
-}
-
-type esBulkResponse struct {
-	Took   int                  `json:"took"`
-	Errors bool                 `json:"errors"`
-	Items  []esBulkItemResponse `json:"items"`
-}
-
-type esBulkItemResponse map[string]esBulkItemResponseData
-
-type esBulkItemResponseData struct {
-	Index  string `json:"_index"`
-	Status int    `json:"status"`
-	Error  string `json:"error"`
 }
 
 // Handle the given slice of SearchDataImport Model.
@@ -88,9 +75,9 @@ func (bh BatchHandler) SendToES(ctx context.Context, cfg *config.Config, events 
 	semaphore <- 1
 
 	esDestURL := cfg.ElasticSearchAPIURL
-	esIndex := "esIndex"
-	esDestType := "docType"
 
+	esIndex := "search_index"
+	esDestType := "docType"
 	esDestIndex := fmt.Sprintf("%s/%s", esIndex, esDestType)
 	log.Info(ctx, "esDestIndex ", log.Data{"esDestIndex": esDestIndex})
 
@@ -136,33 +123,19 @@ func (bh BatchHandler) SendToES(ctx context.Context, cfg *config.Config, events 
 			i++
 		}
 
-		b, err := bh.ElasticSearchCli.SubmitBulkToES(ctx, cfg, esDestIndex, esDestURL, bulk)
+		b, status, err := bh.esClient.BulkUpdate(ctx, esDestIndex, esDestURL, bulk)
+		log.Info(ctx, "response from elasticsearch bulkUpdate", log.Data{
+			"actual response": b,
+			"status":          status,
+			"err":             err,
+		})
 		if err != nil {
-			log.Fatal(ctx, "error in submitting bulk in ES", err)
+			log.Error(ctx, "error in response from elasticsearch", err)
 			return
-		}
-
-		var bulkRes esBulkResponse
-		if err := json.Unmarshal(b, &bulkRes); err != nil {
-			log.Info(ctx, "error unmarshaling json", log.Data{
-				"actual response": b,
-				"err":             err,
-			})
-			log.Error(ctx, "error unmarshaling json", err)
-		}
-
-		//TODO : handle failed updates to elasticsearch. The plan will be to re-queue these failed events
-		if bulkRes.Errors {
-			for _, r := range bulkRes.Items {
-				if r["create"].Status != 201 {
-					log.Error(ctx, "error inserting doc to ES", err)
-				}
-			}
 		}
 		insertChannel <- target
 
 		log.Info(ctx, "go routine for inserting into ES ends with insertChannel")
-
 	}()
 
 	return nil
