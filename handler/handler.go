@@ -3,7 +3,6 @@ package handler
 import (
 	"context"
 	"encoding/json"
-	"fmt"
 	"sync"
 	"time"
 
@@ -75,11 +74,7 @@ func (bh BatchHandler) SendToES(ctx context.Context, cfg *config.Config, events 
 	semaphore <- 1
 
 	esDestURL := cfg.ElasticSearchAPIURL
-
-	esIndex := "search_index"
-	esDestType := "docType"
-	esDestIndex := fmt.Sprintf("%s/%s", esIndex, esDestType)
-	log.Info(ctx, "esDestIndex ", log.Data{"esDestIndex": esDestIndex})
+	esDestIndex := "ons"
 
 	t := transform.NewTransformer()
 

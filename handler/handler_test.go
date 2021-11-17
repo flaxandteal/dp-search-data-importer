@@ -12,8 +12,9 @@ import (
 	"github.com/ONSdigital/dp-search-data-importer/handler"
 	"github.com/ONSdigital/dp-search-data-importer/models"
 
-	dpelasticSearch "github.com/ONSdigital/dp-elasticsearch/v2/elasticsearch"
+	dpelasticsearch "github.com/ONSdigital/dp-elasticsearch/v2/elasticsearch"
 	dphttp "github.com/ONSdigital/dp-net/http"
+	
 	. "github.com/smartystreets/goconvey/convey"
 )
 
@@ -93,7 +94,7 @@ func TestDataImporterHandle(t *testing.T) {
 			return successESResponse(), nil
 		}
 		httpCli := clientMock(doFuncWithInValidResponse)
-		esTestclient := dpelasticSearch.NewClientWithHTTPClientAndAwsSigner(esDestURL, testSigner, true, httpCli)
+		esTestclient := dpelasticsearch.NewClientWithHTTPClientAndAwsSigner(esDestURL, testSigner, true, httpCli)
 
 		batchHandler := handler.NewBatchHandler(esTestclient)
 

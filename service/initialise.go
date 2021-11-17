@@ -3,15 +3,14 @@ package service
 import (
 	"context"
 	"net/http"
-	"os"
 
-	"github.com/ONSdigital/dp-elasticsearch/v2/awsauth"
-	dpelasticsearch "github.com/ONSdigital/dp-elasticsearch/v2/elasticsearch"
 	"github.com/ONSdigital/dp-healthcheck/healthcheck"
-	dpkafka "github.com/ONSdigital/dp-kafka/v2"
-	dphttp "github.com/ONSdigital/dp-net/http"
 	"github.com/ONSdigital/dp-search-data-importer/config"
 	"github.com/ONSdigital/log.go/v2/log"
+
+	dpelasticsearch "github.com/ONSdigital/dp-elasticsearch/v2/elasticsearch"
+	dpkafka "github.com/ONSdigital/dp-kafka/v2"
+	dphttp "github.com/ONSdigital/dp-net/http"
 )
 
 // ExternalServiceList holds the initialiser and initialisation state of external services.
@@ -131,38 +130,8 @@ func (e *Init) DoGetHealthCheck(cfg *config.Config, buildTime, gitCommit, versio
 func (e *Init) DoGetElasticSearchClient(ctx context.Context, cfg *config.Config) (*dpelasticsearch.Client, error) {
 
 	elasticHTTPClient := dphttp.NewClient()
-
-	if cfg.SignElasticsearchRequests {
-		awsSigner, err := createAWSSigner(ctx)
-		if err != nil {
-			log.Error(ctx, "Error getting aws signer", err)
-			return nil, err
-		}
-		esClientWithAwsSigner := dpelasticsearch.NewClientWithHTTPClientAndAwsSigner(
-			cfg.ElasticSearchAPIURL, awsSigner, cfg.SignElasticsearchRequests, elasticHTTPClient)
-
-		log.Info(ctx, "returning esClientWithAwsSigner")
-		return esClientWithAwsSigner, nil
-	}
-
-	elasticSearchClient := dpelasticsearch.NewClientWithHTTPClient(
-		cfg.ElasticSearchAPIURL, false, elasticHTTPClient)
+	elasticSearchClient := dpelasticsearch.NewClientWithHTTPClient(cfg.ElasticSearchAPIURL, cfg.SignElasticsearchRequests, elasticHTTPClient)
 
 	log.Info(ctx, "returning esClientWithNonAwsSigner")
 	return elasticSearchClient, nil
-}
-
-func createAWSSigner(ctx context.Context) (*awsauth.Signer, error) {
-	// Get Config
-	cfg, err := config.Get()
-	if err != nil {
-		log.Fatal(ctx, "error getting config", err)
-		os.Exit(1)
-	}
-
-	return awsauth.NewAwsSigner(
-		cfg.AwsAccessKeyId,
-		cfg.AwsSecretAccessKey,
-		cfg.AwsRegion,
-		cfg.AwsService)
 }
