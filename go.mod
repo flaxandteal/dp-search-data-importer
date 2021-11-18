@@ -3,11 +3,10 @@ module github.com/ONSdigital/dp-search-data-importer
 go 1.17
 
 replace github.com/coreos/etcd => github.com/coreos/etcd v3.3.24+incompatible
-replace github.com/ONSdigital/dp-elasticsearch/v2 => /Users/bhupendrapathak/go/src/github.com/ONSdigital/dp-elasticsearch
 
 require (
 	github.com/ONSdigital/dp-component-test v0.6.0
-	github.com/ONSdigital/dp-elasticsearch/v2 v2.0.0-00010101000000-000000000000
+	github.com/ONSdigital/dp-elasticsearch/v2 v2.2.2-0.20211118122722-af1c58d8d496
 	github.com/ONSdigital/dp-healthcheck v1.1.0
 	github.com/ONSdigital/dp-kafka/v2 v2.4.2
 	github.com/ONSdigital/dp-net v1.2.0
