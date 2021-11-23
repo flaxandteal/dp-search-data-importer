@@ -15,15 +15,9 @@ import (
 
 const esDestIndex = "ons"
 
-var _ event.Handler = (*BatchHandler)(nil)
-
 var (
+	_             event.Handler = (*BatchHandler)(nil)
 	syncWaitGroup sync.WaitGroup
-
-	countChannel  = make(chan int)
-	insertChannel = make(chan int)
-	skipChannel   = make(chan int)
-	semaphore     = make(chan int, 5)
 )
 
 // BatchHandler handles batches of SearchDataImportModel events that contain CSV row data.
@@ -67,21 +61,17 @@ func (bh BatchHandler) SendToES(ctx context.Context, esDestURL string, events []
 
 	// Wait on semaphore if we've reached our concurrency limit
 	syncWaitGroup.Add(1)
-	semaphore <- 1
 
 	t := transform.NewTransformer()
 
 	go func() {
 
 		defer func() {
-			<-semaphore
 			syncWaitGroup.Done()
 		}()
 
 		log.Info(ctx, "go routine for inserting into ES starts")
 
-		countChannel <- len(events)
-		target := len(events)
 		var bulk []byte
 
 		i := 0
@@ -104,25 +94,16 @@ func (bh BatchHandler) SendToES(ctx context.Context, esDestURL string, events []
 				bulk = append(bulk, []byte("{ \"create\": { \"_id\": \""+esmodel.Title+"\" } }\n")...)
 				bulk = append(bulk, b...)
 				bulk = append(bulk, []byte("\n")...)
-			} else {
-				skipChannel <- 1
-				target--
 			}
 			i++
 		}
 
 		//@TODO  decision on handle failed updates to elasticsearch later
-		b, status, err := bh.esClient.BulkUpdate(ctx, esDestIndex, esDestURL, bulk)
-		log.Info(ctx, "response from elasticsearch bulkUpdate", log.Data{
-			"actual response": b,
-			"status":          status,
-			"err":             err,
-		})
+		_, _, err := bh.esClient.BulkUpdate(ctx, esDestIndex, esDestURL, bulk)
 		if err != nil {
 			log.Error(ctx, "error in response from elasticsearch", err)
 			return
 		}
-		insertChannel <- target
 
 		log.Info(ctx, "go routine for inserting into ES ends with insertChannel")
 	}()
