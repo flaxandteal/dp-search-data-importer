@@ -32,7 +32,7 @@ func NewConsumer() *Consumer {
 // Handler represents a handler for processing a single event.
 type Handler interface {
 	Handle(ctx context.Context,
-		cfg *config.Config,
+		esDestURL string,
 		SearchDataImportModel []*models.SearchDataImportModel) error
 }
 
@@ -84,7 +84,7 @@ func ProcessBatch(ctx context.Context, cfg *config.Config, handler Handler, batc
 	log.Info(ctx, "process batch starts", log.Data{
 		"batch_size": batch.Size(),
 		"reason":     reason})
-	err := handler.Handle(ctx, cfg, batch.Events())
+	err := handler.Handle(ctx, cfg.ElasticSearchAPIURL, batch.Events())
 	if err != nil {
 		log.Error(ctx, "error handling batch", err)
 		batch.Commit()

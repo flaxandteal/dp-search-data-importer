@@ -11,6 +11,7 @@ import (
 	"github.com/gorilla/mux"
 	"github.com/pkg/errors"
 
+	dpawsauth "github.com/ONSdigital/dp-elasticsearch/v2/awsauth"
 	dpelasticsearch "github.com/ONSdigital/dp-elasticsearch/v2/elasticsearch"
 	dpkafka "github.com/ONSdigital/dp-kafka/v2"
 )
@@ -24,6 +25,8 @@ type Service struct {
 	consumer        dpkafka.IConsumerGroup
 	shutdownTimeout time.Duration
 }
+
+var awsSigner *dpawsauth.Signer
 
 // Run the service
 func Run(ctx context.Context, serviceList *ExternalServiceList, buildTime, gitCommit, version string,
@@ -43,6 +46,15 @@ func Run(ctx context.Context, serviceList *ExternalServiceList, buildTime, gitCo
 	if err != nil {
 		log.Fatal(ctx, "failed to initialise kafka consumer", err)
 		return nil, err
+	}
+
+	// Initialse AWS signer
+	if cfg.SignElasticsearchRequests {
+		awsSigner, err = dpawsauth.NewAwsSigner("", "", cfg.AwsRegion, cfg.AwsService)
+		if err != nil {
+			log.Error(ctx, "failed to create aws v4 signer", err)
+			return nil, err
+		}
 	}
 
 	// Get Elastic Search Client

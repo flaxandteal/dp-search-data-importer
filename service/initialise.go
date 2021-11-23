@@ -130,7 +130,7 @@ func (e *Init) DoGetHealthCheck(cfg *config.Config, buildTime, gitCommit, versio
 func (e *Init) DoGetElasticSearchClient(ctx context.Context, cfg *config.Config) (*dpelasticsearch.Client, error) {
 
 	elasticHTTPClient := dphttp.NewClient()
-	elasticSearchClient := dpelasticsearch.NewClientWithHTTPClient(cfg.ElasticSearchAPIURL, cfg.SignElasticsearchRequests, elasticHTTPClient)
+	elasticSearchClient := dpelasticsearch.NewClientWithHTTPClientAndAwsSigner(cfg.ElasticSearchAPIURL, awsSigner, cfg.SignElasticsearchRequests, elasticHTTPClient)
 
 	log.Info(ctx, "returning esClientWithNonAwsSigner")
 	return elasticSearchClient, nil

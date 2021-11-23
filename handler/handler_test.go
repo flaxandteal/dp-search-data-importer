@@ -7,14 +7,12 @@ import (
 	"net/http"
 	"testing"
 
-	"github.com/ONSdigital/dp-elasticsearch/v2/awsauth"
-	"github.com/ONSdigital/dp-search-data-importer/config"
 	"github.com/ONSdigital/dp-search-data-importer/handler"
 	"github.com/ONSdigital/dp-search-data-importer/models"
 
 	dpelasticsearch "github.com/ONSdigital/dp-elasticsearch/v2/elasticsearch"
 	dphttp "github.com/ONSdigital/dp-net/http"
-	
+
 	. "github.com/smartystreets/goconvey/convey"
 )
 
@@ -54,10 +52,6 @@ var (
 		expectedEvent2,
 	}
 
-	testSigner *awsauth.Signer
-
-	testCfg, _ = config.Get()
-
 	emptyListOfPathsWithNoRetries = func() []string {
 		return []string{}
 	}
@@ -94,12 +88,12 @@ func TestDataImporterHandle(t *testing.T) {
 			return successESResponse(), nil
 		}
 		httpCli := clientMock(doFuncWithInValidResponse)
-		esTestclient := dpelasticsearch.NewClientWithHTTPClientAndAwsSigner(esDestURL, testSigner, true, httpCli)
+		esTestclient := dpelasticsearch.NewClientWithHTTPClientAndAwsSigner(esDestURL, nil, false, httpCli)
 
 		batchHandler := handler.NewBatchHandler(esTestclient)
 
 		Convey("When handle is called", func() {
-			err := batchHandler.Handle(testContext, testCfg, testEvents)
+			err := batchHandler.Handle(testContext, esDestURL, testEvents)
 
 			Convey("And the error is nil", func() {
 				So(err, ShouldBeNil)

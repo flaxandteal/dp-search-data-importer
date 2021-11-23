@@ -4,9 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"sync"
-	"time"
 
-	"github.com/ONSdigital/dp-search-data-importer/config"
 	"github.com/ONSdigital/dp-search-data-importer/event"
 	"github.com/ONSdigital/dp-search-data-importer/models"
 	"github.com/ONSdigital/dp-search-data-importer/transform"
@@ -14,6 +12,8 @@ import (
 
 	dpelasticsearch "github.com/ONSdigital/dp-elasticsearch/v2/elasticsearch"
 )
+
+const esDestIndex = "ons"
 
 var _ event.Handler = (*BatchHandler)(nil)
 
@@ -40,7 +40,7 @@ func NewBatchHandler(esClient *dpelasticsearch.Client) *BatchHandler {
 }
 
 // Handle the given slice of SearchDataImport Model.
-func (batchHandler BatchHandler) Handle(ctx context.Context, cfg *config.Config, events []*models.SearchDataImportModel) error {
+func (batchHandler BatchHandler) Handle(ctx context.Context, url string, events []*models.SearchDataImportModel) error {
 	log.Info(ctx, "events handler called")
 
 	//no events receeived. Nothing more to do.
@@ -51,30 +51,23 @@ func (batchHandler BatchHandler) Handle(ctx context.Context, cfg *config.Config,
 	log.Info(ctx, "Events received ", log.Data{
 		"events received": len(events),
 	})
-	go status(ctx)
 
 	// This will block if we've reached our concurrency limit (sem buffer size)
-	err := batchHandler.SendToES(ctx, cfg, events)
+	err := batchHandler.SendToES(ctx, url, events)
 	if err != nil {
 		log.Fatal(ctx, "failed to send event to Elastic Search", err)
 		return err
 	}
 
-	time.Sleep(4 * time.Second)
-	syncWaitGroup.Wait()
-
 	log.Info(ctx, "event successfully handled")
 	return nil
 }
 
-func (bh BatchHandler) SendToES(ctx context.Context, cfg *config.Config, events []*models.SearchDataImportModel) error {
+func (bh BatchHandler) SendToES(ctx context.Context, esDestURL string, events []*models.SearchDataImportModel) error {
 
 	// Wait on semaphore if we've reached our concurrency limit
 	syncWaitGroup.Add(1)
 	semaphore <- 1
-
-	esDestURL := cfg.ElasticSearchAPIURL
-	esDestIndex := "ons"
 
 	t := transform.NewTransformer()
 
@@ -118,6 +111,7 @@ func (bh BatchHandler) SendToES(ctx context.Context, cfg *config.Config, events 
 			i++
 		}
 
+		//@TODO  decision on handle failed updates to elasticsearch later
 		b, status, err := bh.esClient.BulkUpdate(ctx, esDestIndex, esDestURL, bulk)
 		log.Info(ctx, "response from elasticsearch bulkUpdate", log.Data{
 			"actual response": b,
@@ -134,44 +128,4 @@ func (bh BatchHandler) SendToES(ctx context.Context, cfg *config.Config, events 
 	}()
 
 	return nil
-}
-
-func status(ctx context.Context) {
-	var (
-		rpsCounter  = 0
-		insCounter  = 0
-		skipCounter = 0
-		reqTotal    = 0
-		insTotal    = 0
-		skipTotal   = 0
-	)
-
-	t := time.NewTicker(time.Second)
-
-	for {
-		select {
-		case n := <-skipChannel:
-			skipCounter += n
-			skipTotal += n
-		case n := <-countChannel:
-			rpsCounter += n
-			reqTotal += n
-		case n := <-insertChannel:
-			insCounter += n
-			insTotal += n
-		case <-t.C:
-			logData := log.Data{
-				"Read":        reqTotal,
-				"Written":     insTotal,
-				"skipTotal":   skipTotal,
-				"rpsCounter":  rpsCounter,
-				"insCounter":  insCounter,
-				"skipCounter": skipCounter,
-			}
-			log.Info(ctx, "Elastic Search Summary", log.INFO, logData)
-			rpsCounter = 0
-			insCounter = 0
-			skipCounter = 0
-		}
-	}
 }

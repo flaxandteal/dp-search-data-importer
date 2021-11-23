@@ -3,7 +3,6 @@ package eventtest
 import (
 	"context"
 
-	"github.com/ONSdigital/dp-search-data-importer/config"
 	"github.com/ONSdigital/dp-search-data-importer/event"
 	"github.com/ONSdigital/dp-search-data-importer/models"
 	"github.com/ONSdigital/log.go/v2/log"
@@ -31,7 +30,7 @@ type EventHandler struct {
 }
 
 // Handle captures the given event and stores it for later assertions
-func (handler *EventHandler) Handle(ctx context.Context, cfg *config.Config, events []*models.SearchDataImportModel) error {
+func (handler *EventHandler) Handle(ctx context.Context, url string, events []*models.SearchDataImportModel) error {
 	log.Info(ctx, "eventtest handler called")
 	handler.Events = events
 

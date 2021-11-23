@@ -22,7 +22,7 @@ fmt:
 	go fmt ./...
 
 .PHONY: build
-build: fmt
+build:
 	go build -tags 'production' $(LDFLAGS) -o $(BINPATH)/dp-search-data-importer
 
 .PHONY: debug
