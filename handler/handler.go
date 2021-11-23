@@ -15,9 +15,11 @@ import (
 
 const esDestIndex = "ons"
 
+var _ event.Handler = (*BatchHandler)(nil)
+
 var (
-	_             event.Handler = (*BatchHandler)(nil)
 	syncWaitGroup sync.WaitGroup
+	semaphore     = make(chan int, 5)
 )
 
 // BatchHandler handles batches of SearchDataImportModel events that contain CSV row data.
@@ -61,12 +63,14 @@ func (bh BatchHandler) SendToES(ctx context.Context, esDestURL string, events []
 
 	// Wait on semaphore if we've reached our concurrency limit
 	syncWaitGroup.Add(1)
+	semaphore <- 1
 
 	t := transform.NewTransformer()
 
 	go func() {
 
 		defer func() {
+			<-semaphore
 			syncWaitGroup.Done()
 		}()
 

@@ -6,7 +6,6 @@ import (
 
 	"github.com/ONSdigital/dp-healthcheck/healthcheck"
 	"github.com/ONSdigital/dp-search-data-importer/config"
-	"github.com/ONSdigital/log.go/v2/log"
 
 	dpelasticsearch "github.com/ONSdigital/dp-elasticsearch/v2/elasticsearch"
 	dpkafka "github.com/ONSdigital/dp-kafka/v2"
@@ -132,6 +131,5 @@ func (e *Init) DoGetElasticSearchClient(ctx context.Context, cfg *config.Config)
 	elasticHTTPClient := dphttp.NewClient()
 	elasticSearchClient := dpelasticsearch.NewClientWithHTTPClientAndAwsSigner(cfg.ElasticSearchAPIURL, awsSigner, cfg.SignElasticsearchRequests, elasticHTTPClient)
 
-	log.Info(ctx, "returning esClientWithNonAwsSigner")
 	return elasticSearchClient, nil
 }
