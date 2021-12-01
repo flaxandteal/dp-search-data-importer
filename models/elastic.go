@@ -9,7 +9,7 @@ type EsModel struct {
 	DatasetID       string   `json:"dataset_id"`
 	Keywords        []string `json:"keywords"`
 	MetaDescription string   `json:"meta_description"`
-	ReleaseDate     string   `json:"release_date"`
+	ReleaseDate     string   `json:"release_date,omitempty"`
 	Summary         string   `json:"summary"`
 	Title           string   `json:"title"`
 }
