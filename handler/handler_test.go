@@ -59,6 +59,9 @@ var (
 	setListOfPathsWithNoRetries = func(listOfPaths []string) {
 		return
 	}
+
+	mockSuccessESResponseWith409Error = "{\"took\":5,\"errors\":true,\"items\":[{\"create\":{\"_index\":\"ons1637667136829001\",\"_type\":\"_doc\",\"_id\":\"testTitle2\",\"status\":409,\"error\":{\"type\":\"version_conflict_engine_exception\",\"reason\":\"[Help]: version conflict, document already exists (current version [1])\",\"index_uuid\":\"YNxkEkfcTp-SiMXOSqDvEA\",\"shard\":\"0\",\"index\":\"ons1637667136829001\"}}}]}"
+	mockSuccessESResponseWithNoError  = "{\"took\":6,\"errors\":false,\"items\":[{\"create\":{\"_index\":\"ons1637667136829001\",\"_type\":\"_doc\",\"_id\":\"Monthly gross domestic product: time series\",\"_version\":1,\"result\":\"created\",\"_shards\":{\"total\":2,\"successful\":2,\"failed\":0},\"_seq_no\":0,\"_primary_term\":1,\"status\":201}}]}"
 )
 
 func successESResponse() *http.Response {
@@ -66,6 +69,15 @@ func successESResponse() *http.Response {
 	return &http.Response{
 		StatusCode: 201,
 		Body:       ioutil.NopCloser(bytes.NewBufferString(`Created`)),
+		Header:     make(http.Header),
+	}
+}
+
+func successWithESResponseError() *http.Response {
+
+	return &http.Response{
+		StatusCode: 201,
+		Body:       ioutil.NopCloser(bytes.NewBufferString(mockSuccessESResponseWith409Error)),
 		Header:     make(http.Header),
 	}
 }
@@ -86,6 +98,29 @@ func TestDataImporterHandle(t *testing.T) {
 		//ES Client initialisation : this needs to be mock
 		doFuncWithInValidResponse := func(ctx context.Context, req *http.Request) (*http.Response, error) {
 			return successESResponse(), nil
+		}
+		httpCli := clientMock(doFuncWithInValidResponse)
+		esTestclient := dpelasticsearch.NewClientWithHTTPClientAndAwsSigner(esDestURL, nil, false, httpCli)
+
+		batchHandler := handler.NewBatchHandler(esTestclient)
+
+		Convey("When handle is called", func() {
+			err := batchHandler.Handle(testContext, esDestURL, testEvents)
+
+			Convey("And the error is nil", func() {
+				So(err, ShouldBeNil)
+			})
+		})
+	})
+}
+
+func TestDataImporterHandleWithFailedESResponse(t *testing.T) {
+
+	Convey("Given a handler configured with one success and other un-successful es updates", t, func() {
+		esDestURL := "locahost:9999"
+
+		doFuncWithInValidResponse := func(ctx context.Context, req *http.Request) (*http.Response, error) {
+			return successWithESResponseError(), nil
 		}
 		httpCli := clientMock(doFuncWithInValidResponse)
 		esTestclient := dpelasticsearch.NewClientWithHTTPClientAndAwsSigner(esDestURL, nil, false, httpCli)

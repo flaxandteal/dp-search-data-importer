@@ -22,6 +22,23 @@ var (
 	semaphore     = make(chan int, 5)
 )
 
+type bulk []byte
+
+type esBulkResponse struct {
+	Took   int                  `json:"took"`
+	Errors bool                 `json:"errors"`
+	Items  []esBulkItemResponse `json:"items"`
+}
+
+type esBulkItemResponse map[string]esBulkItemResponseData
+
+type esBulkItemResponseData struct {
+	Index  string `json:"_index"`
+	ID     string `json:"_id"`
+	Status int    `json:"status"`
+	Error  string `json:"error"`
+}
+
 // BatchHandler handles batches of SearchDataImportModel events that contain CSV row data.
 type BatchHandler struct {
 	esClient *dpelasticsearch.Client
@@ -65,8 +82,6 @@ func (bh BatchHandler) SendToES(ctx context.Context, esDestURL string, events []
 	syncWaitGroup.Add(1)
 	semaphore <- 1
 
-	t := transform.NewTransformer()
-
 	go func() {
 
 		defer func() {
@@ -75,10 +90,11 @@ func (bh BatchHandler) SendToES(ctx context.Context, esDestURL string, events []
 		}()
 
 		log.Info(ctx, "go routine for inserting into ES starts")
+		documentList := make(map[string]models.SearchDataImportModel)
 
-		var bulk []byte
-
+		var bulkcreate bulk
 		i := 0
+
 		for i < len(events) {
 
 			if events[i].Title == "" {
@@ -86,31 +102,75 @@ func (bh BatchHandler) SendToES(ctx context.Context, esDestURL string, events []
 				continue // break here
 			}
 
-			esmodel := t.TransformEventModelToEsModel(events[i])
+			documentList[events[i].Title] = *events[i]
 
-			if esmodel != nil {
-				b, err := json.Marshal(esmodel)
-				if err != nil {
-					log.Fatal(ctx, "error marshal to json", err)
-					return
-				}
-
-				bulk = append(bulk, []byte("{ \"create\": { \"_id\": \""+esmodel.Title+"\" } }\n")...)
-				bulk = append(bulk, b...)
-				bulk = append(bulk, []byte("\n")...)
+			if err := bulkcreate.prepareBulkRequestBody(ctx, events[i], "create"); err != nil {
+				log.Error(ctx, "", err, log.Data{})
 			}
 			i++
 		}
 
-		//@TODO  decision on handle failed updates to elasticsearch later
-		_, _, err := bh.esClient.BulkUpdate(ctx, esDestIndex, esDestURL, bulk)
+		jsonResponse, _, err := bh.esClient.BulkUpdate(ctx, esDestIndex, esDestURL, bulkcreate)
 		if err != nil {
-			log.Error(ctx, "error in response from elasticsearch", err)
+			log.Error(ctx, "error in response from elasticsearch for bulkcreate", err)
 			return
 		}
 
-		log.Info(ctx, "go routine for inserting into ES ends with insertChannel")
+		var bulkRes esBulkResponse
+		if err := json.Unmarshal(jsonResponse, &bulkRes); err != nil {
+			log.Error(ctx, "error unmarshaling json", err)
+		}
+
+		if bulkRes.Errors {
+			var bulkupdate bulk
+			for _, r := range bulkRes.Items {
+				if r["create"].Status == 409 {
+					event := documentList[r["create"].ID]
+					if err = bulkupdate.prepareBulkRequestBody(ctx, &event, "update"); err != nil {
+						log.Error(ctx, "error in update the bulk loader", err)
+						return
+					}
+				} else {
+					//logs for all failed transactions with different status than 409
+					log.Error(ctx, "error inserting doc to ES", err,
+						log.Data{
+							"response status": r["create"].Status,
+							"err":             err,
+						})
+					return
+				}
+			}
+			_, _, err := bh.esClient.BulkUpdate(ctx, esDestIndex, esDestURL, bulkupdate)
+			if err != nil {
+				log.Error(ctx, "error in response from elasticsearch for bulkupload", err)
+				return
+			}
+		}
 	}()
 
+	syncWaitGroup.Wait()
+	log.Info(ctx, "go routine for inserting into ES ends")
+
 	return nil
+}
+
+func (bulkbody bulk) prepareBulkRequestBody(ctx context.Context, event *models.SearchDataImportModel, method string) error {
+
+	t := transform.NewTransformer()
+	esmodel := t.TransformEventModelToEsModel(event)
+
+	if esmodel != nil {
+		b, err := json.Marshal(esmodel)
+		if err != nil {
+			log.Fatal(ctx, "error marshal to json", err)
+			return err
+		}
+
+		bulkbody = append(bulkbody, []byte("{ \""+method+"\": { \"_id\": \""+esmodel.Title+"\" } }\n")...)
+		bulkbody = append(bulkbody, b...)
+		bulkbody = append(bulkbody, []byte("\n")...)
+	}
+
+	return nil
+
 }
