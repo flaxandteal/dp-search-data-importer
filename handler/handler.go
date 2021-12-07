@@ -28,22 +28,7 @@ type esBulkResponse struct {
 	Items  []esBulkItemResponse `json:"items"`
 }
 
-type esBulkItemResponse map[string]esBulkItemResponseData
-
-type esBulkItemResponseData struct {
-	Index  string                  `json:"_index"`
-	ID     string                  `json:"_id"`
-	Status int                     `json:"status"`
-	Error  esBulkItemResponseError `json:"error,omitempty"`
-}
-
-type esBulkItemResponseError struct {
-	ErrorType string `json:"type"`
-	Reason    string `json:"reason"`
-	IndexUUID string `json:"index_uuid"`
-	Shard     string `json:"shard"`
-	Index     string `json:"index"`
-}
+type esBulkItemResponse map[string]models.ESBulkItemResponseData
 
 // BatchHandler handles batches of SearchDataImportModel events that contain CSV row data.
 type BatchHandler struct {
@@ -93,7 +78,7 @@ func (batchHandler BatchHandler) sendToES(ctx context.Context, esDestURL string,
 			syncWaitGroup.Done()
 		}()
 
-		log.Info(ctx, "go routine for inserting bulk events into ES starts")
+		log.Info(ctx, "inserting bulk events into ES starts")
 		documentList := make(map[string]models.SearchDataImportModel)
 
 		var bulkcreate []byte
@@ -176,8 +161,7 @@ func (batchHandler BatchHandler) sendToES(ctx context.Context, esDestURL string,
 	}()
 
 	syncWaitGroup.Wait()
-	log.Info(ctx, "go routine for inserting bulk events into ES ends")
-
+	log.Info(ctx, "inserting bulk events into ES ends")
 	return nil
 }
 
