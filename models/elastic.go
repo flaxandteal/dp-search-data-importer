@@ -13,3 +13,28 @@ type EsModel struct {
 	Summary         string   `json:"summary"`
 	Title           string   `json:"title"`
 }
+
+type EsBulkResponse struct {
+	Took   int                  `json:"took"`
+	Errors bool                 `json:"errors"`
+	Items  []EsBulkItemResponse `json:"items"`
+}
+
+type EsBulkItemResponse map[string]EsBulkItemResponseData
+
+// esBulkItemResponseData holds a response from ES
+type EsBulkItemResponseData struct {
+	Index  string                  `json:"_index"`
+	ID     string                  `json:"_id"`
+	Status int                     `json:"status"`
+	Error  EsBulkItemResponseError `json:"error,omitempty"`
+}
+
+// esBulkItemResponseError holds an ES Error details
+type EsBulkItemResponseError struct {
+	ErrorType string `json:"type"`
+	Reason    string `json:"reason"`
+	IndexUUID string `json:"index_uuid"`
+	Shard     string `json:"shard"`
+	Index     string `json:"index"`
+}
