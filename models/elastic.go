@@ -14,6 +14,7 @@ type EsModel struct {
 	Title           string   `json:"title"`
 }
 
+// EsBulkResponse holds a response from ES
 type EsBulkResponse struct {
 	Took   int                  `json:"took"`
 	Errors bool                 `json:"errors"`
@@ -22,7 +23,7 @@ type EsBulkResponse struct {
 
 type EsBulkItemResponse map[string]EsBulkItemResponseData
 
-// esBulkItemResponseData holds a response from ES
+// EsBulkItemResponseData holds a response from ES for each item
 type EsBulkItemResponseData struct {
 	Index  string                  `json:"_index"`
 	ID     string                  `json:"_id"`
@@ -30,7 +31,7 @@ type EsBulkItemResponseData struct {
 	Error  EsBulkItemResponseError `json:"error,omitempty"`
 }
 
-// esBulkItemResponseError holds an ES Error details
+// EsBulkItemResponseError holds an ES Error details
 type EsBulkItemResponseError struct {
 	ErrorType string `json:"type"`
 	Reason    string `json:"reason"`

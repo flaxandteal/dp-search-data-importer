@@ -81,13 +81,13 @@ func (batchHandler BatchHandler) sendToES(ctx context.Context, esDestURL string,
 			}
 
 			documentList[event.Title] = *event
-			eventBulkRequestBody, err := prepareEventForBulkRequestBody(ctx, event, "create")
+			createBulkRequestBody, err := prepareEventForBulkRequestBody(ctx, event, "create")
 			if err != nil {
 				log.Error(ctx, "error in preparing the bulk for create", err, log.Data{
 					"event": *event,
 				})
 			}
-			bulkcreate = append(bulkcreate, eventBulkRequestBody...)
+			bulkcreate = append(bulkcreate, createBulkRequestBody...)
 		}
 
 		jsonCreateResponse, _, err := batchHandler.esClient.BulkUpdate(ctx, esDestIndex, esDestURL, bulkcreate)
@@ -106,12 +106,12 @@ func (batchHandler BatchHandler) sendToES(ctx context.Context, esDestURL string,
 			for _, resCreateItem := range bulkCreateRes.Items {
 				if resCreateItem["create"].Status == 409 {
 					event := documentList[resCreateItem["create"].ID]
-					updateBulkBody, err := prepareEventForBulkRequestBody(ctx, &event, "update")
+					updateBulkRequestBody, err := prepareEventForBulkRequestBody(ctx, &event, "update")
 					if err != nil {
 						log.Error(ctx, "error in preparing the bulk for update", err)
 						return
 					}
-					bulkupdate = append(bulkupdate, updateBulkBody...)
+					bulkupdate = append(bulkupdate, updateBulkRequestBody...)
 				} else if resCreateItem["create"].Status == 201 {
 					continue
 				} else {
