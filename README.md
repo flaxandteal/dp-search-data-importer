@@ -12,9 +12,9 @@ An example event can be created using the helper script, `make produce`.
 ### Dependencies
 
 * Requires running…
-  * go v1.17
-  * ElasticSearch 7.10
-  * [kafka](https://github.com/ONSdigital/dp/blob/main/guides/INSTALLING.md#prerequisites)
+	* go v1.17
+	* ElasticSearch 7.10
+	* [kafka](https://github.com/ONSdigital/dp/blob/main/guides/INSTALLING.md#prerequisites)
 * No further dependencies other than those defined in `go.mod`
 
 ### Configuration
@@ -32,15 +32,15 @@ An example event can be created using the helper script, `make produce`.
 | PUBLISHED_CONTENT_TOPIC      | published-content                 | The name of the topic to consume messages from
 | BATCH_SIZE                   | 500                               | The default total number of messages that should be buffered (in batches) before writing to the search engine.
 | BATCH_WAIT_TIME              | 5s                                | The default wait time for preparing the batch.
-| KAFKA_SEC_PROTO	             | unset	                           | if set to TLS, kafka connections will use TLS [1]
-| KAFKA_SEC_CA_CERTS	         | unset	                           | CA cert chain for the server cert [1]
-| KAFKA_SEC_CLIENT_KEY	       | unset	                           | PEM for the client key [1]
-| KAFKA_SEC_CLIENT_CERT	       | unset	                           | PEM for the client certificate [1]
-| KAFKA_SEC_SKIP_VERIFY	       |false	                             | ignores server certificate issues if true [1]
-| ELASTIC_SEARCH_URL:          | "http://localhost:11200"          | The elastic search URL
-| AWS_REGION:                  | "eu-west-1"                       | The default AWS region to be validated while connecting to elastic search
-| AWS_SERVICE:                 | "es"                              | The default AWS service to be validated while connecting to elastic search
-SIGN_ELASTICSEARCH_REQUESTS:   | false                             | The default configuration for AWS authenticatioin while connecting to elastic search
+| KAFKA_SEC_PROTO              | unset                             | if set to TLS, kafka connections will use TLS [1]
+| KAFKA_SEC_CA_CERTS           | unset                             | CA cert chain for the server cert [1]
+| KAFKA_SEC_CLIENT_KEY         | unset                             | PEM for the client key [1]
+| KAFKA_SEC_CLIENT_CERT        | unset                             | PEM for the client certificate [1]
+| KAFKA_SEC_SKIP_VERIFY        | false                             | ignores server certificate issues if true [1]
+| ELASTIC_SEARCH_URL           | "http://localhost:11200"          | The elastic search URL
+| AWS_REGION                   | "eu-west-1"                       | The default AWS region to be validated while connecting to elastic search
+| AWS_SERVICE                  | "es"                              | The default AWS service to be validated while connecting to elastic search
+| SIGN_ELASTICSEARCH_REQUESTS  | false                             | The default configuration for AWS authenticatioin while connecting to elastic search
 
 **Notes:**
 
