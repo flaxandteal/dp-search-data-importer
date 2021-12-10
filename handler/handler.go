@@ -3,7 +3,6 @@ package handler
 import (
 	"context"
 	"encoding/json"
-	"fmt"
 
 	"github.com/ONSdigital/dp-search-data-importer/event"
 	"github.com/ONSdigital/dp-search-data-importer/models"
@@ -74,8 +73,6 @@ func (batchHandler BatchHandler) sendToES(ctx context.Context, esDestURL string,
 		bulkcreate = append(bulkcreate, createBulkRequestBody...)
 	}
 
-	fmt.Printf("++++++++++++bulkcreate \n%s", bulkcreate)
-
 	jsonCreateResponse, _, err := batchHandler.esClient.BulkUpdate(ctx, esDestIndex, esDestURL, bulkcreate)
 	if err != nil {
 		log.Error(ctx, "error in response from elasticsearch while creating the event", err)
@@ -109,8 +106,6 @@ func (batchHandler BatchHandler) sendToES(ctx context.Context, esDestURL string,
 				continue
 			}
 		}
-
-		fmt.Printf("++++++++++++bulkupdate \n%s", bulkupdate)
 
 		jsonUpdateResponse, _, err := batchHandler.esClient.BulkUpdate(ctx, esDestIndex, esDestURL, bulkupdate)
 		if err != nil {
