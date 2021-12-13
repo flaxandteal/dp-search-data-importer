@@ -53,7 +53,7 @@ func (batchHandler BatchHandler) Handle(ctx context.Context, url string, events 
 // Preparing the payload and sending bulk events to elastic search.
 func (batchHandler BatchHandler) sendToES(ctx context.Context, esDestURL string, events []*models.SearchDataImportModel) error {
 
-	log.Info(ctx, "inserting bulk events into ES starts")
+	log.Info(ctx, "bulk events into ES starts")
 	documentList := make(map[string]models.SearchDataImportModel)
 
 	var bulkcreate []byte
@@ -81,7 +81,8 @@ func (batchHandler BatchHandler) sendToES(ctx context.Context, esDestURL string,
 
 	var bulkCreateRes models.EsBulkResponse
 	if err := json.Unmarshal(jsonCreateResponse, &bulkCreateRes); err != nil {
-		log.Error(ctx, "error unmarshaling json", err)
+		log.Error(ctx, "error unmarshaling jsonCreateResponse", err)
+		return err
 	}
 
 	if bulkCreateRes.Errors {
@@ -110,11 +111,13 @@ func (batchHandler BatchHandler) sendToES(ctx context.Context, esDestURL string,
 		jsonUpdateResponse, _, err := batchHandler.esClient.BulkUpdate(ctx, esDestIndex, esDestURL, bulkupdate)
 		if err != nil {
 			log.Error(ctx, "error in response from elasticsearch while updating the event", err)
+			return err
 		}
 
 		var bulkUpdateRes models.EsBulkResponse
 		if err := json.Unmarshal(jsonUpdateResponse, &bulkUpdateRes); err != nil {
-			log.Error(ctx, "error unmarshaling json", err)
+			log.Error(ctx, "error unmarshaling bulkUpdateRes", err)
+			return err
 		}
 
 		if bulkUpdateRes.Errors {
@@ -133,7 +136,7 @@ func (batchHandler BatchHandler) sendToES(ctx context.Context, esDestURL string,
 		}
 	}
 
-	log.Info(ctx, "inserting bulk events into ES ends")
+	log.Info(ctx, "bulk events into ES ends")
 	return nil
 }
 
