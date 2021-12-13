@@ -122,11 +122,7 @@ func TestHandleWithTwoEventsBothEventCreated(t *testing.T) {
 
 		doFuncWithValidResponse := func(ctx context.Context, req *http.Request) (*http.Response, error) {
 			count++
-			if count == 1 {
-				return successWithESResponseNoError(), nil
-			} else {
-				return successWithESResponseError(), nil
-			}
+			return successWithESResponseNoError(), nil
 		}
 		httpCli := clientMock(doFuncWithValidResponse)
 		esTestclient := dpelasticsearch.NewClientWithHTTPClientAndAwsSigner(esDestURL, nil, false, httpCli)
@@ -218,11 +214,7 @@ func TestHandleWithCreateAndInternalServerESResponse(t *testing.T) {
 
 		doFuncWithInValidResponse := func(ctx context.Context, req *http.Request) (*http.Response, error) {
 			count++
-			if count == 1 {
-				return failedWithESResponseInternalServerError(), nil
-			} else {
-				return successWithESResponseNoError(), nil
-			}
+			return failedWithESResponseInternalServerError(), nil
 		}
 		httpCli := clientMock(doFuncWithInValidResponse)
 		esTestclient := dpelasticsearch.NewClientWithHTTPClientAndAwsSigner(esDestURL, nil, false, httpCli)

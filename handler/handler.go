@@ -69,6 +69,7 @@ func (batchHandler BatchHandler) sendToES(ctx context.Context, esDestURL string,
 			log.Error(ctx, "error in preparing the bulk for create", err, log.Data{
 				"event": *event,
 			})
+			continue
 		}
 		bulkcreate = append(bulkcreate, createBulkRequestBody...)
 	}
@@ -136,12 +137,10 @@ func (batchHandler BatchHandler) sendToES(ctx context.Context, esDestURL string,
 			}
 		}
 	}
-	logData := log.Data{
-		"Events received":         len(events),
-		"Events inserted into ES": target,
-	}
-	log.Info(ctx, "ES updates", logData)
-	log.Info(ctx, "bulk events into ES ends")
+	log.Info(ctx, "documents bulk uploaded to elasticsearch", log.Data{
+		"documents_received": len(events),
+		"documents_inserted": target,
+	})
 	return nil
 }
 
