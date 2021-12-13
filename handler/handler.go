@@ -39,10 +39,9 @@ func (batchHandler BatchHandler) Handle(ctx context.Context, url string, events 
 		return nil
 	}
 
-	// This will block if we've reached our concurrency limit (sem buffer size)
 	err := batchHandler.sendToES(ctx, url, events)
 	if err != nil {
-		log.Fatal(ctx, "failed to send event to Elastic Search", err)
+		log.Error(ctx, "failed to send event to Elastic Search", err)
 		return err
 	}
 
@@ -54,6 +53,7 @@ func (batchHandler BatchHandler) Handle(ctx context.Context, url string, events 
 func (batchHandler BatchHandler) sendToES(ctx context.Context, esDestURL string, events []*models.SearchDataImportModel) error {
 
 	log.Info(ctx, "bulk events into ES starts")
+	target := len(events)
 	documentList := make(map[string]models.SearchDataImportModel)
 
 	var bulkcreate []byte
@@ -130,12 +130,17 @@ func (batchHandler BatchHandler) sendToES(ctx context.Context, esDestURL string,
 							"response status": resUpdateItem["update"].Status,
 							"response.title:": resUpdateItem["update"].ID,
 						})
+					target--
 					continue
 				}
 			}
 		}
 	}
-
+	logData := log.Data{
+		"Events received":         len(events),
+		"Events inserted into ES": target,
+	}
+	log.Info(ctx, "ES updates", logData)
 	log.Info(ctx, "bulk events into ES ends")
 	return nil
 }
@@ -148,7 +153,7 @@ func prepareEventForBulkRequestBody(ctx context.Context, event *models.SearchDat
 	if esmodel != nil {
 		b, err := json.Marshal(esmodel)
 		if err != nil {
-			log.Fatal(ctx, "error marshal to json", err)
+			log.Error(ctx, "error marshal to json while preparing bulk request", err)
 			return nil, err
 		}
 
