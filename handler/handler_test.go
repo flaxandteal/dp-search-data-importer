@@ -112,9 +112,6 @@ func clientMock(doFunc func(ctx context.Context, request *http.Request) (*http.R
 	}
 }
 
-// Scenario 1
-// a) Create bulk request succeeded with no failed resources
-// b) Update bulk request not made
 func TestHandleWithTwoEventsBothEventCreated(t *testing.T) {
 
 	var count int
@@ -122,6 +119,8 @@ func TestHandleWithTwoEventsBothEventCreated(t *testing.T) {
 
 		doFuncWithValidResponse := func(ctx context.Context, req *http.Request) (*http.Response, error) {
 			count++
+			//Create bulk request succeeded with no failed resources
+			//and Update bulk request not made
 			return successWithESResponseNoError(), nil
 		}
 		httpCli := clientMock(doFuncWithValidResponse)
@@ -140,9 +139,6 @@ func TestHandleWithTwoEventsBothEventCreated(t *testing.T) {
 	})
 }
 
-// Scenario 2
-// a) Create bulk request succeeded with one failed resources
-// b) Update bulk request succeeded with no failed resources
 func TestHandleWithTwoEventsWithOneEventCreateSuccessAndOtherUpdateSuccess(t *testing.T) {
 
 	var count int
@@ -151,8 +147,10 @@ func TestHandleWithTwoEventsWithOneEventCreateSuccessAndOtherUpdateSuccess(t *te
 		doFuncWithValidResponse := func(ctx context.Context, req *http.Request) (*http.Response, error) {
 			count++
 			if count == 1 {
+				//Create bulk request succeeded with one failed resources
 				return successWithESResponseError(), nil
 			} else {
+				//Update bulk request succeeded with no failed resources
 				return successWithESResponseNoError(), nil
 			}
 		}
@@ -172,9 +170,6 @@ func TestHandleWithTwoEventsWithOneEventCreateSuccessAndOtherUpdateSuccess(t *te
 	})
 }
 
-// Scenario 3
-// a) Create bulk request succeeded with failed resources
-// b) Update bulk request succeeded with failed resources
 func TestHandleWithBothCreateAndUpdateFailedESResponse(t *testing.T) {
 
 	var count int
@@ -183,8 +178,10 @@ func TestHandleWithBothCreateAndUpdateFailedESResponse(t *testing.T) {
 		doFuncWithInValidResponse := func(ctx context.Context, req *http.Request) (*http.Response, error) {
 			count++
 			if count == 1 {
+				//Create bulk request succeeded with failed resources
 				return failedWithESResponseError(), nil
 			} else {
+				//Update bulk request succeeded with failed resources
 				return failedWithESResponseError(), nil
 			}
 		}
@@ -204,9 +201,6 @@ func TestHandleWithBothCreateAndUpdateFailedESResponse(t *testing.T) {
 	})
 }
 
-//  Scenario 4
-// a) Create bulk request failed
-// b) Update bulk request not made
 func TestHandleWithCreateAndInternalServerESResponse(t *testing.T) {
 
 	var count int
@@ -214,6 +208,8 @@ func TestHandleWithCreateAndInternalServerESResponse(t *testing.T) {
 
 		doFuncWithInValidResponse := func(ctx context.Context, req *http.Request) (*http.Response, error) {
 			count++
+			//Create bulk request failed
+			//Update bulk request not made
 			return failedWithESResponseInternalServerError(), nil
 		}
 		httpCli := clientMock(doFuncWithInValidResponse)
@@ -232,9 +228,6 @@ func TestHandleWithCreateAndInternalServerESResponse(t *testing.T) {
 	})
 }
 
-//  Scenario 5 :
-// a) Create bulk request succeeded with a failed resources
-// b) Update bulk request failed for internal server error
 func TestHandleWithCreateButUpdateWithInternalServerESResponse(t *testing.T) {
 
 	var count int
@@ -243,8 +236,10 @@ func TestHandleWithCreateButUpdateWithInternalServerESResponse(t *testing.T) {
 		doFuncWithInValidResponse := func(ctx context.Context, req *http.Request) (*http.Response, error) {
 			count++
 			if count == 1 {
+				//Create bulk request succeeded with a failed resources
 				return successWithESResponseError(), nil
 			} else {
+				//Update bulk request failed for internal server error
 				return failedWithESResponseInternalServerError(), nil
 			}
 		}
