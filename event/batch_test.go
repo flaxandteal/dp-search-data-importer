@@ -31,7 +31,7 @@ func TestIsEmpty(t *testing.T) {
 
 		Convey("When the batch has a message added", func() {
 
-			batch.Add(ctx, message)
+			_ = batch.Add(ctx, message)
 			Convey("Then the batch is not empty", func() {
 				So(batch.IsEmpty(), ShouldBeFalse)
 			})
@@ -51,7 +51,7 @@ func TestAdd(t *testing.T) {
 
 		Convey("When add is called with a valid message", func() {
 
-			batch.Add(ctx, message)
+			_ = batch.Add(ctx, message)
 
 			Convey("Then the batch contains the expected event.", func() {
 				So(batch.Size(), ShouldEqual, 1)
@@ -71,7 +71,7 @@ func TestCommitWithOneMessage(t *testing.T) {
 		batchSize := 1
 		batch := event.NewBatch(batchSize)
 
-		batch.Add(ctx, message1)
+		_ = batch.Add(ctx, message1)
 
 		Convey("When commit is called", func() {
 
@@ -102,8 +102,8 @@ func TestCommitWithTwoMessage(t *testing.T) {
 		batchSize := 2
 		batch := event.NewBatch(batchSize)
 
-		batch.Add(ctx, message1)
-		batch.Add(ctx, message2)
+		_ = batch.Add(ctx, message1)
+		_ = batch.Add(ctx, message2)
 
 		Convey("When commit is called", func() {
 
@@ -123,7 +123,7 @@ func TestCommitWithTwoMessage(t *testing.T) {
 			})
 
 			Convey("And the batch can be reused", func() {
-				batch.Add(ctx, message1)
+				_ = batch.Add(ctx, message1)
 
 				So(batch.IsEmpty(), ShouldBeFalse)
 				So(batch.IsFull(), ShouldBeFalse)
@@ -131,7 +131,7 @@ func TestCommitWithTwoMessage(t *testing.T) {
 
 				So(batch.Events()[0].DataType, ShouldEqual, expectedEvent.DataType)
 
-				batch.Add(ctx, message2)
+				_ = batch.Add(ctx, message2)
 
 				So(batch.IsEmpty(), ShouldBeFalse)
 				So(batch.IsFull(), ShouldBeTrue)
@@ -157,11 +157,11 @@ func TestSize(t *testing.T) {
 
 		Convey("When add is called with a valid message", func() {
 
-			batch.Add(ctx, message)
+			_ = batch.Add(ctx, message)
 
 			Convey("Then the batch size should increase.", func() {
 				So(batch.Size(), ShouldEqual, 1)
-				batch.Add(ctx, message)
+				_ = batch.Add(ctx, message)
 				So(batch.Size(), ShouldEqual, 2)
 			})
 		})
@@ -182,9 +182,9 @@ func TestIsFull(t *testing.T) {
 
 		Convey("When the number of messages added equals the batch size", func() {
 
-			batch.Add(ctx, message)
+			_ = batch.Add(ctx, message)
 			So(batch.IsFull(), ShouldBeFalse)
-			batch.Add(ctx, message)
+			_ = batch.Add(ctx, message)
 
 			Convey("Then the batch should be full.", func() {
 				So(batch.IsFull(), ShouldBeTrue)

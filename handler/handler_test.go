@@ -59,9 +59,7 @@ var (
 		return []string{}
 	}
 
-	setListOfPathsWithNoRetries = func(listOfPaths []string) {
-		return
-	}
+	setListOfPathsWithNoRetries = func(listOfPaths []string) {}
 
 	mockSuccessESResponseWith409Error                  = "{\"took\":5,\"errors\":true,\"items\":[{\"create\":{\"_index\":\"ons1637667136829001\",\"_type\":\"_doc\",\"_id\":\"testTitle2\",\"status\":409,\"error\":{\"type\":\"version_conflict_engine_exception\",\"reason\":\"[Help]: version conflict, document already exists (current version [1])\",\"index_uuid\":\"YNxkEkfcTp-SiMXOSqDvEA\",\"shard\":\"0\",\"index\":\"ons1637667136829001\"}}},{\"create\":{\"_index\":\"ons1637667136829001\",\"_type\":\"_doc\",\"_id\":\"testTitle4\",\"_version\":1,\"result\":\"created\",\"_shards\":{\"total\":2,\"successful\":2,\"failed\":0},\"_seq_no\":0,\"_primary_term\":1,\"status\":201}}]}"
 	mockSuccessESResponseWithNoError                   = "{\"took\":6,\"errors\":false,\"items\":[{\"create\":{\"_index\":\"ons1637667136829001\",\"_type\":\"_doc\",\"_id\":\"testTitle3\",\"_version\":1,\"result\":\"created\",\"_shards\":{\"total\":2,\"successful\":2,\"failed\":0},\"_seq_no\":0,\"_primary_term\":1,\"status\":201}}]}"

@@ -52,9 +52,7 @@ var (
 	emptyListOfPathsWithNoRetries = func() []string {
 		return []string{}
 	}
-	setListOfPathsWithNoRetries = func(listOfPaths []string) {
-		return
-	}
+	setListOfPathsWithNoRetries = func(listOfPaths []string) {}
 
 	doFuncWithValidResponse = func(ctx context.Context, req *http.Request) (*http.Response, error) {
 		return successESResponse(), nil
