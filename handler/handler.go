@@ -33,7 +33,7 @@ func NewBatchHandler(esClient *dpelasticsearch.Client) *BatchHandler {
 func (batchHandler BatchHandler) Handle(ctx context.Context, url string, events []*models.SearchDataImportModel) error {
 	log.Info(ctx, "events handler called")
 
-	//no events received. Nothing more to do.
+	// no events received. Nothing more to do.
 	if len(events) == 0 {
 		log.Info(ctx, "there are no events to handle")
 		return nil
@@ -81,7 +81,8 @@ func (batchHandler BatchHandler) sendToES(ctx context.Context, esDestURL string,
 	}
 
 	var bulkCreateRes models.EsBulkResponse
-	if err := json.Unmarshal(jsonCreateResponse, &bulkCreateRes); err != nil {
+	err = json.Unmarshal(jsonCreateResponse, &bulkCreateRes)
+	if err != nil {
 		log.Error(ctx, "error unmarshaling jsonCreateResponse", err)
 		return err
 	}
@@ -90,8 +91,8 @@ func (batchHandler BatchHandler) sendToES(ctx context.Context, esDestURL string,
 		var bulkupdate []byte
 		for _, resCreateItem := range bulkCreateRes.Items {
 			if resCreateItem["create"].Status == 409 {
-				event := documentList[resCreateItem["create"].ID]
-				updateBulkRequestBody, err := prepareEventForBulkRequestBody(ctx, &event, "update")
+				esEvent := documentList[resCreateItem["create"].ID]
+				updateBulkRequestBody, err := prepareEventForBulkRequestBody(ctx, &esEvent, "update")
 				if err != nil {
 					log.Error(ctx, "error in preparing the bulk for update", err)
 					continue
@@ -116,7 +117,8 @@ func (batchHandler BatchHandler) sendToES(ctx context.Context, esDestURL string,
 		}
 
 		var bulkUpdateRes models.EsBulkResponse
-		if err := json.Unmarshal(jsonUpdateResponse, &bulkUpdateRes); err != nil {
+		err = json.Unmarshal(jsonUpdateResponse, &bulkUpdateRes)
+		if err != nil {
 			log.Error(ctx, "error unmarshaling bulkUpdateRes", err)
 			return err
 		}
@@ -145,18 +147,20 @@ func (batchHandler BatchHandler) sendToES(ctx context.Context, esDestURL string,
 }
 
 // Preparing the payload to be inserted into the elastic search.
-func prepareEventForBulkRequestBody(ctx context.Context, event *models.SearchDataImportModel, method string) (bulkbody []byte, err error) {
+func prepareEventForBulkRequestBody(ctx context.Context, sdModel *models.SearchDataImportModel, method string) (bulkbody []byte, err error) {
 	t := transform.NewTransformer()
-	esmodel := t.TransformEventModelToEsModel(event)
+	esModel := t.TransformEventModelToEsModel(sdModel)
 
-	if esmodel != nil {
-		b, err := json.Marshal(esmodel)
+	if esModel != nil {
+		b, err := json.Marshal(esModel)
 		if err != nil {
 			log.Error(ctx, "error marshal to json while preparing bulk request", err)
 			return nil, err
 		}
 
-		bulkbody = append(bulkbody, []byte("{ \""+method+"\": { \"_id\": \""+esmodel.Title+"\" } }\n")...)
+		uid := esModel.UID
+		log.Info(ctx, "UID while preparing bulk request", log.Data{"UID": uid})
+		bulkbody = append(bulkbody, []byte("{ \""+method+"\": { \"_id\": \""+uid+"\" } }\n")...)
 		bulkbody = append(bulkbody, b...)
 		bulkbody = append(bulkbody, []byte("\n")...)
 	}

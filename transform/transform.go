@@ -19,8 +19,8 @@ func NewTransformer() Transformer {
 
 // TransformModelToEsModel transforms a SearchDataImport into its EsModel counterpart
 func (t *Transform) TransformEventModelToEsModel(eventModel *models.SearchDataImportModel) *models.EsModel {
-
 	esModels := models.EsModel{
+		UID:             eventModel.UID,
 		DataType:        eventModel.DataType,
 		JobID:           eventModel.JobID,
 		SearchIndex:     eventModel.SearchIndex,

@@ -125,7 +125,6 @@ func TestConsumeWithTwoMessages(t *testing.T) {
 				So(len(message2.ReleaseCalls()), ShouldEqual, 1)
 			})
 		})
-
 	})
 }
 

@@ -12,7 +12,6 @@ var _ event.Handler = (*EventHandler)(nil)
 
 // NewEventHandler returns a new mock event handler to capture event
 func NewEventHandler() *EventHandler {
-
 	events := make([]*models.SearchDataImportModel, 0)
 	eventUpdated := make(chan bool)
 

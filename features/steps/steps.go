@@ -82,7 +82,6 @@ func (c *Component) sendToConsumer(e *models.SearchDataImportModel) error {
 
 	c.KafkaConsumer.Channels().Upstream <- kafkatest.NewMessage(bytes, 0)
 	return nil
-
 }
 
 func registerInterrupt() chan os.Signal {

@@ -4,7 +4,7 @@ import (
 	"bytes"
 	"context"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"sync"
 	"testing"
@@ -63,7 +63,7 @@ func successESResponse() *http.Response {
 
 	return &http.Response{
 		StatusCode: 201,
-		Body:       ioutil.NopCloser(bytes.NewBufferString(`Created`)),
+		Body:       io.NopCloser(bytes.NewBufferString(`Created`)),
 		Header:     make(http.Header),
 	}
 }

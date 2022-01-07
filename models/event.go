@@ -2,6 +2,7 @@ package models
 
 // SearchDataImportModel provides an avro structure for a SearchDataImportModel Called event
 type SearchDataImportModel struct {
+	UID             string   `avro:"uid"`
 	DataType        string   `avro:"type"`
 	JobID           string   `avro:"job_id"`
 	SearchIndex     string   `avro:"search_index"`

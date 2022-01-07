@@ -4,7 +4,7 @@ import (
 	"bytes"
 	"context"
 	"errors"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"testing"
 
@@ -23,6 +23,7 @@ var (
 	esDestURL = "locahost:9999"
 
 	expectedEvent1 = &models.SearchDataImportModel{
+		UID:             "testTitle1",
 		DataType:        "testDataType1",
 		JobID:           "",
 		SearchIndex:     "ONS",
@@ -37,6 +38,7 @@ var (
 	}
 
 	expectedEvent2 = &models.SearchDataImportModel{
+		UID:             "testTitle1",
 		DataType:        "testDataType2",
 		JobID:           "",
 		SearchIndex:     "ONS",
@@ -70,7 +72,7 @@ func successWithESResponseNoError() *http.Response {
 
 	return &http.Response{
 		StatusCode: 201,
-		Body:       ioutil.NopCloser(bytes.NewBufferString(mockSuccessESResponseWithNoError)),
+		Body:       io.NopCloser(bytes.NewBufferString(mockSuccessESResponseWithNoError)),
 		Header:     make(http.Header),
 	}
 }
@@ -79,7 +81,7 @@ func successWithESResponseError() *http.Response {
 
 	return &http.Response{
 		StatusCode: 201,
-		Body:       ioutil.NopCloser(bytes.NewBufferString(mockSuccessESResponseWith409Error)),
+		Body:       io.NopCloser(bytes.NewBufferString(mockSuccessESResponseWith409Error)),
 		Header:     make(http.Header),
 	}
 }
@@ -88,7 +90,16 @@ func failedWithESResponseError() *http.Response {
 
 	return &http.Response{
 		StatusCode: 201,
-		Body:       ioutil.NopCloser(bytes.NewBufferString(mockSuccessESResponseWithBothCreateAndUpdateFailed)),
+		Body:       io.NopCloser(bytes.NewBufferString(mockSuccessESResponseWithBothCreateAndUpdateFailed)),
+		Header:     make(http.Header),
+	}
+}
+
+func failedWithESUpdateResponseError() *http.Response {
+
+	return &http.Response{
+		StatusCode: 201,
+		Body:       io.NopCloser(bytes.NewBufferString(mockSuccessESResponseWithBothCreateAndUpdateFailed)),
 		Header:     make(http.Header),
 	}
 }
@@ -97,7 +108,7 @@ func failedWithESResponseInternalServerError() *http.Response {
 
 	return &http.Response{
 		StatusCode: 500,
-		Body:       ioutil.NopCloser(bytes.NewBufferString(`Internal Server Error`)),
+		Body:       io.NopCloser(bytes.NewBufferString(`Internal Server Error`)),
 		Header:     make(http.Header),
 	}
 }
@@ -117,8 +128,8 @@ func TestHandleWithTwoEventsBothEventCreated(t *testing.T) {
 
 		doFuncWithValidResponse := func(ctx context.Context, req *http.Request) (*http.Response, error) {
 			count++
-			//Create bulk request succeeded with no failed resources
-			//and Update bulk request not made
+			// Create bulk request succeeded with no failed resources
+			// and Update bulk request not made
 			return successWithESResponseNoError(), nil
 		}
 		httpCli := clientMock(doFuncWithValidResponse)
@@ -145,11 +156,11 @@ func TestHandleWithTwoEventsWithOneEventCreateSuccessAndOtherUpdateSuccess(t *te
 		doFuncWithValidResponse := func(ctx context.Context, req *http.Request) (*http.Response, error) {
 			count++
 			if count == 1 {
-				//Create bulk request succeeded with one failed resources
+				// Create bulk request succeeded with one failed resources
 				return successWithESResponseError(), nil
 			} else {
-				//Update bulk request succeeded with no failed resources
-				return successWithESResponseNoError(), nil
+				// Update bulk request succeeded with no failed resources
+				return failedWithESUpdateResponseError(), nil
 			}
 		}
 		httpCli := clientMock(doFuncWithValidResponse)
@@ -176,11 +187,11 @@ func TestHandleWithBothCreateAndUpdateFailedESResponse(t *testing.T) {
 		doFuncWithInValidResponse := func(ctx context.Context, req *http.Request) (*http.Response, error) {
 			count++
 			if count == 1 {
-				//Create bulk request succeeded with failed resources
+				// Create bulk request succeeded with failed resources
 				return failedWithESResponseError(), nil
 			} else {
-				//Update bulk request succeeded with failed resources
-				return failedWithESResponseError(), nil
+				// Update bulk request succeeded with failed resources
+				return failedWithESUpdateResponseError(), nil
 			}
 		}
 		httpCli := clientMock(doFuncWithInValidResponse)
@@ -206,8 +217,8 @@ func TestHandleWithCreateAndInternalServerESResponse(t *testing.T) {
 
 		doFuncWithInValidResponse := func(ctx context.Context, req *http.Request) (*http.Response, error) {
 			count++
-			//Create bulk request failed
-			//Update bulk request not made
+			// Create bulk request failed
+			// Update bulk request not made
 			return failedWithESResponseInternalServerError(), nil
 		}
 		httpCli := clientMock(doFuncWithInValidResponse)
@@ -234,10 +245,10 @@ func TestHandleWithCreateButUpdateWithInternalServerESResponse(t *testing.T) {
 		doFuncWithInValidResponse := func(ctx context.Context, req *http.Request) (*http.Response, error) {
 			count++
 			if count == 1 {
-				//Create bulk request succeeded with a failed resources
+				// Create bulk request succeeded with a failed resources
 				return successWithESResponseError(), nil
 			} else {
-				//Update bulk request failed for internal server error
+				// Update bulk request failed for internal server error
 				return failedWithESResponseInternalServerError(), nil
 			}
 		}

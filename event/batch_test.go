@@ -14,7 +14,6 @@ import (
 var ctx = context.Background()
 
 func TestIsEmpty(t *testing.T) {
-
 	Convey("Given a batch", t, func() {
 
 		expectedEvent := getExpectedEvent()
@@ -202,19 +201,19 @@ func TestToEvent(t *testing.T) {
 
 		Convey("When the expectedEvent is unmarshalled", func() {
 
-			event, err := event.Unmarshal(message)
+			testEvent, err := event.Unmarshal(message)
 
 			Convey("Then the expectedEvent has the expected values", func() {
 				So(err, ShouldBeNil)
-				So(event.DataType, ShouldEqual, expectedEvent.DataType)
+				So(testEvent.DataType, ShouldEqual, expectedEvent.DataType)
 			})
 		})
 	})
 }
 
 // Marshal helper method to marshal a event into a []byte
-func marshal(event models.SearchDataImportModel) []byte {
-	bytes, err := schema.SearchDataImportEvent.Marshal(event)
+func marshal(smEvent models.SearchDataImportModel) []byte {
+	bytes, err := schema.SearchDataImportEvent.Marshal(smEvent)
 	So(err, ShouldBeNil)
 	return bytes
 }
