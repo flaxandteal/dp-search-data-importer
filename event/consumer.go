@@ -91,7 +91,6 @@ func ProcessBatch(ctx context.Context, cfg *config.Config, handler Handler, batc
 		return
 	}
 
-	// Handle Batch Events..committing " Ends"
 	log.Info(ctx, "batch event processed - committing")
 	batch.Commit()
 }
