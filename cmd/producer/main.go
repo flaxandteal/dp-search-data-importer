@@ -68,7 +68,7 @@ func main() {
 		err = kafkaProducer.Initialise(ctx)
 		if err != nil {
 			log.Fatal(ctx, "failed to initialise kafka producer", err)
-				os.Exit(1)
+			os.Exit(1)
 		}
 		kafkaProducer.Channels().Output <- bytes
 	}
