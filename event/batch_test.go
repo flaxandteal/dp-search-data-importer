@@ -130,7 +130,8 @@ func TestCommitWithTwoMessage(t *testing.T) {
 			})
 
 			Convey("And the batch can be reused", func() {
-				_ = batch.Add(ctx, message1)
+				err1 := batch.Add(ctx, message1)
+				So(err1, ShouldBeNil)
 
 				So(batch.IsEmpty(), ShouldBeFalse)
 				So(batch.IsFull(), ShouldBeFalse)
@@ -138,8 +139,8 @@ func TestCommitWithTwoMessage(t *testing.T) {
 
 				So(batch.Events()[0].DataType, ShouldEqual, expectedEvent.DataType)
 
-				err := batch.Add(ctx, message2)
-				So(err, ShouldBeNil)
+				err2 := batch.Add(ctx, message2)
+				So(err2, ShouldBeNil)
 				So(batch.IsEmpty(), ShouldBeFalse)
 				So(batch.IsFull(), ShouldBeTrue)
 				So(batch.Size(), ShouldEqual, 2)
@@ -164,11 +165,13 @@ func TestSize(t *testing.T) {
 
 		Convey("When add is called with a valid message", func() {
 
-			_ = batch.Add(ctx, message)
+			err := batch.Add(ctx, message)
+			So(err, ShouldBeNil)
 
 			Convey("Then the batch size should increase.", func() {
 				So(batch.Size(), ShouldEqual, 1)
-				_ = batch.Add(ctx, message)
+				err = batch.Add(ctx, message)
+				So(err, ShouldBeNil)
 				So(batch.Size(), ShouldEqual, 2)
 			})
 		})
@@ -189,9 +192,12 @@ func TestIsFull(t *testing.T) {
 
 		Convey("When the number of messages added equals the batch size", func() {
 
-			_ = batch.Add(ctx, message)
+			err1 := batch.Add(ctx, message)
+			So(err1, ShouldBeNil)
 			So(batch.IsFull(), ShouldBeFalse)
-			_ = batch.Add(ctx, message)
+
+			err2 := batch.Add(ctx, message)
+			So(err2, ShouldBeNil)
 
 			Convey("Then the batch should be full.", func() {
 				So(batch.IsFull(), ShouldBeTrue)
