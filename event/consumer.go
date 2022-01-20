@@ -73,7 +73,10 @@ func (consumer *Consumer) Consume(
 // AddMessageToBatch will attempt to add the message to the batch and determine if it should be processed.
 func AddMessageToBatch(ctx context.Context, cfg *config.Config, batch *Batch, msg kafka.Message, handler Handler) {
 	log.Info(ctx, "add message to batch starts")
-	_ = batch.Add(ctx, msg)
+	err := batch.Add(ctx, msg)
+	if err != nil {
+		log.Error(ctx, "failed to add event to batch", err)
+	}
 	if batch.IsFull() {
 		ProcessBatch(ctx, cfg, handler, batch, "full-batch")
 	}
