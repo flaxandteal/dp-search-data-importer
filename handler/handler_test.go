@@ -213,7 +213,7 @@ func TestHandleWithBothCreateAndUpdateFailedESResponse(t *testing.T) {
 func TestHandleWithCreateAndInternalServerESResponse(t *testing.T) {
 
 	var count int
-	Convey("Given a handler configured with other 409 es create request", t, func() {
+	Convey("Given a handler configured with other failed es create request", t, func() {
 
 		doFuncWithInValidResponse := func(ctx context.Context, req *http.Request) (*http.Response, error) {
 			count++

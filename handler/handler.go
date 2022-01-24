@@ -77,6 +77,7 @@ func (batchHandler BatchHandler) sendToES(ctx context.Context, esDestURL string,
 	jsonCreateResponse, _, err := batchHandler.esClient.BulkUpdate(ctx, esDestIndex, esDestURL, bulkcreate)
 	if err != nil {
 		if jsonCreateResponse == nil {
+			log.Error(ctx, "error from elasticsearch while creating the event", err)
 			return err
 		}
 		log.Warn(ctx, "error in response from elasticsearch while creating the event", log.FormatErrors([]error{err}))
