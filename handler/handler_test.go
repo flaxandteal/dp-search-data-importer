@@ -210,16 +210,20 @@ func TestHandleWithBothCreateAndUpdateFailedESResponse(t *testing.T) {
 	})
 }
 
-func TestHandleWithCreateAndInternalServerESResponse(t *testing.T) {
+func TestHandleWithCreate409ErrorAndInternalServerESResponse(t *testing.T) {
 
 	var count int
-	Convey("Given a handler configured with other failed es create request", t, func() {
+	Convey("Given a handler configured with other 409 es create request", t, func() {
 
 		doFuncWithInValidResponse := func(ctx context.Context, req *http.Request) (*http.Response, error) {
 			count++
-			// Create bulk request failed
-			// Update bulk request not made
-			return failedWithESResponseInternalServerError(), nil
+			if count == 1 {
+				// Create bulk request succeeded with a failed resources
+				return successWithESResponseError(), nil
+			} else {
+				// Update bulk request failed for internal server error
+				return failedWithESResponseInternalServerError(), nil
+			}
 		}
 		httpCli := clientMock(doFuncWithInValidResponse)
 		esTestclient := dpelasticsearch.NewClientWithHTTPClientAndAwsSigner(esDestURL, nil, false, httpCli)
@@ -231,7 +235,7 @@ func TestHandleWithCreateAndInternalServerESResponse(t *testing.T) {
 
 			Convey("And the error is not nil and only create bulk request called", func() {
 				So(err, ShouldResemble, errors.New("unexpected status code from api"))
-				So(count, ShouldEqual, 1)
+				So(count, ShouldEqual, 2)
 			})
 		})
 	})
