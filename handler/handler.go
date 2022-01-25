@@ -151,6 +151,8 @@ func (batchHandler BatchHandler) sendToES(ctx context.Context, esDestURL string,
 
 // Preparing the payload to be inserted into the elastic search.
 func prepareEventForBulkRequestBody(ctx context.Context, sdModel *models.SearchDataImportModel, method string) (bulkbody []byte, err error) {
+
+	uid := sdModel.UID
 	t := transform.NewTransformer()
 	esModel := t.TransformEventModelToEsModel(sdModel)
 
@@ -161,11 +163,11 @@ func prepareEventForBulkRequestBody(ctx context.Context, sdModel *models.SearchD
 			return nil, err
 		}
 
-		uid := esModel.UID
-		log.Info(ctx, "UID while preparing bulk request", log.Data{"UID": uid})
+		log.Info(ctx, "uid while preparing bulk request", log.Data{"uid": uid})
 		bulkbody = append(bulkbody, []byte("{ \""+method+"\": { \"_id\": \""+uid+"\" } }\n")...)
 		bulkbody = append(bulkbody, b...)
 		bulkbody = append(bulkbody, []byte("\n")...)
+		log.Info(ctx, "bulk request", log.Data{"bulkbody": bulkbody})
 	}
 	return bulkbody, nil
 }

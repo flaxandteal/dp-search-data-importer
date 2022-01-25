@@ -2,7 +2,6 @@ package models
 
 // EsModel holds an individual content data
 type EsModel struct {
-	UID             string   `json:"uid"`
 	DataType        string   `json:"type"`
 	JobID           string   `json:"job_id"`
 	SearchIndex     string   `json:"search_index"`
