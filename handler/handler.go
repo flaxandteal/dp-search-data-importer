@@ -167,7 +167,6 @@ func prepareEventForBulkRequestBody(ctx context.Context, sdModel *models.SearchD
 		bulkbody = append(bulkbody, []byte("{ \""+method+"\": { \"_id\": \""+uid+"\" } }\n")...)
 		bulkbody = append(bulkbody, b...)
 		bulkbody = append(bulkbody, []byte("\n")...)
-		log.Info(ctx, "bulk request", log.Data{"bulkbody": bulkbody})
 	}
 	return bulkbody, nil
 }
