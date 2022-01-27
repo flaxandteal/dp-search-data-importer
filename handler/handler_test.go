@@ -160,7 +160,7 @@ func TestHandleWithTwoEventsWithOneEventCreateSuccessAndOtherUpdateSuccess(t *te
 				return successWithESResponseError(), nil
 			} else {
 				// Update bulk request succeeded with no failed resources
-				return failedWithESUpdateResponseError(), nil
+				return successWithESResponseNoError(), nil
 			}
 		}
 		httpCli := clientMock(doFuncWithValidResponse)

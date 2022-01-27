@@ -63,7 +63,7 @@ func (batchHandler BatchHandler) sendToES(ctx context.Context, esDestURL string,
 			continue // break here
 		}
 
-		documentList[event.Title] = *event
+		documentList[event.UID] = *event
 		createBulkRequestBody, err := prepareEventForBulkRequestBody(ctx, event, "create")
 		if err != nil {
 			log.Error(ctx, "error in preparing the bulk for create", err, log.Data{
@@ -164,9 +164,19 @@ func prepareEventForBulkRequestBody(ctx context.Context, sdModel *models.SearchD
 		}
 
 		log.Info(ctx, "uid while preparing bulk request", log.Data{"uid": uid})
+
 		bulkbody = append(bulkbody, []byte("{ \""+method+"\": { \"_id\": \""+uid+"\" } }\n")...)
-		bulkbody = append(bulkbody, b...)
-		bulkbody = append(bulkbody, []byte("\n")...)
+		if method == "update" {
+			bulkbody = append(bulkbody, []byte("{")...)
+			bulkbody = append(bulkbody, []byte("\"doc\":")...)
+			bulkbody = append(bulkbody, b...)
+			bulkbody = append(bulkbody, []byte(",\"doc_as_upsert\": true")...)
+			bulkbody = append(bulkbody, []byte("}")...)
+			bulkbody = append(bulkbody, []byte("\n")...)
+		} else {
+			bulkbody = append(bulkbody, b...)
+			bulkbody = append(bulkbody, []byte("\n")...)
+		}
 	}
 	return bulkbody, nil
 }
