@@ -19,12 +19,10 @@ import (
 
 var (
 	testContext = context.Background()
-
-	esDestURL = "locahost:9999"
+	esDestURL   = "locahost:9999"
 
 	expectedEvent1 = &models.SearchDataImportModel{
-		UID:             "testTitle1",
-		DataType:        "testDataType1",
+		DataType:        "testDataType",
 		JobID:           "",
 		SearchIndex:     "ONS",
 		CDID:            "",
@@ -33,12 +31,11 @@ var (
 		MetaDescription: "",
 		Summary:         "",
 		ReleaseDate:     "",
-		Title:           "testTitle1",
-		TraceID:         "testTraceID1",
+		Title:           "",
+		TraceID:         "testTraceID",
 	}
 
 	expectedEvent2 = &models.SearchDataImportModel{
-		UID:             "testTitle1",
 		DataType:        "testDataType2",
 		JobID:           "",
 		SearchIndex:     "ONS",
@@ -48,8 +45,8 @@ var (
 		MetaDescription: "",
 		Summary:         "",
 		ReleaseDate:     "",
-		Title:           "testTitle2",
-		TraceID:         "testTraceID2",
+		Title:           "",
+		TraceID:         "",
 	}
 
 	testEvents = []*models.SearchDataImportModel{
@@ -63,15 +60,14 @@ var (
 
 	setListOfPathsWithNoRetries = func(listOfPaths []string) {}
 
-	mockSuccessESResponseWith409Error                  = "{\"took\":5,\"errors\":true,\"items\":[{\"create\":{\"_index\":\"ons1637667136829001\",\"_type\":\"_doc\",\"_id\":\"testTitle2\",\"status\":409,\"error\":{\"type\":\"version_conflict_engine_exception\",\"reason\":\"[Help]: version conflict, document already exists (current version [1])\",\"index_uuid\":\"YNxkEkfcTp-SiMXOSqDvEA\",\"shard\":\"0\",\"index\":\"ons1637667136829001\"}}},{\"create\":{\"_index\":\"ons1637667136829001\",\"_type\":\"_doc\",\"_id\":\"testTitle4\",\"_version\":1,\"result\":\"created\",\"_shards\":{\"total\":2,\"successful\":2,\"failed\":0},\"_seq_no\":0,\"_primary_term\":1,\"status\":201}}]}"
-	mockSuccessESResponseWithNoError                   = "{\"took\":6,\"errors\":false,\"items\":[{\"create\":{\"_index\":\"ons1637667136829001\",\"_type\":\"_doc\",\"_id\":\"testTitle3\",\"_version\":1,\"result\":\"created\",\"_shards\":{\"total\":2,\"successful\":2,\"failed\":0},\"_seq_no\":0,\"_primary_term\":1,\"status\":201}}]}"
-	mockSuccessESResponseWithBothCreateAndUpdateFailed = "{\"took\":5,\"errors\":true,\"items\":[{\"create\":{\"_index\":\"ons1637667136829001\",\"_type\":\"_doc\",\"_id\":\"testTitle2\",\"status\":409,\"error\":{\"type\":\"version_conflict_engine_exception\",\"reason\":\"[Help]: version conflict, document already exists (current version [1])\",\"index_uuid\":\"YNxkEkfcTp-SiMXOSqDvEA\",\"shard\":\"0\",\"index\":\"ons1637667136829001\"}}},{\"create\":{\"_index\":\"ons1637667136829001\",\"_type\":\"_doc\",\"_id\":\"testTitle4\",\"_version\":1,\"result\":\"created\",\"_shards\":{\"total\":2,\"successful\":2,\"failed\":0},\"_seq_no\":0,\"_primary_term\":1,\"status\":400}}]}"
+	mockSuccessESResponseWith409Error = "{\"took\":5,\"errors\":true,\"items\":[{\"create\":{\"_index\":\"ons1637667136829001\",\"_type\":\"_doc\",\"_id\":\"testTitle2\",\"status\":409,\"error\":{\"type\":\"version_conflict_engine_exception\",\"reason\":\"[Help]: version conflict, document already exists (current version [1])\",\"index_uuid\":\"YNxkEkfcTp-SiMXOSqDvEA\",\"shard\":\"0\",\"index\":\"ons1637667136829001\"}}},{\"create\":{\"_index\":\"ons1637667136829001\",\"_type\":\"_doc\",\"_id\":\"testTitle4\",\"_version\":1,\"result\":\"created\",\"_shards\":{\"total\":2,\"successful\":2,\"failed\":0},\"_seq_no\":0,\"_primary_term\":1,\"status\":201}}]}"
+	mockSuccessESResponseWithNoError  = "{\"took\":6,\"errors\":false,\"items\":[{\"create\":{\"_index\":\"ons1637667136829001\",\"_type\":\"_doc\",\"_id\":\"testTitle3\",\"_version\":1,\"result\":\"created\",\"_shards\":{\"total\":2,\"successful\":2,\"failed\":0},\"_seq_no\":0,\"_primary_term\":1,\"status\":201}}]}"
 )
 
 func successWithESResponseNoError() *http.Response {
 
 	return &http.Response{
-		StatusCode: 201,
+		StatusCode: 200,
 		Body:       io.NopCloser(bytes.NewBufferString(mockSuccessESResponseWithNoError)),
 		Header:     make(http.Header),
 	}
@@ -80,26 +76,8 @@ func successWithESResponseNoError() *http.Response {
 func successWithESResponseError() *http.Response {
 
 	return &http.Response{
-		StatusCode: 201,
+		StatusCode: 200,
 		Body:       io.NopCloser(bytes.NewBufferString(mockSuccessESResponseWith409Error)),
-		Header:     make(http.Header),
-	}
-}
-
-func failedWithESResponseError() *http.Response {
-
-	return &http.Response{
-		StatusCode: 201,
-		Body:       io.NopCloser(bytes.NewBufferString(mockSuccessESResponseWithBothCreateAndUpdateFailed)),
-		Header:     make(http.Header),
-	}
-}
-
-func failedWithESUpdateResponseError() *http.Response {
-
-	return &http.Response{
-		StatusCode: 201,
-		Body:       io.NopCloser(bytes.NewBufferString(mockSuccessESResponseWithBothCreateAndUpdateFailed)),
 		Header:     make(http.Header),
 	}
 }
@@ -121,15 +99,13 @@ func clientMock(doFunc func(ctx context.Context, request *http.Request) (*http.R
 	}
 }
 
-func TestHandleWithTwoEventsBothEventCreated(t *testing.T) {
+func TestHandleWithEventsCreated(t *testing.T) {
 
 	var count int
 	Convey("Given a handler configured with sucessful es updates for all two events is success", t, func() {
 
 		doFuncWithValidResponse := func(ctx context.Context, req *http.Request) (*http.Response, error) {
 			count++
-			// Create bulk request succeeded with no failed resources
-			// and Update bulk request not made
 			return successWithESResponseNoError(), nil
 		}
 		httpCli := clientMock(doFuncWithValidResponse)
@@ -148,20 +124,14 @@ func TestHandleWithTwoEventsBothEventCreated(t *testing.T) {
 	})
 }
 
-func TestHandleWithTwoEventsWithOneEventCreateSuccessAndOtherUpdateSuccess(t *testing.T) {
+func TestHandleWithEventsUpdated(t *testing.T) {
 
 	var count int
 	Convey("Given a handler configured with sucessful es updates for two events with one create error", t, func() {
 
 		doFuncWithValidResponse := func(ctx context.Context, req *http.Request) (*http.Response, error) {
 			count++
-			if count == 1 {
-				// Create bulk request succeeded with one failed resources
-				return successWithESResponseError(), nil
-			} else {
-				// Update bulk request succeeded with no failed resources
-				return successWithESResponseNoError(), nil
-			}
+			return successWithESResponseError(), nil
 		}
 		httpCli := clientMock(doFuncWithValidResponse)
 		esTestclient := dpelasticsearch.NewClientWithHTTPClientAndAwsSigner(esDestURL, nil, false, httpCli)
@@ -173,52 +143,19 @@ func TestHandleWithTwoEventsWithOneEventCreateSuccessAndOtherUpdateSuccess(t *te
 
 			Convey("Then the error is nil and both create and update bulk request called", func() {
 				So(err, ShouldBeNil)
-				So(count, ShouldEqual, 2)
+				So(count, ShouldEqual, 1)
 			})
 		})
 	})
 }
 
-func TestHandleWithBothCreateAndUpdateFailedESResponse(t *testing.T) {
-
-	var count int
-	Convey("Given a handler configured with both events failed for es create and es updates", t, func() {
-
-		doFuncWithInValidResponse := func(ctx context.Context, req *http.Request) (*http.Response, error) {
-			count++
-			if count == 1 {
-				// Create bulk request succeeded with failed resources
-				return failedWithESResponseError(), nil
-			} else {
-				// Update bulk request succeeded with failed resources
-				return failedWithESUpdateResponseError(), nil
-			}
-		}
-		httpCli := clientMock(doFuncWithInValidResponse)
-		esTestclient := dpelasticsearch.NewClientWithHTTPClientAndAwsSigner(esDestURL, nil, false, httpCli)
-
-		batchHandler := handler.NewBatchHandler(esTestclient)
-
-		Convey("When handle is called", func() {
-			err := batchHandler.Handle(testContext, esDestURL, testEvents)
-
-			Convey("And the error is nil and both create and update bulk request called", func() {
-				So(err, ShouldBeNil)
-				So(count, ShouldEqual, 2)
-			})
-		})
-	})
-}
-
-func TestHandleWithCreateAndInternalServerESResponse(t *testing.T) {
+func TestHandleWithInternalServerESResponse(t *testing.T) {
 
 	var count int
 	Convey("Given a handler configured with other failed es create request", t, func() {
 
 		doFuncWithInValidResponse := func(ctx context.Context, req *http.Request) (*http.Response, error) {
 			count++
-			// Create bulk request failed
-			// Update bulk request not made
 			return failedWithESResponseInternalServerError(), nil
 		}
 		httpCli := clientMock(doFuncWithInValidResponse)
@@ -232,37 +169,6 @@ func TestHandleWithCreateAndInternalServerESResponse(t *testing.T) {
 			Convey("And the error is not nil and only create bulk request called", func() {
 				So(err, ShouldResemble, errors.New("unexpected status code from api"))
 				So(count, ShouldEqual, 1)
-			})
-		})
-	})
-}
-
-func TestHandleWithCreateButUpdateWithInternalServerESResponse(t *testing.T) {
-
-	var count int
-	Convey("Given a handler configured with one success and other failed es updates", t, func() {
-
-		doFuncWithInValidResponse := func(ctx context.Context, req *http.Request) (*http.Response, error) {
-			count++
-			if count == 1 {
-				// Create bulk request succeeded with a failed resources
-				return successWithESResponseError(), nil
-			} else {
-				// Update bulk request failed for internal server error
-				return failedWithESResponseInternalServerError(), nil
-			}
-		}
-		httpCli := clientMock(doFuncWithInValidResponse)
-		esTestclient := dpelasticsearch.NewClientWithHTTPClientAndAwsSigner(esDestURL, nil, false, httpCli)
-
-		batchHandler := handler.NewBatchHandler(esTestclient)
-
-		Convey("When handle is called", func() {
-			err := batchHandler.Handle(testContext, esDestURL, testEvents)
-
-			Convey("And the error is nil", func() {
-				So(err, ShouldResemble, errors.New("unexpected status code from api"))
-				So(count, ShouldEqual, 2)
 			})
 		})
 	})

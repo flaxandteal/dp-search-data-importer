@@ -54,94 +54,48 @@ func (batchHandler BatchHandler) sendToES(ctx context.Context, esDestURL string,
 
 	log.Info(ctx, "bulk events into ES starts")
 	target := len(events)
-	documentList := make(map[string]models.SearchDataImportModel)
 
-	var bulkcreate []byte
+	var bulkupsert []byte
 	for _, event := range events {
-		if event.Title == "" {
-			log.Info(ctx, "No title for inbound event, no transformation possible")
-			continue // break here
-		}
-
-		documentList[event.UID] = *event
-		createBulkRequestBody, err := prepareEventForBulkRequestBody(ctx, event, "create")
+		upsertBulkRequestBody, err := prepareEventForBulkUpsertRequestBody(ctx, event)
 		if err != nil {
-			log.Error(ctx, "error in preparing the bulk for create", err, log.Data{
+			log.Error(ctx, "error in preparing the bulk for upsert", err, log.Data{
 				"event": *event,
 			})
 			continue
 		}
-		bulkcreate = append(bulkcreate, createBulkRequestBody...)
+		bulkupsert = append(bulkupsert, upsertBulkRequestBody...)
 	}
 
-	jsonCreateResponse, _, err := batchHandler.esClient.BulkUpdate(ctx, esDestIndex, esDestURL, bulkcreate)
+	jsonUpsertResponse, _, err := batchHandler.esClient.BulkUpdate(ctx, esDestIndex, esDestURL, bulkupsert)
 	if err != nil {
-		if jsonCreateResponse == nil {
-			log.Error(ctx, "error from elasticsearch while creating the event", err)
+		if jsonUpsertResponse == nil {
+			log.Error(ctx, "server error while upserting the event", err)
 			return err
 		}
-		log.Warn(ctx, "error in response from elasticsearch while creating the event", log.FormatErrors([]error{err}))
+		log.Warn(ctx, "error in response from elasticsearch while upserting the event", log.FormatErrors([]error{err}))
 	}
 
-	var bulkCreateRes models.EsBulkResponse
-	err = json.Unmarshal(jsonCreateResponse, &bulkCreateRes)
-	if err != nil {
-		log.Error(ctx, "error unmarshaling jsonCreateResponse", err)
-		return err
+	var bulkRes models.EsBulkResponse
+	if err := json.Unmarshal(jsonUpsertResponse, &bulkRes); err != nil {
+		log.Error(ctx, "error unmarshaling json", err)
 	}
-
-	if bulkCreateRes.Errors {
-		var bulkupdate []byte
-		for _, resCreateItem := range bulkCreateRes.Items {
-			if resCreateItem["create"].Status == 409 {
-				esEvent := documentList[resCreateItem["create"].ID]
-				updateBulkRequestBody, err := prepareEventForBulkRequestBody(ctx, &esEvent, "update")
-				if err != nil {
-					log.Error(ctx, "error in preparing the bulk for update", err)
-					continue
-				}
-				bulkupdate = append(bulkupdate, updateBulkRequestBody...)
-			} else if resCreateItem["create"].Status == 201 {
+	if bulkRes.Errors {
+		for _, resUpsertItem := range bulkRes.Items {
+			if resUpsertItem["create"].Status == 409 {
 				continue
 			} else {
-				log.Error(ctx, "error creating doc to ES", err,
+				log.Error(ctx, "error upserting doc to ES", err,
 					log.Data{
-						"response status": resCreateItem["create"].Status,
-						"response.title:": resCreateItem["create"].ID,
+						"response.uid:":   resUpsertItem["create"].ID,
+						"response status": resUpsertItem["create"].Status,
 					})
+				target--
 				continue
 			}
 		}
-
-		jsonUpdateResponse, _, err := batchHandler.esClient.BulkUpdate(ctx, esDestIndex, esDestURL, bulkupdate)
-		if err != nil {
-			log.Error(ctx, "error in response from elasticsearch while updating the event", err)
-			return err
-		}
-
-		var bulkUpdateRes models.EsBulkResponse
-		err = json.Unmarshal(jsonUpdateResponse, &bulkUpdateRes)
-		if err != nil {
-			log.Error(ctx, "error unmarshaling bulkUpdateRes", err)
-			return err
-		}
-
-		if bulkUpdateRes.Errors {
-			for _, resUpdateItem := range bulkUpdateRes.Items {
-				if resUpdateItem["update"].Status == 200 {
-					continue
-				} else {
-					log.Error(ctx, "error updating event to ES", err,
-						log.Data{
-							"response status": resUpdateItem["update"].Status,
-							"response.title:": resUpdateItem["update"].ID,
-						})
-					target--
-					continue
-				}
-			}
-		}
 	}
+
 	log.Info(ctx, "documents bulk uploaded to elasticsearch", log.Data{
 		"documents_received": len(events),
 		"documents_inserted": target,
@@ -150,7 +104,7 @@ func (batchHandler BatchHandler) sendToES(ctx context.Context, esDestURL string,
 }
 
 // Preparing the payload to be inserted into the elastic search.
-func prepareEventForBulkRequestBody(ctx context.Context, sdModel *models.SearchDataImportModel, method string) (bulkbody []byte, err error) {
+func prepareEventForBulkUpsertRequestBody(ctx context.Context, sdModel *models.SearchDataImportModel) (bulkbody []byte, err error) {
 
 	uid := sdModel.UID
 	t := transform.NewTransformer()
@@ -163,20 +117,14 @@ func prepareEventForBulkRequestBody(ctx context.Context, sdModel *models.SearchD
 			return nil, err
 		}
 
-		log.Info(ctx, "uid while preparing bulk request", log.Data{"uid": uid})
-
-		bulkbody = append(bulkbody, []byte("{ \""+method+"\": { \"_id\": \""+uid+"\" } }\n")...)
-		if method == "update" {
-			bulkbody = append(bulkbody, []byte("{")...)
-			bulkbody = append(bulkbody, []byte("\"doc\":")...)
-			bulkbody = append(bulkbody, b...)
-			bulkbody = append(bulkbody, []byte(",\"doc_as_upsert\": true")...)
-			bulkbody = append(bulkbody, []byte("}")...)
-			bulkbody = append(bulkbody, []byte("\n")...)
-		} else {
-			bulkbody = append(bulkbody, b...)
-			bulkbody = append(bulkbody, []byte("\n")...)
-		}
+		log.Info(ctx, "uid while preparing bulk request for upsert", log.Data{"uid": uid})
+		bulkbody = append(bulkbody, []byte("{ \""+"update"+"\": { \"_id\": \""+uid+"\" } }\n")...)
+		bulkbody = append(bulkbody, []byte("{")...)
+		bulkbody = append(bulkbody, []byte("\"doc\":")...)
+		bulkbody = append(bulkbody, b...)
+		bulkbody = append(bulkbody, []byte(",\"doc_as_upsert\": true")...)
+		bulkbody = append(bulkbody, []byte("}")...)
+		bulkbody = append(bulkbody, []byte("\n")...)
 	}
 	return bulkbody, nil
 }
