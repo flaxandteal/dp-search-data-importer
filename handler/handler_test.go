@@ -22,31 +22,33 @@ var (
 	esDestURL   = "locahost:9999"
 
 	expectedEvent1 = &models.SearchDataImportModel{
-		DataType:        "testDataType",
+		UID:             "uid1",
+		DataType:        "anyDataType1",
 		JobID:           "",
 		SearchIndex:     "ONS",
 		CDID:            "",
 		DatasetID:       "",
-		Keywords:        []string{"testkeyword1"},
+		Keywords:        []string{"anykeyword1"},
 		MetaDescription: "",
 		Summary:         "",
 		ReleaseDate:     "",
-		Title:           "",
-		TraceID:         "testTraceID",
+		Title:           "anyTitle1",
+		TraceID:         "anyTraceID1",
 	}
 
 	expectedEvent2 = &models.SearchDataImportModel{
-		DataType:        "testDataType2",
+		UID:             "uid2",
+		DataType:        "anyDataType2",
 		JobID:           "",
 		SearchIndex:     "ONS",
 		CDID:            "",
 		DatasetID:       "",
-		Keywords:        []string{"testkeyword2"},
+		Keywords:        []string{"anykeyword2"},
 		MetaDescription: "",
 		Summary:         "",
 		ReleaseDate:     "",
-		Title:           "",
-		TraceID:         "",
+		Title:           "anyTitle2",
+		TraceID:         "anyTraceID2",
 	}
 
 	testEvents = []*models.SearchDataImportModel{
