@@ -78,7 +78,7 @@ func main() {
 func scanEvent(scanner *bufio.Scanner) *models.SearchDataImportModel {
 	fmt.Println("--- [Send Kafka PublishedContent] ---")
 
-	fmt.Println("Type the uid")
+	fmt.Println("Type the UID")
 	fmt.Printf("$ ")
 	scanner.Scan()
 	uid := scanner.Text()

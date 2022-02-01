@@ -12,7 +12,10 @@ import (
 	dpelasticsearch "github.com/ONSdigital/dp-elasticsearch/v2/elasticsearch"
 )
 
-const esDestIndex = "ons"
+const (
+	esDestIndex = "ons"
+	create      = "create"
+)
 
 var _ event.Handler = (*BatchHandler)(nil)
 
@@ -57,6 +60,11 @@ func (batchHandler BatchHandler) sendToES(ctx context.Context, esDestURL string,
 
 	var bulkupsert []byte
 	for _, event := range events {
+		if event.UID == "" {
+			log.Info(ctx, "No uid for inbound kafka event, no transformation possible")
+			continue // break here
+		}
+
 		upsertBulkRequestBody, err := prepareEventForBulkUpsertRequestBody(ctx, event)
 		if err != nil {
 			log.Error(ctx, "error in preparing the bulk for upsert", err, log.Data{
@@ -79,16 +87,17 @@ func (batchHandler BatchHandler) sendToES(ctx context.Context, esDestURL string,
 	var bulkRes models.EsBulkResponse
 	if err := json.Unmarshal(jsonUpsertResponse, &bulkRes); err != nil {
 		log.Error(ctx, "error unmarshaling json", err)
+		return err
 	}
 	if bulkRes.Errors {
 		for _, resUpsertItem := range bulkRes.Items {
-			if resUpsertItem["create"].Status == 409 {
+			if resUpsertItem[create].Status == 409 {
 				continue
 			} else {
 				log.Error(ctx, "error upserting doc to ES", err,
 					log.Data{
-						"response.uid:":   resUpsertItem["create"].ID,
-						"response status": resUpsertItem["create"].Status,
+						"response.uid:":   resUpsertItem[create].ID,
+						"response status": resUpsertItem[create].Status,
 					})
 				target--
 				continue

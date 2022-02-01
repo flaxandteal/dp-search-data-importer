@@ -103,11 +103,9 @@ func clientMock(doFunc func(ctx context.Context, request *http.Request) (*http.R
 
 func TestHandleWithEventsCreated(t *testing.T) {
 
-	var count int
-	Convey("Given a handler configured with sucessful es updates for all two events is success", t, func() {
+	Convey("Given a handler configured with successful es updates for all two events is success", t, func() {
 
 		doFuncWithValidResponse := func(ctx context.Context, req *http.Request) (*http.Response, error) {
-			count++
 			return successWithESResponseNoError(), nil
 		}
 		httpCli := clientMock(doFuncWithValidResponse)
@@ -118,9 +116,8 @@ func TestHandleWithEventsCreated(t *testing.T) {
 		Convey("When handle is called", func() {
 			err := batchHandler.Handle(testContext, esDestURL, testEvents)
 
-			Convey("Then the error is nil and only create bulk is called but not update bulk request", func() {
+			Convey("Then the error is nil", func() {
 				So(err, ShouldBeNil)
-				So(count, ShouldEqual, 1)
 			})
 		})
 	})
@@ -128,11 +125,9 @@ func TestHandleWithEventsCreated(t *testing.T) {
 
 func TestHandleWithEventsUpdated(t *testing.T) {
 
-	var count int
 	Convey("Given a handler configured with sucessful es updates for two events with one create error", t, func() {
 
 		doFuncWithValidResponse := func(ctx context.Context, req *http.Request) (*http.Response, error) {
-			count++
 			return successWithESResponseError(), nil
 		}
 		httpCli := clientMock(doFuncWithValidResponse)
@@ -143,9 +138,8 @@ func TestHandleWithEventsUpdated(t *testing.T) {
 		Convey("When handle is called", func() {
 			err := batchHandler.Handle(testContext, esDestURL, testEvents)
 
-			Convey("Then the error is nil and both create and update bulk request called", func() {
+			Convey("Then the error is nil", func() {
 				So(err, ShouldBeNil)
-				So(count, ShouldEqual, 1)
 			})
 		})
 	})
