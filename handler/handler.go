@@ -61,7 +61,7 @@ func (batchHandler BatchHandler) sendToES(ctx context.Context, esDestURL string,
 	var bulkupsert []byte
 	for _, event := range events {
 		if event.UID == "" {
-			log.Info(ctx, "No uid for inbound kafka event, no transformation possible")
+			log.Info(ctx, "no uid for inbound kafka event, no transformation possible")
 			continue // break here
 		}
 
