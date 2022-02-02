@@ -13,8 +13,8 @@ import (
 )
 
 const (
-	esDestIndex = "ons"
-	create      = "create"
+	esDestIndex  = "ons"
+	esRespCreate = "create"
 )
 
 var _ event.Handler = (*BatchHandler)(nil)
@@ -91,13 +91,13 @@ func (batchHandler BatchHandler) sendToES(ctx context.Context, esDestURL string,
 	}
 	if bulkRes.Errors {
 		for _, resUpsertItem := range bulkRes.Items {
-			if resUpsertItem[create].Status == 409 {
+			if resUpsertItem[esRespCreate].Status == 409 {
 				continue
 			} else {
 				log.Error(ctx, "error upserting doc to ES", err,
 					log.Data{
-						"response.uid:":   resUpsertItem[create].ID,
-						"response status": resUpsertItem[create].Status,
+						"response.uid:":   resUpsertItem[esRespCreate].ID,
+						"response status": resUpsertItem[esRespCreate].Status,
 					})
 				target--
 				continue

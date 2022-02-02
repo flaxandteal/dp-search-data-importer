@@ -104,8 +104,10 @@ func clientMock(doFunc func(ctx context.Context, request *http.Request) (*http.R
 func TestHandleWithEventsCreated(t *testing.T) {
 
 	Convey("Given a handler configured with successful es updates for all two events is success", t, func() {
+		count := 0
 
 		doFuncWithValidResponse := func(ctx context.Context, req *http.Request) (*http.Response, error) {
+			count++
 			return successWithESResponseNoError(), nil
 		}
 		httpCli := clientMock(doFuncWithValidResponse)
@@ -116,8 +118,9 @@ func TestHandleWithEventsCreated(t *testing.T) {
 		Convey("When handle is called", func() {
 			err := batchHandler.Handle(testContext, esDestURL, testEvents)
 
-			Convey("Then the error is nil", func() {
+			Convey("Then the error is nil and it performed upsert action", func() {
 				So(err, ShouldBeNil)
+				So(count, ShouldEqual, 1)
 			})
 		})
 	})
@@ -127,7 +130,9 @@ func TestHandleWithEventsUpdated(t *testing.T) {
 
 	Convey("Given a handler configured with sucessful es updates for two events with one create error", t, func() {
 
+		count := 0
 		doFuncWithValidResponse := func(ctx context.Context, req *http.Request) (*http.Response, error) {
+			count++
 			return successWithESResponseError(), nil
 		}
 		httpCli := clientMock(doFuncWithValidResponse)
@@ -138,8 +143,9 @@ func TestHandleWithEventsUpdated(t *testing.T) {
 		Convey("When handle is called", func() {
 			err := batchHandler.Handle(testContext, esDestURL, testEvents)
 
-			Convey("Then the error is nil", func() {
+			Convey("Then the error is nil and it performed upsert action", func() {
 				So(err, ShouldBeNil)
+				So(count, ShouldEqual, 1)
 			})
 		})
 	})
@@ -147,8 +153,8 @@ func TestHandleWithEventsUpdated(t *testing.T) {
 
 func TestHandleWithInternalServerESResponse(t *testing.T) {
 
-	var count int
 	Convey("Given a handler configured with other failed es create request", t, func() {
+		count := 0
 
 		doFuncWithInValidResponse := func(ctx context.Context, req *http.Request) (*http.Response, error) {
 			count++
@@ -162,7 +168,7 @@ func TestHandleWithInternalServerESResponse(t *testing.T) {
 		Convey("When handle is called", func() {
 			err := batchHandler.Handle(testContext, esDestURL, testEvents)
 
-			Convey("And the error is not nil and only create bulk request called", func() {
+			Convey("And the error is not nil while performing upsert action", func() {
 				So(err, ShouldResemble, errors.New("unexpected status code from api"))
 				So(count, ShouldEqual, 1)
 			})
