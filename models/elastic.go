@@ -12,6 +12,7 @@ type EsModel struct {
 	ReleaseDate     string   `json:"release_date,omitempty"`
 	Summary         string   `json:"summary"`
 	Title           string   `json:"title"`
+	Topics          []string `json:"topics"`
 }
 
 // EsBulkResponse holds a response from ES

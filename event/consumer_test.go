@@ -28,6 +28,7 @@ var (
 		Summary:         "",
 		ReleaseDate:     "",
 		Title:           "testTitle1",
+		Topics:          []string{""},
 		TraceID:         "",
 	}
 
@@ -42,6 +43,7 @@ var (
 		Summary:         "",
 		ReleaseDate:     "",
 		Title:           "",
+		Topics:          []string{"testtopic1", "testtopic2"},
 		TraceID:         "",
 	}
 )
