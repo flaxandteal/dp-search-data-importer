@@ -19,7 +19,7 @@ var searchDataImportEvent = `{
     {"name": "release_date", "type": "string", "default": ""},
     {"name": "summary", "type": "string", "default": ""},
     {"name": "title", "type": "string", "default": ""},
-    {"name": "topics", "type":"array", "items":"string"},
+    {"name": "topics", "type": {"type":"array","items":"string"}},
     {"name": "trace_id", "type": "string", "default": ""}
   ]
 }`
