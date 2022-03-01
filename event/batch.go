@@ -42,6 +42,11 @@ func (batch *Batch) Add(ctx context.Context, message Message) (err error) {
 		return errors.New("failed to unmarshal event while adding an event to batch")
 	}
 
+	//nolint: revive, staticcheck, gocritic
+	//TODO: This needs to be looked into log library for customised context details
+	ctx = context.WithValue(ctx, "request-id", event.TraceID)
+	log.Info(ctx, "event received to be added into the batch", log.Data{"event": event})
+
 	batch.messages = append(batch.messages, message)
 	batch.events = append(batch.events, event)
 	return
