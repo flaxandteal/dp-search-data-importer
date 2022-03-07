@@ -7,7 +7,6 @@ import (
 	"github.com/ONSdigital/dp-search-data-importer/models"
 	"github.com/ONSdigital/dp-search-data-importer/schema"
 	"github.com/ONSdigital/log.go/v2/log"
-
 	dprequest "github.com/ONSdigital/dp-net/v2/request"
 )
 
@@ -46,7 +45,6 @@ func (batch *Batch) Add(ctx context.Context, message Message) (err error) {
 
 	ctx = dprequest.WithRequestId(ctx, event.TraceID)
 	log.Info(ctx, "event received to be added into the batch", log.Data{"traceid": event.TraceID})
-
 	batch.messages = append(batch.messages, message)
 	batch.events = append(batch.events, event)
 	return
