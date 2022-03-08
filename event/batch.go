@@ -4,10 +4,10 @@ import (
 	"context"
 	"errors"
 
+	dprequest "github.com/ONSdigital/dp-net/v2/request"
 	"github.com/ONSdigital/dp-search-data-importer/models"
 	"github.com/ONSdigital/dp-search-data-importer/schema"
 	"github.com/ONSdigital/log.go/v2/log"
-	dprequest "github.com/ONSdigital/dp-net/v2/request"
 )
 
 // Batch handles adding raw messages to a batch of SearchDataImportModel events.
