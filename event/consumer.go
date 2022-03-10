@@ -5,6 +5,7 @@ import (
 	"time"
 
 	kafka "github.com/ONSdigital/dp-kafka/v2"
+	dprequest "github.com/ONSdigital/dp-net/v2/request"
 	"github.com/ONSdigital/dp-search-data-importer/config"
 	"github.com/ONSdigital/dp-search-data-importer/models"
 	"github.com/ONSdigital/log.go/v2/log"
@@ -73,10 +74,18 @@ func (consumer *Consumer) Consume(
 // AddMessageToBatch will attempt to add the message to the batch and determine if it should be processed.
 func AddMessageToBatch(ctx context.Context, cfg *config.Config, batch *Batch, msg kafka.Message, handler Handler) {
 	log.Info(ctx, "add message to batch starts")
-	err := batch.Add(ctx, msg)
+
+	event, err := Unmarshal(msg)
 	if err != nil {
-		log.Error(ctx, "failed to add event to batch", err)
+		log.Error(ctx, "failed to unmarshal event", err)
+		return
 	}
+
+	ctx = dprequest.WithRequestId(ctx, event.TraceID)
+	log.Info(ctx, "event received to be added into the batch", log.Data{"traceid": event.TraceID})
+
+	batch.messages = append(batch.messages, msg)
+	batch.Add(ctx, event)
 	if batch.IsFull() {
 		ProcessBatch(ctx, cfg, handler, batch, "full-batch")
 	}

@@ -2,12 +2,9 @@ package event
 
 import (
 	"context"
-	"errors"
 
-	dprequest "github.com/ONSdigital/dp-net/v2/request"
 	"github.com/ONSdigital/dp-search-data-importer/models"
 	"github.com/ONSdigital/dp-search-data-importer/schema"
-	"github.com/ONSdigital/log.go/v2/log"
 )
 
 // Batch handles adding raw messages to a batch of SearchDataImportModel events.
@@ -35,19 +32,8 @@ func NewBatch(batchSize int) *Batch {
 }
 
 // Add a message to the batch.
-func (batch *Batch) Add(ctx context.Context, message Message) (err error) {
-
-	event, err := Unmarshal(message)
-	if err != nil {
-		log.Error(ctx, "failed to unmarshal event", err)
-		return errors.New("failed to unmarshal event while adding an event to batch")
-	}
-
-	ctx = dprequest.WithRequestId(ctx, event.TraceID)
-	log.Info(ctx, "event received to be added into the batch", log.Data{"traceid": event.TraceID})
-	batch.messages = append(batch.messages, message)
+func (batch *Batch) Add(ctx context.Context, event *models.SearchDataImportModel) {
 	batch.events = append(batch.events, event)
-	return
 }
 
 // Size returns the number of events currently in the batch.
