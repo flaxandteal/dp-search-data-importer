@@ -32,6 +32,50 @@ var (
 		TraceID:         "",
 	}
 
+	expectedEventWithEmptyTopicString = models.SearchDataImportModel{
+		DataType:        "testDataType3",
+		JobID:           "",
+		SearchIndex:     "ONS",
+		CDID:            "",
+		DatasetID:       "",
+		Keywords:        []string{"testkeyword31", "testkeyword32"},
+		MetaDescription: "",
+		Summary:         "",
+		ReleaseDate:     "",
+		Title:           "",
+		Topics:          []string{""},
+		TraceID:         "",
+	}
+
+	expectedEventWithMissingTopicArray = models.SearchDataImportModel{
+		DataType:        "testDataType3",
+		JobID:           "",
+		SearchIndex:     "ONS",
+		CDID:            "",
+		DatasetID:       "",
+		Keywords:        []string{"testkeyword31", "testkeyword32"},
+		MetaDescription: "",
+		Summary:         "",
+		ReleaseDate:     "",
+		Title:           "",
+		TraceID:         "",
+	}
+
+	expectedEventWithEmptyTopicArray = models.SearchDataImportModel{
+		DataType:        "testDataType3",
+		JobID:           "",
+		SearchIndex:     "ONS",
+		CDID:            "",
+		DatasetID:       "",
+		Keywords:        []string{"testkeyword31", "testkeyword32"},
+		MetaDescription: "",
+		Summary:         "",
+		ReleaseDate:     "",
+		Title:           "",
+		Topics:          []string{},
+		TraceID:         "",
+	}
+
 	expectedEvent2 = models.SearchDataImportModel{
 		DataType:        "testDataType2",
 		JobID:           "",
@@ -65,7 +109,7 @@ func TestConsumeWithOneMessage(t *testing.T) {
 
 			go consumer.Consume(testCtx, messageConsumer, eventHandler, cfg)
 
-			message := kafkatest.NewMessage([]byte(marshal(expectedEvent2)), 0)
+			message := kafkatest.NewMessage([]byte(marshal(expectedEvent1)), 0)
 			messageConsumer.Channels().Upstream <- message
 
 			<-eventHandler.EventUpdated
@@ -75,8 +119,127 @@ func TestConsumeWithOneMessage(t *testing.T) {
 				So(len(eventHandler.Events), ShouldEqual, 1)
 
 				actual := eventHandler.Events[0]
-				So(actual.DataType, ShouldEqual, expectedEvent2.DataType)
-				So(actual.Title, ShouldEqual, expectedEvent2.Title)
+				So(actual.DataType, ShouldEqual, expectedEvent1.DataType)
+				So(actual.Title, ShouldEqual, expectedEvent1.Title)
+			})
+			Convey("And the message is committed and the consumer is released", func() {
+				<-consumer.Closed
+				So(len(message.CommitCalls()), ShouldEqual, 1)
+				So(len(message.ReleaseCalls()), ShouldEqual, 1)
+			})
+		})
+	})
+}
+
+func TestConsumeWithEmptyTopicString(t *testing.T) {
+
+	Convey("Given a consumer with a mocked message producer with an expected message", t, func() {
+
+		messageConsumer := kafkatest.NewMessageConsumer(false)
+		eventHandler := eventtest.NewEventHandler()
+		cfg, err := config.Get()
+		if err != nil {
+			t.Fatalf("failed to retrieve configuration: %v", err)
+		}
+
+		consumer := event.NewConsumer()
+
+		Convey("When consume is called", func() {
+
+			go consumer.Consume(testCtx, messageConsumer, eventHandler, cfg)
+
+			message := kafkatest.NewMessage([]byte(marshal(expectedEventWithEmptyTopicString)), 0)
+			messageConsumer.Channels().Upstream <- message
+
+			<-eventHandler.EventUpdated
+			consumer.Close(testCtx)
+
+			Convey("Then the expected event is sent to the handler", func() {
+				So(len(eventHandler.Events), ShouldEqual, 1)
+
+				actual := eventHandler.Events[0]
+				So(actual.DataType, ShouldEqual, expectedEventWithEmptyTopicString.DataType)
+				So(actual.Title, ShouldEqual, expectedEventWithEmptyTopicString.Title)
+				So(len(actual.Topics), ShouldEqual, 1)
+			})
+			Convey("And the message is committed and the consumer is released", func() {
+				<-consumer.Closed
+				So(len(message.CommitCalls()), ShouldEqual, 1)
+				So(len(message.ReleaseCalls()), ShouldEqual, 1)
+			})
+		})
+	})
+}
+
+func TestConsumeWithMissingTopicElement(t *testing.T) {
+
+	Convey("Given a consumer with a mocked message producer with an expected message", t, func() {
+
+		messageConsumer := kafkatest.NewMessageConsumer(false)
+		eventHandler := eventtest.NewEventHandler()
+		cfg, err := config.Get()
+		if err != nil {
+			t.Fatalf("failed to retrieve configuration: %v", err)
+		}
+
+		consumer := event.NewConsumer()
+
+		Convey("When consume is called", func() {
+
+			go consumer.Consume(testCtx, messageConsumer, eventHandler, cfg)
+
+			message := kafkatest.NewMessage([]byte(marshal(expectedEventWithMissingTopicArray)), 0)
+			messageConsumer.Channels().Upstream <- message
+
+			<-eventHandler.EventUpdated
+			consumer.Close(testCtx)
+
+			Convey("Then the expected event is sent to the handler", func() {
+				So(len(eventHandler.Events), ShouldEqual, 1)
+
+				actual := eventHandler.Events[0]
+				So(actual.DataType, ShouldEqual, expectedEventWithMissingTopicArray.DataType)
+				So(actual.Title, ShouldEqual, expectedEventWithMissingTopicArray.Title)
+			})
+			Convey("And the message is committed and the consumer is released", func() {
+				<-consumer.Closed
+				So(len(message.CommitCalls()), ShouldEqual, 1)
+				So(len(message.ReleaseCalls()), ShouldEqual, 1)
+			})
+		})
+	})
+}
+
+func TestConsumeWithEmptyTopicArray(t *testing.T) {
+
+	Convey("Given a consumer with a mocked message producer with an expected message", t, func() {
+
+		messageConsumer := kafkatest.NewMessageConsumer(false)
+		eventHandler := eventtest.NewEventHandler()
+		cfg, err := config.Get()
+		if err != nil {
+			t.Fatalf("failed to retrieve configuration: %v", err)
+		}
+
+		consumer := event.NewConsumer()
+
+		Convey("When consume is called", func() {
+
+			go consumer.Consume(testCtx, messageConsumer, eventHandler, cfg)
+
+			message := kafkatest.NewMessage([]byte(marshal(expectedEventWithEmptyTopicArray)), 0)
+			messageConsumer.Channels().Upstream <- message
+
+			<-eventHandler.EventUpdated
+			consumer.Close(testCtx)
+
+			Convey("Then the expected event is sent to the handler", func() {
+				So(len(eventHandler.Events), ShouldEqual, 1)
+
+				actual := eventHandler.Events[0]
+				So(actual.DataType, ShouldEqual, expectedEventWithEmptyTopicArray.DataType)
+				So(actual.Title, ShouldEqual, expectedEventWithEmptyTopicArray.Title)
+				So(len(actual.Topics), ShouldEqual, 0)
 			})
 			Convey("And the message is committed and the consumer is released", func() {
 				<-consumer.Closed
