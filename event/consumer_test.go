@@ -121,6 +121,7 @@ func TestConsumeWithOneMessage(t *testing.T) {
 				actual := eventHandler.Events[0]
 				So(actual.DataType, ShouldEqual, expectedEvent1.DataType)
 				So(actual.Title, ShouldEqual, expectedEvent1.Title)
+				So(len(actual.Topics), ShouldEqual, 1)
 			})
 			Convey("And the message is committed and the consumer is released", func() {
 				<-consumer.Closed
@@ -200,6 +201,7 @@ func TestConsumeWithMissingTopicElement(t *testing.T) {
 				actual := eventHandler.Events[0]
 				So(actual.DataType, ShouldEqual, expectedEventWithMissingTopicArray.DataType)
 				So(actual.Title, ShouldEqual, expectedEventWithMissingTopicArray.Title)
+				So(len(actual.Topics), ShouldEqual, 0)
 			})
 			Convey("And the message is committed and the consumer is released", func() {
 				<-consumer.Closed
