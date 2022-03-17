@@ -30,6 +30,7 @@ func (t *Transform) TransformEventModelToEsModel(eventModel *models.SearchDataIm
 		ReleaseDate:     eventModel.ReleaseDate,
 		Summary:         eventModel.Summary,
 		Title:           eventModel.Title,
+		Topics:          eventModel.Topics,
 	}
 	return &esModels
 }

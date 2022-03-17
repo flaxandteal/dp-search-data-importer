@@ -13,5 +13,6 @@ type SearchDataImportModel struct {
 	ReleaseDate     string   `avro:"release_date"`
 	Summary         string   `avro:"summary"`
 	Title           string   `avro:"title"`
+	Topics          []string `avro:"topics"`
 	TraceID         string   `avro:"trace_id"`
 }

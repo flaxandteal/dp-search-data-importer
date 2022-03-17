@@ -124,5 +124,6 @@ func scanEvent(scanner *bufio.Scanner) *models.SearchDataImportModel {
 		Summary:     summary,
 		ReleaseDate: "2017-09-07",
 		Title:       title,
+		TraceID:     "2effer334d",
 	}
 }
