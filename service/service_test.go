@@ -16,7 +16,7 @@ import (
 	"github.com/pkg/errors"
 
 	dpElasticSearch "github.com/ONSdigital/dp-elasticsearch/v2/elasticsearch"
-	kafka "github.com/ONSdigital/dp-kafka/v2"
+	dpkafka "github.com/ONSdigital/dp-kafka/v2"
 	dphttp "github.com/ONSdigital/dp-net/http"
 	serviceMock "github.com/ONSdigital/dp-search-data-importer/service/mock"
 
@@ -33,7 +33,7 @@ var (
 	errKafkaConsumer = errors.New("Kafka consumer error")
 	errHealthcheck   = errors.New("healthCheck error")
 
-	funcDoGetKafkaConsumerErr = func(ctx context.Context, cfg *config.Config) (kafka.IConsumerGroup, error) {
+	funcDoGetKafkaConsumerErr = func(ctx context.Context, cfg *config.Config) (dpkafka.IConsumerGroup, error) {
 		return nil, errKafkaConsumer
 	}
 
@@ -86,7 +86,7 @@ func TestRun(t *testing.T) {
 
 		consumerMock := &kafkatest.IConsumerGroupMock{
 			CheckerFunc:  func(ctx context.Context, state *healthcheck.CheckState) error { return nil },
-			ChannelsFunc: func() *kafka.ConsumerGroupChannels { return &kafka.ConsumerGroupChannels{} },
+			ChannelsFunc: func() *dpkafka.ConsumerGroupChannels { return &dpkafka.ConsumerGroupChannels{} },
 		}
 
 		hcMock := &serviceMock.HealthCheckerMock{
@@ -106,7 +106,7 @@ func TestRun(t *testing.T) {
 			return elasticSearchMock, nil
 		}
 
-		funcDoGetKafkaConsumerOk := func(ctx context.Context, cfg *config.Config) (kafka.IConsumerGroup, error) {
+		funcDoGetKafkaConsumerOk := func(ctx context.Context, cfg *config.Config) (dpkafka.IConsumerGroup, error) {
 			return consumerMock, nil
 		}
 
@@ -250,7 +250,7 @@ func TestClose(t *testing.T) {
 			StopListeningToConsumerFunc: func(ctx context.Context) error { return nil },
 			CloseFunc:                   func(ctx context.Context) error { return nil },
 			CheckerFunc:                 func(ctx context.Context, state *healthcheck.CheckState) error { return nil },
-			ChannelsFunc:                func() *kafka.ConsumerGroupChannels { return &kafka.ConsumerGroupChannels{} },
+			ChannelsFunc:                func() *dpkafka.ConsumerGroupChannels { return &dpkafka.ConsumerGroupChannels{} },
 		}
 
 		// healthcheck Stop does not depend on any other service being closed/stopped
@@ -278,7 +278,9 @@ func TestClose(t *testing.T) {
 				DoGetHealthCheckFunc: func(cfg *config.Config, buildTime string, gitCommit string, version string) (service.HealthChecker, error) {
 					return hcMock, nil
 				},
-				DoGetKafkaConsumerFunc:       func(ctx context.Context, cfg *config.Config) (kafka.IConsumerGroup, error) { return consumerMock, nil },
+				DoGetKafkaConsumerFunc: func(ctx context.Context, cfg *config.Config) (dpkafka.IConsumerGroup, error) {
+					return consumerMock, nil
+				},
 				DoGetElasticSearchClientFunc: funcElasticSearchMockOk,
 			}
 
@@ -309,7 +311,9 @@ func TestClose(t *testing.T) {
 				DoGetHealthCheckFunc: func(cfg *config.Config, buildTime string, gitCommit string, version string) (service.HealthChecker, error) {
 					return hcMock, nil
 				},
-				DoGetKafkaConsumerFunc:       func(ctx context.Context, cfg *config.Config) (kafka.IConsumerGroup, error) { return consumerMock, nil },
+				DoGetKafkaConsumerFunc: func(ctx context.Context, cfg *config.Config) (dpkafka.IConsumerGroup, error) {
+					return consumerMock, nil
+				},
 				DoGetElasticSearchClientFunc: funcElasticSearchMockOk,
 			}
 

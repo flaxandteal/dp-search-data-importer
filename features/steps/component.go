@@ -7,7 +7,7 @@ import (
 
 	componenttest "github.com/ONSdigital/dp-component-test"
 	"github.com/ONSdigital/dp-healthcheck/healthcheck"
-	kafka "github.com/ONSdigital/dp-kafka/v2"
+	dpkafka "github.com/ONSdigital/dp-kafka/v2"
 	"github.com/ONSdigital/dp-kafka/v2/kafkatest"
 	dphttp "github.com/ONSdigital/dp-net/http"
 	"github.com/ONSdigital/dp-search-data-importer/config"
@@ -18,7 +18,7 @@ import (
 type Component struct {
 	componenttest.ErrorFeature
 	serviceList   *service.ExternalServiceList
-	KafkaConsumer kafka.IConsumerGroup
+	KafkaConsumer dpkafka.IConsumerGroup
 	errorChan     chan error
 	svc           *service.Service
 	cfg           *config.Config
@@ -69,7 +69,7 @@ func (c *Component) DoGetHTTPServer(bindAddr string, router http.Handler) servic
 	return dphttp.NewServer(bindAddr, router)
 }
 
-func (c *Component) DoGetConsumer(ctx context.Context, cfg *config.Config) (kafkaConsumer kafka.IConsumerGroup, err error) {
+func (c *Component) DoGetConsumer(ctx context.Context, cfg *config.Config) (kafkaConsumer dpkafka.IConsumerGroup, err error) {
 	return c.KafkaConsumer, nil
 }
 
