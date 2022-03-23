@@ -82,7 +82,7 @@ func AddMessageToBatch(ctx context.Context, cfg *config.Config, batch *Batch, ms
 	}
 
 	ctx = dprequest.WithRequestId(ctx, event.TraceID)
-	log.Info(ctx, "event received to be added into the batch", log.Data{"traceid": event.TraceID})
+	log.Info(ctx, "event received to be added into the batch")
 
 	batch.messages = append(batch.messages, msg)
 	batch.Add(ctx, event)
