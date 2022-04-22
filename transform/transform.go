@@ -21,6 +21,7 @@ func NewTransformer() Transformer {
 func (t *Transform) TransformEventModelToEsModel(eventModel *models.SearchDataImportModel) *models.EsModel {
 	esModels := models.EsModel{
 		DataType:        eventModel.DataType,
+		URI:             eventModel.URI,
 		JobID:           eventModel.JobID,
 		SearchIndex:     eventModel.SearchIndex,
 		CDID:            eventModel.CDID,

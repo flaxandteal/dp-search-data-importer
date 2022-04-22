@@ -9,6 +9,7 @@ var searchDataImportEvent = `{
   "name": "search-data-import",
   "fields": [
     {"name": "uid", "type": "string", "default": ""},
+    {"name": "uri", "type": "string", "default": ""},
     {"name": "type", "type": "string", "default": ""},
     {"name": "job_id", "type": "string", "default": ""},
     {"name": "search_index", "type": "string", "default": ""},
