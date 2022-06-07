@@ -34,6 +34,11 @@ var (
 		ReleaseDate:     "",
 		Title:           "anyTitle1",
 		TraceID:         "anyTraceID1",
+		DateChanges:     []models.ReleaseDateDetails{},
+		Cancelled:       false,
+		Finalised:       false,
+		ProvisionalDate: "",
+		Published:       false,
 	}
 
 	expectedEvent2 = &models.SearchDataImportModel{

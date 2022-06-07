@@ -32,6 +32,13 @@ func (t *Transform) TransformEventModelToEsModel(eventModel *models.SearchDataIm
 		Summary:         eventModel.Summary,
 		Title:           eventModel.Title,
 		Topics:          eventModel.Topics,
+		Cancelled:       eventModel.Cancelled,
+		Finalised:       eventModel.Finalised,
+		ProvisionalDate: eventModel.ProvisionalDate,
+		Published:       eventModel.Published,
+	}
+	for _, data := range eventModel.DateChanges {
+		esModels.DateChanges = append(esModels.DateChanges, models.ReleaseDateChange(data))
 	}
 	return &esModels
 }
