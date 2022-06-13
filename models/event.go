@@ -23,7 +23,7 @@ type SearchDataImportModel struct {
 	Published       bool                 `avro:"published"`
 }
 
-// ReleaseDateChange represent a date change of a release
+// ReleaseDateDetails represents a change of release date
 type ReleaseDateDetails struct {
 	ChangeNotice string `avro:"change_notice"`
 	Date         string `avro:"previous_date"`
