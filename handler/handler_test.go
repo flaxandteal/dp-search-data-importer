@@ -39,6 +39,8 @@ var (
 		Finalised:       false,
 		ProvisionalDate: "",
 		Published:       false,
+		Survey:          "",
+		Language:        "",
 	}
 
 	expectedEvent2 = &models.SearchDataImportModel{
