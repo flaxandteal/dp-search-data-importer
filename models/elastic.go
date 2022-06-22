@@ -15,10 +15,10 @@ type EsModel struct {
 	Title           string              `json:"title"`
 	Topics          []string            `json:"topics"`
 	DateChanges     []ReleaseDateChange `json:"date_changes,omitempty"`
-	Cancelled       bool                `json:"cancelled,omitempty"`
-	Finalised       bool                `json:"finalised,omitempty"`
+	Cancelled       bool                `json:"cancelled"`
+	Finalised       bool                `json:"finalised"`
 	ProvisionalDate string              `json:"provisional_date,omitempty"`
-	Published       bool                `json:"published,omitempty"`
+	Published       bool                `json:"published"`
 	Language        string              `json:"language,omitempty"`
 	Survey          string              `json:"survey,omitempty"`
 }
