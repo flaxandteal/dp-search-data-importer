@@ -41,6 +41,7 @@ var (
 		Published:       false,
 		Survey:          "",
 		Language:        "",
+		CanonicalTopic:  "",
 	}
 
 	expectedEvent2 = &models.SearchDataImportModel{

@@ -21,6 +21,7 @@ type EsModel struct {
 	Published       bool                `json:"published"`
 	Language        string              `json:"language,omitempty"`
 	Survey          string              `json:"survey,omitempty"`
+	CanonicalTopic  string              `json:"canonical_topic"`
 }
 
 // EsBulkResponse holds a response from ES

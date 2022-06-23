@@ -38,6 +38,7 @@ func (t *Transform) TransformEventModelToEsModel(eventModel *models.SearchDataIm
 		Published:       eventModel.Published,
 		Survey:          eventModel.Survey,
 		Language:        eventModel.Language,
+		CanonicalTopic:  eventModel.CanonicalTopic,
 	}
 	for _, data := range eventModel.DateChanges {
 		esModels.DateChanges = append(esModels.DateChanges, models.ReleaseDateChange(data))

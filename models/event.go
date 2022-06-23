@@ -23,6 +23,7 @@ type SearchDataImportModel struct {
 	Published       bool                 `avro:"published"`
 	Language        string               `avro:"language"`
 	Survey          string               `avro:"survey"`
+	CanonicalTopic  string               `avro:"canonical_topic"`
 }
 
 // ReleaseDateDetails represents a change of release date
