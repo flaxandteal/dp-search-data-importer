@@ -51,18 +51,24 @@ func (consumer *Consumer) Consume(
 		// Wait a batch full of messages.
 		// If we do not get any messages for a time, just process the messages already in the batch.
 		for {
+			delay := time.NewTimer(cfg.BatchWaitTime)
 			select {
 			case msg := <-messageConsumer.Channels().Upstream:
 				AddMessageToBatch(ctx, cfg, batch, msg, batchHandler)
 				msg.Release()
 
-			case <-time.After(cfg.BatchWaitTime):
+			case <-delay.C:
 				if batch.IsEmpty() {
 					continue
 				}
 				ProcessBatch(ctx, cfg, batchHandler, batch, "timeout")
 
 			case <-consumer.closing:
+				// Ensure timer is stopped and its resources are freed
+				if !delay.Stop() {
+					// if the timer has been stopped then read from the channel
+					<-delay.C
+				}
 				log.Info(ctx, "closing event consumer loop")
 				close(consumer.closing)
 				return
