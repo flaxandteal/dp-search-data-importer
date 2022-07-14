@@ -9,7 +9,7 @@ import (
 	"github.com/ONSdigital/dp-search-data-importer/transform"
 	"github.com/ONSdigital/log.go/v2/log"
 
-	dpelasticsearch "github.com/ONSdigital/dp-elasticsearch/v2/elasticsearch"
+	dpelasticsearch "github.com/ONSdigital/dp-elasticsearch/v3/client"
 )
 
 const (
@@ -21,11 +21,11 @@ var _ event.Handler = (*BatchHandler)(nil)
 
 // BatchHandler handles batches of SearchDataImportModel events that contain CSV row data.
 type BatchHandler struct {
-	esClient *dpelasticsearch.Client
+	esClient dpelasticsearch.Client
 }
 
 // NewBatchHandler returns a BatchHandler.
-func NewBatchHandler(esClient *dpelasticsearch.Client) *BatchHandler {
+func NewBatchHandler(esClient dpelasticsearch.Client) *BatchHandler {
 
 	return &BatchHandler{
 		esClient: esClient,
@@ -75,7 +75,7 @@ func (batchHandler BatchHandler) sendToES(ctx context.Context, esDestURL string,
 		bulkupsert = append(bulkupsert, upsertBulkRequestBody...)
 	}
 
-	jsonUpsertResponse, _, err := batchHandler.esClient.BulkUpdate(ctx, esDestIndex, esDestURL, bulkupsert)
+	jsonUpsertResponse, err := batchHandler.esClient.BulkUpdate(ctx, esDestIndex, esDestURL, bulkupsert)
 	if err != nil {
 		if jsonUpsertResponse == nil {
 			log.Error(ctx, "server error while upserting the event", err)

@@ -1,10 +1,8 @@
 package service_test
 
 import (
-	"bytes"
 	"context"
 	"fmt"
-	"io"
 	"net/http"
 	"sync"
 	"testing"
@@ -15,12 +13,16 @@ import (
 	"github.com/ONSdigital/dp-search-data-importer/service"
 	"github.com/pkg/errors"
 
-	dpElasticSearch "github.com/ONSdigital/dp-elasticsearch/v2/elasticsearch"
+	dpElastic "github.com/ONSdigital/dp-elasticsearch/v3"
+	dpESClient "github.com/ONSdigital/dp-elasticsearch/v3/client"
 	dpkafka "github.com/ONSdigital/dp-kafka/v2"
-	dphttp "github.com/ONSdigital/dp-net/http"
 	serviceMock "github.com/ONSdigital/dp-search-data-importer/service/mock"
 
 	. "github.com/smartystreets/goconvey/convey"
+)
+
+const (
+	esDestURL = "http://locahost:9999"
 )
 
 var (
@@ -45,44 +47,19 @@ var (
 		return nil
 	}
 
-	funDoGetElasticSearchClientErr = func(ctx context.Context, cfg *config.Config) (*dpElasticSearch.Client, error) {
+	funDoGetElasticSearchClientErr = func(ctx context.Context, cfg *config.Config) (dpESClient.Client, error) {
 		return nil, errElasticSearch
 	}
-
-	emptyListOfPathsWithNoRetries = func() []string {
-		return []string{}
-	}
-	setListOfPathsWithNoRetries = func(listOfPaths []string) {}
-
-	doFuncWithValidResponse = func(ctx context.Context, req *http.Request) (*http.Response, error) {
-		return successESResponse(), nil
-	}
 )
-
-func successESResponse() *http.Response {
-
-	return &http.Response{
-		StatusCode: 201,
-		Body:       io.NopCloser(bytes.NewBufferString(`Created`)),
-		Header:     make(http.Header),
-	}
-}
-
-func clientMock(doFunc func(ctx context.Context, request *http.Request) (*http.Response, error)) *dphttp.ClienterMock {
-	return &dphttp.ClienterMock{
-		DoFunc:                    doFunc,
-		GetPathsWithNoRetriesFunc: emptyListOfPathsWithNoRetries,
-		SetPathsWithNoRetriesFunc: setListOfPathsWithNoRetries,
-	}
-}
 
 func TestRun(t *testing.T) {
 
 	Convey("Given a set of mocked dependencies", t, func() {
 
-		esDestURL := "http://locahost:9999"
-		httpCli := clientMock(doFuncWithValidResponse)
-		elasticSearchMock := dpElasticSearch.NewClientWithHTTPClient(esDestURL, false, httpCli)
+		elasticSearchMock, _ := dpElastic.NewClient(dpESClient.Config{
+			Address:   esDestURL,
+			Transport: nil,
+		})
 
 		consumerMock := &kafkatest.IConsumerGroupMock{
 			CheckerFunc:  func(ctx context.Context, state *healthcheck.CheckState) error { return nil },
@@ -102,7 +79,7 @@ func TestRun(t *testing.T) {
 			},
 		}
 
-		funcElasticSearchMockOk := func(ctx context.Context, cfg *config.Config) (*dpElasticSearch.Client, error) {
+		funcElasticSearchMockOk := func(ctx context.Context, cfg *config.Config) (dpESClient.Client, error) {
 			return elasticSearchMock, nil
 		}
 
@@ -242,8 +219,15 @@ func TestClose(t *testing.T) {
 
 		hcStopped := false
 
-		funcElasticSearchMockOk := func(ctx context.Context, cfg *config.Config) (*dpElasticSearch.Client, error) {
-			return nil, nil
+		esDestURL := "http://locahost:9999"
+
+		elasticSearchMock, _ := dpElastic.NewClient(dpESClient.Config{
+			Address:   esDestURL,
+			Transport: nil,
+		})
+
+		funcElasticSearchMockOk := func(ctx context.Context, cfg *config.Config) (dpESClient.Client, error) {
+			return elasticSearchMock, nil
 		}
 
 		consumerMock := &kafkatest.IConsumerGroupMock{

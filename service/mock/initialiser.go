@@ -5,52 +5,46 @@ package mock
 
 import (
 	"context"
-	"github.com/ONSdigital/dp-elasticsearch/v2/elasticsearch"
-	"github.com/ONSdigital/dp-kafka/v2"
+
+	dpelasticsearch "github.com/ONSdigital/dp-elasticsearch/v3/client"
+	dpkafka "github.com/ONSdigital/dp-kafka/v2"
 	"github.com/ONSdigital/dp-search-data-importer/config"
 	"github.com/ONSdigital/dp-search-data-importer/service"
 	"net/http"
 	"sync"
 )
 
-var (
-	lockInitialiserMockDoGetElasticSearchClient sync.RWMutex
-	lockInitialiserMockDoGetHTTPServer          sync.RWMutex
-	lockInitialiserMockDoGetHealthCheck         sync.RWMutex
-	lockInitialiserMockDoGetKafkaConsumer       sync.RWMutex
-)
-
-// Ensure, that InitialiserMock does implement Initialiser.
+// Ensure, that InitialiserMock does implement service.Initialiser.
 // If this is not the case, regenerate this file with moq.
 var _ service.Initialiser = &InitialiserMock{}
 
 // InitialiserMock is a mock implementation of service.Initialiser.
 //
-//     func TestSomethingThatUsesInitialiser(t *testing.T) {
+// 	func TestSomethingThatUsesInitialiser(t *testing.T) {
 //
-//         // make and configure a mocked service.Initialiser
-//         mockedInitialiser := &InitialiserMock{
-//             DoGetElasticSearchClientFunc: func(ctx context.Context, cfg *config.Config) (*elasticsearch.Client, error) {
-// 	               panic("mock out the DoGetElasticSearchClient method")
-//             },
-//             DoGetHTTPServerFunc: func(bindAddr string, router http.Handler) service.HTTPServer {
-// 	               panic("mock out the DoGetHTTPServer method")
-//             },
-//             DoGetHealthCheckFunc: func(cfg *config.Config, buildTime string, gitCommit string, version string) (service.HealthChecker, error) {
-// 	               panic("mock out the DoGetHealthCheck method")
-//             },
-//             DoGetKafkaConsumerFunc: func(ctx context.Context, cfg *config.Config) (kafka.IConsumerGroup, error) {
-// 	               panic("mock out the DoGetKafkaConsumer method")
-//             },
-//         }
+// 		// make and configure a mocked service.Initialiser
+// 		mockedInitialiser := &InitialiserMock{
+// 			DoGetElasticSearchClientFunc: func(ctx context.Context, cfg *config.Config) (dpelasticsearch.Client, error) {
+// 				panic("mock out the DoGetElasticSearchClient method")
+// 			},
+// 			DoGetHTTPServerFunc: func(bindAddr string, router http.Handler) service.HTTPServer {
+// 				panic("mock out the DoGetHTTPServer method")
+// 			},
+// 			DoGetHealthCheckFunc: func(cfg *config.Config, buildTime string, gitCommit string, version string) (service.HealthChecker, error) {
+// 				panic("mock out the DoGetHealthCheck method")
+// 			},
+// 			DoGetKafkaConsumerFunc: func(ctx context.Context, cfg *config.Config) (dpkafka.IConsumerGroup, error) {
+// 				panic("mock out the DoGetKafkaConsumer method")
+// 			},
+// 		}
 //
-//         // use mockedInitialiser in code that requires service.Initialiser
-//         // and then make assertions.
+// 		// use mockedInitialiser in code that requires service.Initialiser
+// 		// and then make assertions.
 //
-//     }
+// 	}
 type InitialiserMock struct {
 	// DoGetElasticSearchClientFunc mocks the DoGetElasticSearchClient method.
-	DoGetElasticSearchClientFunc func(ctx context.Context, cfg *config.Config) (*elasticsearch.Client, error)
+	DoGetElasticSearchClientFunc func(ctx context.Context, cfg *config.Config) (dpelasticsearch.Client, error)
 
 	// DoGetHTTPServerFunc mocks the DoGetHTTPServer method.
 	DoGetHTTPServerFunc func(bindAddr string, router http.Handler) service.HTTPServer
@@ -59,7 +53,7 @@ type InitialiserMock struct {
 	DoGetHealthCheckFunc func(cfg *config.Config, buildTime string, gitCommit string, version string) (service.HealthChecker, error)
 
 	// DoGetKafkaConsumerFunc mocks the DoGetKafkaConsumer method.
-	DoGetKafkaConsumerFunc func(ctx context.Context, cfg *config.Config) (kafka.IConsumerGroup, error)
+	DoGetKafkaConsumerFunc func(ctx context.Context, cfg *config.Config) (dpkafka.IConsumerGroup, error)
 
 	// calls tracks calls to the methods.
 	calls struct {
@@ -96,10 +90,14 @@ type InitialiserMock struct {
 			Cfg *config.Config
 		}
 	}
+	lockDoGetElasticSearchClient sync.RWMutex
+	lockDoGetHTTPServer          sync.RWMutex
+	lockDoGetHealthCheck         sync.RWMutex
+	lockDoGetKafkaConsumer       sync.RWMutex
 }
 
 // DoGetElasticSearchClient calls DoGetElasticSearchClientFunc.
-func (mock *InitialiserMock) DoGetElasticSearchClient(ctx context.Context, cfg *config.Config) (*elasticsearch.Client, error) {
+func (mock *InitialiserMock) DoGetElasticSearchClient(ctx context.Context, cfg *config.Config) (dpelasticsearch.Client, error) {
 	if mock.DoGetElasticSearchClientFunc == nil {
 		panic("InitialiserMock.DoGetElasticSearchClientFunc: method is nil but Initialiser.DoGetElasticSearchClient was just called")
 	}
@@ -110,9 +108,9 @@ func (mock *InitialiserMock) DoGetElasticSearchClient(ctx context.Context, cfg *
 		Ctx: ctx,
 		Cfg: cfg,
 	}
-	lockInitialiserMockDoGetElasticSearchClient.Lock()
+	mock.lockDoGetElasticSearchClient.Lock()
 	mock.calls.DoGetElasticSearchClient = append(mock.calls.DoGetElasticSearchClient, callInfo)
-	lockInitialiserMockDoGetElasticSearchClient.Unlock()
+	mock.lockDoGetElasticSearchClient.Unlock()
 	return mock.DoGetElasticSearchClientFunc(ctx, cfg)
 }
 
@@ -127,9 +125,9 @@ func (mock *InitialiserMock) DoGetElasticSearchClientCalls() []struct {
 		Ctx context.Context
 		Cfg *config.Config
 	}
-	lockInitialiserMockDoGetElasticSearchClient.RLock()
+	mock.lockDoGetElasticSearchClient.RLock()
 	calls = mock.calls.DoGetElasticSearchClient
-	lockInitialiserMockDoGetElasticSearchClient.RUnlock()
+	mock.lockDoGetElasticSearchClient.RUnlock()
 	return calls
 }
 
@@ -145,9 +143,9 @@ func (mock *InitialiserMock) DoGetHTTPServer(bindAddr string, router http.Handle
 		BindAddr: bindAddr,
 		Router:   router,
 	}
-	lockInitialiserMockDoGetHTTPServer.Lock()
+	mock.lockDoGetHTTPServer.Lock()
 	mock.calls.DoGetHTTPServer = append(mock.calls.DoGetHTTPServer, callInfo)
-	lockInitialiserMockDoGetHTTPServer.Unlock()
+	mock.lockDoGetHTTPServer.Unlock()
 	return mock.DoGetHTTPServerFunc(bindAddr, router)
 }
 
@@ -162,9 +160,9 @@ func (mock *InitialiserMock) DoGetHTTPServerCalls() []struct {
 		BindAddr string
 		Router   http.Handler
 	}
-	lockInitialiserMockDoGetHTTPServer.RLock()
+	mock.lockDoGetHTTPServer.RLock()
 	calls = mock.calls.DoGetHTTPServer
-	lockInitialiserMockDoGetHTTPServer.RUnlock()
+	mock.lockDoGetHTTPServer.RUnlock()
 	return calls
 }
 
@@ -184,9 +182,9 @@ func (mock *InitialiserMock) DoGetHealthCheck(cfg *config.Config, buildTime stri
 		GitCommit: gitCommit,
 		Version:   version,
 	}
-	lockInitialiserMockDoGetHealthCheck.Lock()
+	mock.lockDoGetHealthCheck.Lock()
 	mock.calls.DoGetHealthCheck = append(mock.calls.DoGetHealthCheck, callInfo)
-	lockInitialiserMockDoGetHealthCheck.Unlock()
+	mock.lockDoGetHealthCheck.Unlock()
 	return mock.DoGetHealthCheckFunc(cfg, buildTime, gitCommit, version)
 }
 
@@ -205,14 +203,14 @@ func (mock *InitialiserMock) DoGetHealthCheckCalls() []struct {
 		GitCommit string
 		Version   string
 	}
-	lockInitialiserMockDoGetHealthCheck.RLock()
+	mock.lockDoGetHealthCheck.RLock()
 	calls = mock.calls.DoGetHealthCheck
-	lockInitialiserMockDoGetHealthCheck.RUnlock()
+	mock.lockDoGetHealthCheck.RUnlock()
 	return calls
 }
 
 // DoGetKafkaConsumer calls DoGetKafkaConsumerFunc.
-func (mock *InitialiserMock) DoGetKafkaConsumer(ctx context.Context, cfg *config.Config) (kafka.IConsumerGroup, error) {
+func (mock *InitialiserMock) DoGetKafkaConsumer(ctx context.Context, cfg *config.Config) (dpkafka.IConsumerGroup, error) {
 	if mock.DoGetKafkaConsumerFunc == nil {
 		panic("InitialiserMock.DoGetKafkaConsumerFunc: method is nil but Initialiser.DoGetKafkaConsumer was just called")
 	}
@@ -223,9 +221,9 @@ func (mock *InitialiserMock) DoGetKafkaConsumer(ctx context.Context, cfg *config
 		Ctx: ctx,
 		Cfg: cfg,
 	}
-	lockInitialiserMockDoGetKafkaConsumer.Lock()
+	mock.lockDoGetKafkaConsumer.Lock()
 	mock.calls.DoGetKafkaConsumer = append(mock.calls.DoGetKafkaConsumer, callInfo)
-	lockInitialiserMockDoGetKafkaConsumer.Unlock()
+	mock.lockDoGetKafkaConsumer.Unlock()
 	return mock.DoGetKafkaConsumerFunc(ctx, cfg)
 }
 
@@ -240,8 +238,8 @@ func (mock *InitialiserMock) DoGetKafkaConsumerCalls() []struct {
 		Ctx context.Context
 		Cfg *config.Config
 	}
-	lockInitialiserMockDoGetKafkaConsumer.RLock()
+	mock.lockDoGetKafkaConsumer.RLock()
 	calls = mock.calls.DoGetKafkaConsumer
-	lockInitialiserMockDoGetKafkaConsumer.RUnlock()
+	mock.lockDoGetKafkaConsumer.RUnlock()
 	return calls
 }

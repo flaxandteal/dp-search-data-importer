@@ -11,9 +11,9 @@ import (
 	"github.com/gorilla/mux"
 	"github.com/pkg/errors"
 
-	dpawsauth "github.com/ONSdigital/dp-elasticsearch/v2/awsauth"
-	dpelasticsearch "github.com/ONSdigital/dp-elasticsearch/v2/elasticsearch"
+	dpelasticsearch "github.com/ONSdigital/dp-elasticsearch/v3/client"
 	dpkafka "github.com/ONSdigital/dp-kafka/v2"
+	dpawsauth "github.com/ONSdigital/dp-net/v2/awsauth"
 )
 
 // Service contains all the configs, server and clients to run the event handler service
@@ -26,7 +26,7 @@ type Service struct {
 	shutdownTimeout time.Duration
 }
 
-var awsSigner *dpawsauth.Signer
+var awsSigner *dpawsauth.AwsSignerRoundTripper
 
 // Run the service
 func Run(ctx context.Context, serviceList *ExternalServiceList, buildTime, gitCommit, version string,
@@ -50,7 +50,7 @@ func Run(ctx context.Context, serviceList *ExternalServiceList, buildTime, gitCo
 
 	// Initialse AWS signer
 	if cfg.SignElasticsearchRequests {
-		awsSigner, err = dpawsauth.NewAwsSigner("", "", cfg.AwsRegion, cfg.AwsService)
+		awsSigner, err = dpawsauth.NewAWSSignerRoundTripper("", "", cfg.AwsRegion, cfg.AwsService)
 		if err != nil {
 			log.Error(ctx, "failed to create aws v4 signer", err)
 			return nil, err
@@ -176,7 +176,7 @@ func (svc *Service) Close(ctx context.Context) error {
 func registerCheckers(ctx context.Context,
 	hc HealthChecker,
 	consumer dpkafka.IConsumerGroup,
-	esclient *dpelasticsearch.Client) (err error) {
+	esclient dpelasticsearch.Client) (err error) {
 
 	hasErrors := false
 
