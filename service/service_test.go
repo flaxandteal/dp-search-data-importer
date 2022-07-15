@@ -56,10 +56,13 @@ func TestRun(t *testing.T) {
 
 	Convey("Given a set of mocked dependencies", t, func() {
 
-		elasticSearchMock, _ := dpElastic.NewClient(dpESClient.Config{
+		elasticSearchMock, err := dpElastic.NewClient(dpESClient.Config{
 			Address:   esDestURL,
 			Transport: nil,
 		})
+		if err != nil {
+			t.Error("failed to create elasticsearch client")
+		}
 
 		consumerMock := &kafkatest.IConsumerGroupMock{
 			CheckerFunc:  func(ctx context.Context, state *healthcheck.CheckState) error { return nil },
@@ -221,10 +224,13 @@ func TestClose(t *testing.T) {
 
 		esDestURL := "http://locahost:9999"
 
-		elasticSearchMock, _ := dpElastic.NewClient(dpESClient.Config{
+		elasticSearchMock, err := dpElastic.NewClient(dpESClient.Config{
 			Address:   esDestURL,
 			Transport: nil,
 		})
+		if err != nil {
+			t.Error("failed to create elasticsearch client")
+		}
 
 		funcElasticSearchMockOk := func(ctx context.Context, cfg *config.Config) (dpESClient.Client, error) {
 			return elasticSearchMock, nil
