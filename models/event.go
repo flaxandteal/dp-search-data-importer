@@ -4,6 +4,7 @@ package models
 type SearchDataImportModel struct {
 	UID             string               `avro:"uid"`
 	URI             string               `avro:"uri"`
+	Edition         string               `avro:"edition"`
 	DataType        string               `avro:"type"`
 	JobID           string               `avro:"job_id"`
 	SearchIndex     string               `avro:"search_index"`

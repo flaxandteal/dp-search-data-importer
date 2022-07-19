@@ -8,6 +8,7 @@ type EsModel struct {
 	SearchIndex     string              `json:"search_index"`
 	CDID            string              `json:"cdid"`
 	DatasetID       string              `json:"dataset_id"`
+	Edition         string              `json:"edition"`
 	Keywords        []string            `json:"keywords"`
 	MetaDescription string              `json:"meta_description"`
 	ReleaseDate     string              `json:"release_date,omitempty"`
