@@ -61,7 +61,7 @@ func (consumer *Consumer) Consume(
 				}
 
 				AddMessageToBatch(ctx, cfg, batch, msg, batchHandler)
-				msg.Release()
+				msg.CommitAndRelease()
 
 			case <-delay.C:
 				if batch.IsEmpty() {
@@ -111,12 +111,10 @@ func ProcessBatch(ctx context.Context, cfg *config.Config, handler Handler, batc
 	err := handler.Handle(ctx, cfg.ElasticSearchAPIURL, batch.Events())
 	if err != nil {
 		log.Error(ctx, "error handling batch", err)
-		batch.Commit()
 		return
 	}
 
 	log.Info(ctx, "batch event processed - committing")
-	batch.Commit()
 }
 
 // Close safely closes the consumer and releases all resources
