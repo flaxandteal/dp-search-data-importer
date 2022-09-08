@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/ONSdigital/dp-kafka/v2/kafkatest"
+	"github.com/ONSdigital/dp-search-data-importer/config"
 	"github.com/ONSdigital/dp-search-data-importer/models"
 	"github.com/ONSdigital/dp-search-data-importer/schema"
 	"github.com/ONSdigital/dp-search-data-importer/service"
@@ -45,9 +46,14 @@ func (c *Component) theseSearchImportEventsAreConsumed(table *godog.Table) error
 
 	signals := registerInterrupt()
 
+	cfg, err := config.Get()
+	if err != nil {
+		return err
+	}
+
 	// run application in separate goroutine
 	go func() {
-		c.svc, err = service.Run(context.Background(), c.serviceList, "", "", "", c.errorChan)
+		c.svc, err = service.Run(context.Background(), cfg, c.serviceList, "", "", "", c.errorChan)
 	}()
 
 	// consume extracted SearchDataImportEvents

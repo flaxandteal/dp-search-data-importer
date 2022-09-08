@@ -107,7 +107,8 @@ func TestConsumeWithOneMessage(t *testing.T) {
 
 		Convey("When consume is called", func() {
 
-			go consumer.Consume(testCtx, messageConsumer, eventHandler, cfg)
+			batch := event.NewBatch(cfg.BatchSize)
+			go consumer.Consume(testCtx, messageConsumer, batch, eventHandler, cfg)
 
 			message := kafkatest.NewMessage([]byte(marshal(expectedEvent1)), 0)
 			messageConsumer.Channels().Upstream <- message
@@ -125,7 +126,8 @@ func TestConsumeWithOneMessage(t *testing.T) {
 			})
 			Convey("And the message is committed and the consumer is released", func() {
 				<-consumer.Closed
-				So(len(message.CommitAndReleaseCalls()), ShouldEqual, 1)
+				So(len(message.ReleaseCalls()), ShouldEqual, 1)
+				So(len(message.CommitCalls()), ShouldEqual, 1)
 			})
 		})
 	})
@@ -145,8 +147,8 @@ func TestConsumeWithEmptyTopicString(t *testing.T) {
 		consumer := event.NewConsumer()
 
 		Convey("When consume is called", func() {
-
-			go consumer.Consume(testCtx, messageConsumer, eventHandler, cfg)
+			batch := event.NewBatch(cfg.BatchSize)
+			go consumer.Consume(testCtx, messageConsumer, batch, eventHandler, cfg)
 
 			message := kafkatest.NewMessage([]byte(marshal(expectedEventWithEmptyTopicString)), 0)
 			messageConsumer.Channels().Upstream <- message
@@ -164,7 +166,8 @@ func TestConsumeWithEmptyTopicString(t *testing.T) {
 			})
 			Convey("And the message is committed and the consumer is released", func() {
 				<-consumer.Closed
-				So(len(message.CommitAndReleaseCalls()), ShouldEqual, 1)
+				So(len(message.ReleaseCalls()), ShouldEqual, 1)
+				So(len(message.CommitCalls()), ShouldEqual, 1)
 			})
 		})
 	})
@@ -184,8 +187,8 @@ func TestConsumeWithMissingTopicElement(t *testing.T) {
 		consumer := event.NewConsumer()
 
 		Convey("When consume is called", func() {
-
-			go consumer.Consume(testCtx, messageConsumer, eventHandler, cfg)
+			batch := event.NewBatch(cfg.BatchSize)
+			go consumer.Consume(testCtx, messageConsumer, batch, eventHandler, cfg)
 
 			message := kafkatest.NewMessage([]byte(marshal(expectedEventWithMissingTopicArray)), 0)
 			messageConsumer.Channels().Upstream <- message
@@ -203,7 +206,8 @@ func TestConsumeWithMissingTopicElement(t *testing.T) {
 			})
 			Convey("And the message is committed and the consumer is released", func() {
 				<-consumer.Closed
-				So(len(message.CommitAndReleaseCalls()), ShouldEqual, 1)
+				So(len(message.ReleaseCalls()), ShouldEqual, 1)
+				So(len(message.CommitCalls()), ShouldEqual, 1)
 			})
 		})
 	})
@@ -223,8 +227,8 @@ func TestConsumeWithEmptyTopicArray(t *testing.T) {
 		consumer := event.NewConsumer()
 
 		Convey("When consume is called", func() {
-
-			go consumer.Consume(testCtx, messageConsumer, eventHandler, cfg)
+			batch := event.NewBatch(cfg.BatchSize)
+			go consumer.Consume(testCtx, messageConsumer, batch, eventHandler, cfg)
 
 			message := kafkatest.NewMessage([]byte(marshal(expectedEventWithEmptyTopicArray)), 0)
 			messageConsumer.Channels().Upstream <- message
@@ -242,7 +246,8 @@ func TestConsumeWithEmptyTopicArray(t *testing.T) {
 			})
 			Convey("And the message is committed and the consumer is released", func() {
 				<-consumer.Closed
-				So(len(message.CommitAndReleaseCalls()), ShouldEqual, 1)
+				So(len(message.ReleaseCalls()), ShouldEqual, 1)
+				So(len(message.CommitCalls()), ShouldEqual, 1)
 			})
 		})
 	})
@@ -263,7 +268,8 @@ func TestConsumeWithTwoMessages(t *testing.T) {
 		consumer := event.NewConsumer()
 
 		Convey("When consume is called", func() {
-			go consumer.Consume(testCtx, messageConsumer, eventHandler, cfg)
+			batch := event.NewBatch(cfg.BatchSize)
+			go consumer.Consume(testCtx, messageConsumer, batch, eventHandler, cfg)
 
 			message1 := kafkatest.NewMessage([]byte(marshal(expectedEvent1)), 0)
 			messageConsumer.Channels().Upstream <- message1
@@ -283,8 +289,9 @@ func TestConsumeWithTwoMessages(t *testing.T) {
 			})
 			Convey("The message is committed and the consumer is released", func() {
 				<-consumer.Closed
-				So(len(message2.CommitAndReleaseCalls()), ShouldEqual, 1)
-				So(len(message1.CommitAndReleaseCalls()), ShouldEqual, 1)
+				So(len(message2.ReleaseCalls()), ShouldEqual, 1)
+				So(len(message2.CommitCalls()), ShouldEqual, 1)
+				So(len(message1.ReleaseCalls()), ShouldEqual, 1)
 			})
 		})
 	})
@@ -300,7 +307,8 @@ func TestClose(t *testing.T) {
 			t.Fatalf("failed to retrieve configuration: %v", err)
 		}
 		consumer := event.NewConsumer()
-		go consumer.Consume(testCtx, messageConsumer, eventHandler, cfg)
+		batch := event.NewBatch(cfg.BatchSize)
+		go consumer.Consume(testCtx, messageConsumer, batch, eventHandler, cfg)
 
 		Convey("When close is called", func() {
 			err := consumer.Close(testCtx)

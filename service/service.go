@@ -21,6 +21,8 @@ type Service struct {
 	server          HTTPServer
 	router          *mux.Router
 	serviceList     *ExternalServiceList
+	batchHandler    *handler.BatchHandler
+	batch           *event.Batch
 	healthCheck     HealthChecker
 	consumer        dpkafka.IConsumerGroup
 	shutdownTimeout time.Duration
@@ -29,17 +31,10 @@ type Service struct {
 var awsSigner *dpawsauth.AwsSignerRoundTripper
 
 // Run the service
-func Run(ctx context.Context, serviceList *ExternalServiceList, buildTime, gitCommit, version string,
+func Run(ctx context.Context, cfg *config.Config, serviceList *ExternalServiceList, buildTime, gitCommit, version string,
 	svcErrors chan error) (*Service, error) {
 
 	log.Info(ctx, "starting dp-search-data-importer service")
-
-	// Read config
-	cfg, err := config.Get()
-	if err != nil {
-		return nil, errors.Wrap(err, "unable to retrieve service configuration")
-	}
-	log.Info(ctx, "got service configuration", log.Data{"config": cfg})
 
 	// Get Kafka consumer
 	kafkaConsumer, err := serviceList.GetKafkaConsumer(ctx, cfg)
@@ -67,9 +62,10 @@ func Run(ctx context.Context, serviceList *ExternalServiceList, buildTime, gitCo
 	// handle a batch of events.
 	batchHandler := handler.NewBatchHandler(elasticSearchClient)
 	eventConsumer := event.NewConsumer()
+	batch := event.NewBatch(cfg.BatchSize)
 
 	// Start listening for event messages.
-	eventConsumer.Consume(ctx, kafkaConsumer, batchHandler, cfg)
+	eventConsumer.Consume(ctx, kafkaConsumer, batch, batchHandler, cfg)
 
 	// Kafka error logging go-routine
 	kafkaConsumer.Channels().LogErrors(ctx, "error received from kafka consumer, topic: "+cfg.PublishedContentTopic)
@@ -102,6 +98,8 @@ func Run(ctx context.Context, serviceList *ExternalServiceList, buildTime, gitCo
 	return &Service{
 		server:          s,
 		router:          r,
+		batchHandler:    batchHandler,
+		batch:           batch,
 		serviceList:     serviceList,
 		healthCheck:     hc,
 		consumer:        kafkaConsumer,
@@ -110,7 +108,7 @@ func Run(ctx context.Context, serviceList *ExternalServiceList, buildTime, gitCo
 }
 
 // Close gracefully shuts the service down in the required order, with timeout
-func (svc *Service) Close(ctx context.Context) error {
+func (svc *Service) Close(ctx context.Context, cfg *config.Config) error {
 	timeout := svc.shutdownTimeout
 	log.Info(ctx, "commencing graceful shutdown", log.Data{"graceful_shutdown_timeout": timeout})
 	ctx, cancel := context.WithTimeout(ctx, timeout)
@@ -127,28 +125,21 @@ func (svc *Service) Close(ctx context.Context) error {
 			svc.healthCheck.Stop()
 		}
 
-		// If kafka consumer exists, stop listening to it.
-		// This will automatically stop the event consumer loops and no more messages will be processed.
-		// The kafka consumer will be closed after the service shuts down.
-		if svc.serviceList.KafkaConsumer {
-			log.Info(ctx, "stopping kafka consumer listener")
-			if err := svc.consumer.StopListeningToConsumer(ctx); err != nil {
-				log.Error(ctx, "error stopping kafka consumer listener", err)
-				hasShutdownError = true
-			}
-			log.Info(ctx, "stopped kafka consumer listener")
-		}
-
 		// stop any incoming requests before closing any outbound connections
 		if err := svc.server.Shutdown(ctx); err != nil {
 			log.Error(ctx, "failed to shutdown http server", err)
 			hasShutdownError = true
 		}
 
+		var func1 dpkafka.OptFunc = func() {
+			// ProcessBatch remaining messages on the batch in the event of a shutdown.
+			event.ProcessBatch(ctx, cfg, svc.batchHandler, svc.batch, "graceful shutdown")
+		}
+
 		// If kafka consumer exists, close it.
 		if svc.serviceList.KafkaConsumer {
 			log.Info(ctx, "closing kafka consumer")
-			if err := svc.consumer.Close(ctx); err != nil {
+			if err := svc.consumer.Close(ctx, func1); err != nil {
 				log.Error(ctx, "error closing kafka consumer", err)
 				hasShutdownError = true
 			}

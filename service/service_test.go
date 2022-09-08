@@ -7,16 +7,15 @@ import (
 	"sync"
 	"testing"
 
+	dpElastic "github.com/ONSdigital/dp-elasticsearch/v3"
+	dpESClient "github.com/ONSdigital/dp-elasticsearch/v3/client"
 	"github.com/ONSdigital/dp-healthcheck/healthcheck"
+	dpkafka "github.com/ONSdigital/dp-kafka/v2"
 	"github.com/ONSdigital/dp-kafka/v2/kafkatest"
 	"github.com/ONSdigital/dp-search-data-importer/config"
 	"github.com/ONSdigital/dp-search-data-importer/service"
-	"github.com/pkg/errors"
-
-	dpElastic "github.com/ONSdigital/dp-elasticsearch/v3"
-	dpESClient "github.com/ONSdigital/dp-elasticsearch/v3/client"
-	dpkafka "github.com/ONSdigital/dp-kafka/v2"
 	serviceMock "github.com/ONSdigital/dp-search-data-importer/service/mock"
+	"github.com/pkg/errors"
 
 	. "github.com/smartystreets/goconvey/convey"
 )
@@ -106,7 +105,8 @@ func TestRun(t *testing.T) {
 			}
 			svcErrors := make(chan error, 1)
 			svcList := service.NewServiceList(initMock)
-			_, err := service.Run(ctx, svcList, testBuildTime, testGitCommit, testVersion, svcErrors)
+			cfg, _ := config.Get()
+			_, err := service.Run(ctx, cfg, svcList, testBuildTime, testGitCommit, testVersion, svcErrors)
 
 			Convey("Then service Run fails with the same error and the flag is not set", func() {
 				So(err, ShouldResemble, errKafkaConsumer)
@@ -124,7 +124,8 @@ func TestRun(t *testing.T) {
 			}
 			svcErrors := make(chan error, 1)
 			svcList := service.NewServiceList(initMock)
-			_, err := service.Run(ctx, svcList, testBuildTime, testGitCommit, testVersion, svcErrors)
+			cfg, _ := config.Get()
+			_, err := service.Run(ctx, cfg, svcList, testBuildTime, testGitCommit, testVersion, svcErrors)
 
 			Convey("Then service Run fails with the same error and the flag is not set", func() {
 				So(err, ShouldResemble, errElasticSearch)
@@ -143,7 +144,8 @@ func TestRun(t *testing.T) {
 			}
 			svcErrors := make(chan error, 1)
 			svcList := service.NewServiceList(initMock)
-			_, err := service.Run(ctx, svcList, testBuildTime, testGitCommit, testVersion, svcErrors)
+			cfg, _ := config.Get()
+			_, err := service.Run(ctx, cfg, svcList, testBuildTime, testGitCommit, testVersion, svcErrors)
 
 			Convey("Then service Run fails with the same error and the flag is not set", func() {
 				So(err, ShouldResemble, errHealthcheck)
@@ -163,7 +165,8 @@ func TestRun(t *testing.T) {
 			svcErrors := make(chan error, 1)
 			svcList := service.NewServiceList(initMock)
 			serverWg.Add(1)
-			_, err := service.Run(ctx, svcList, testBuildTime, testGitCommit, testVersion, svcErrors)
+			cfg, _ := config.Get()
+			_, err := service.Run(ctx, cfg, svcList, testBuildTime, testGitCommit, testVersion, svcErrors)
 
 			Convey("Then service Run succeeds and all the flags are set", func() {
 				So(err, ShouldBeNil)
@@ -201,7 +204,8 @@ func TestRun(t *testing.T) {
 			}
 			svcErrors := make(chan error, 1)
 			svcList := service.NewServiceList(initMock)
-			_, err := service.Run(ctx, svcList, testBuildTime, testGitCommit, testVersion, svcErrors)
+			cfg, _ := config.Get()
+			_, err := service.Run(ctx, cfg, svcList, testBuildTime, testGitCommit, testVersion, svcErrors)
 
 			Convey("Then service Run fails, but all checks try to register", func() {
 				So(err, ShouldNotBeNil)
@@ -238,7 +242,7 @@ func TestClose(t *testing.T) {
 
 		consumerMock := &kafkatest.IConsumerGroupMock{
 			StopListeningToConsumerFunc: func(ctx context.Context) error { return nil },
-			CloseFunc:                   func(ctx context.Context) error { return nil },
+			CloseFunc:                   func(ctx context.Context, optFuncs ...dpkafka.OptFunc) error { return nil },
 			CheckerFunc:                 func(ctx context.Context, state *healthcheck.CheckState) error { return nil },
 			ChannelsFunc:                func() *dpkafka.ConsumerGroupChannels { return &dpkafka.ConsumerGroupChannels{} },
 		}
@@ -276,12 +280,12 @@ func TestClose(t *testing.T) {
 
 			svcErrors := make(chan error, 1)
 			svcList := service.NewServiceList(initMock)
-			svc, err := service.Run(ctx, svcList, testBuildTime, testGitCommit, testVersion, svcErrors)
+			cfg, _ := config.Get()
+			svc, err := service.Run(ctx, cfg, svcList, testBuildTime, testGitCommit, testVersion, svcErrors)
 			So(err, ShouldBeNil)
 
-			err = svc.Close(context.Background())
+			err = svc.Close(context.Background(), cfg)
 			So(err, ShouldBeNil)
-			So(len(consumerMock.StopListeningToConsumerCalls()), ShouldEqual, 1)
 			So(len(hcMock.StopCalls()), ShouldEqual, 1)
 			So(len(consumerMock.CloseCalls()), ShouldEqual, 1)
 			So(len(serverMock.ShutdownCalls()), ShouldEqual, 1)
@@ -309,10 +313,11 @@ func TestClose(t *testing.T) {
 
 			svcErrors := make(chan error, 1)
 			svcList := service.NewServiceList(initMock)
-			svc, err := service.Run(ctx, svcList, testBuildTime, testGitCommit, testVersion, svcErrors)
+			cfg, _ := config.Get()
+			svc, err := service.Run(ctx, cfg, svcList, testBuildTime, testGitCommit, testVersion, svcErrors)
 			So(err, ShouldBeNil)
 
-			err = svc.Close(context.Background())
+			err = svc.Close(context.Background(), cfg)
 			So(err, ShouldNotBeNil)
 			So(len(hcMock.StopCalls()), ShouldEqual, 1)
 			So(len(failingserverMock.ShutdownCalls()), ShouldEqual, 1)

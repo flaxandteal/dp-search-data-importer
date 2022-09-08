@@ -41,13 +41,13 @@ type Handler interface {
 func (consumer *Consumer) Consume(
 	ctx context.Context,
 	messageConsumer MessageConsumer,
+	batch *Batch,
 	batchHandler Handler,
 	cfg *config.Config) {
 
 	go func() {
 		defer close(consumer.Closed)
 
-		batch := NewBatch(cfg.BatchSize)
 		// Wait a batch full of messages.
 		// If we do not get any messages for a time, just process the messages already in the batch.
 		for {
@@ -60,8 +60,12 @@ func (consumer *Consumer) Consume(
 					<-delay.C
 				}
 
+				if msg == nil {
+					continue
+				}
+
 				AddMessageToBatch(ctx, cfg, batch, msg, batchHandler)
-				msg.CommitAndRelease()
+				msg.Release()
 
 			case <-delay.C:
 				if batch.IsEmpty() {
@@ -111,10 +115,12 @@ func ProcessBatch(ctx context.Context, cfg *config.Config, handler Handler, batc
 	err := handler.Handle(ctx, cfg.ElasticSearchAPIURL, batch.Events())
 	if err != nil {
 		log.Error(ctx, "error handling batch", err)
+		batch.Commit()
 		return
 	}
 
 	log.Info(ctx, "batch event processed - committing")
+	batch.Commit()
 }
 
 // Close safely closes the consumer and releases all resources

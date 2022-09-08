@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"github.com/ONSdigital/dp-search-data-importer/config"
 	"os"
 	"os/signal"
 	"syscall"
@@ -39,7 +40,13 @@ func run(ctx context.Context) error {
 	// Run the service, providing an error channel for fatal errors
 	svcErrors := make(chan error, 1)
 	svcList := service.NewServiceList(&service.Init{})
-	svc, err := service.Run(ctx, svcList, BuildTime, GitCommit, Version, svcErrors)
+	// Read config
+	cfg, err := config.Get()
+	if err != nil {
+		return errors.Wrap(err, "unable to retrieve service configuration")
+	}
+	log.Info(ctx, "got service configuration", log.Data{"config": cfg})
+	svc, err := service.Run(ctx, cfg, svcList, BuildTime, GitCommit, Version, svcErrors)
 	if err != nil {
 		return errors.Wrap(err, "running service failed")
 	}
@@ -51,5 +58,5 @@ func run(ctx context.Context) error {
 	case sig := <-signals:
 		log.Info(ctx, "os signal received", log.Data{"signal": sig})
 	}
-	return svc.Close(ctx)
+	return svc.Close(ctx, cfg)
 }
