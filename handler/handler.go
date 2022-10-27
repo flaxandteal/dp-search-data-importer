@@ -34,8 +34,6 @@ func NewBatchHandler(esClient dpelasticsearch.Client) *BatchHandler {
 
 // Handle the given slice of SearchDataImport Model.
 func (batchHandler BatchHandler) Handle(ctx context.Context, url string, events []*models.SearchDataImportModel) error {
-	log.Info(ctx, "events handler called")
-
 	// no events received. Nothing more to do.
 	if len(events) == 0 {
 		log.Info(ctx, "there are no events to handle")
@@ -48,7 +46,6 @@ func (batchHandler BatchHandler) Handle(ctx context.Context, url string, events 
 		return err
 	}
 
-	log.Info(ctx, "event successfully handled")
 	return nil
 }
 
@@ -126,7 +123,6 @@ func prepareEventForBulkUpsertRequestBody(ctx context.Context, sdModel *models.S
 			return nil, err
 		}
 
-		log.Info(ctx, "uid while preparing bulk request for upsert", log.Data{"uid": uid})
 		bulkbody = append(bulkbody, []byte("{ \""+"update"+"\": { \"_id\": \""+uid+"\" } }\n")...)
 		bulkbody = append(bulkbody, []byte("{")...)
 		bulkbody = append(bulkbody, []byte("\"doc\":")...)
