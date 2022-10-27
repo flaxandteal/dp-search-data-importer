@@ -15,6 +15,7 @@ import (
 	"github.com/ONSdigital/dp-search-data-importer/config"
 	"github.com/ONSdigital/dp-search-data-importer/service"
 	serviceMock "github.com/ONSdigital/dp-search-data-importer/service/mock"
+	"github.com/ONSdigital/log.go/v2/log"
 	"github.com/pkg/errors"
 
 	. "github.com/smartystreets/goconvey/convey"
@@ -105,8 +106,12 @@ func TestRun(t *testing.T) {
 			}
 			svcErrors := make(chan error, 1)
 			svcList := service.NewServiceList(initMock)
-			cfg, _ := config.Get()
-			_, err := service.Run(ctx, cfg, svcList, testBuildTime, testGitCommit, testVersion, svcErrors)
+			cfg, err := config.Get()
+			if err != nil {
+				log.Error(ctx, "failed to retrieve the config", err)
+				t.FailNow()
+			}
+			_, err = service.Run(ctx, cfg, svcList, testBuildTime, testGitCommit, testVersion, svcErrors)
 
 			Convey("Then service Run fails with the same error and the flag is not set", func() {
 				So(err, ShouldResemble, errKafkaConsumer)
@@ -124,8 +129,12 @@ func TestRun(t *testing.T) {
 			}
 			svcErrors := make(chan error, 1)
 			svcList := service.NewServiceList(initMock)
-			cfg, _ := config.Get()
-			_, err := service.Run(ctx, cfg, svcList, testBuildTime, testGitCommit, testVersion, svcErrors)
+			cfg, err := config.Get()
+			if err != nil {
+				log.Error(ctx, "failed to retrieve the config", err)
+				t.FailNow()
+			}
+			_, err = service.Run(ctx, cfg, svcList, testBuildTime, testGitCommit, testVersion, svcErrors)
 
 			Convey("Then service Run fails with the same error and the flag is not set", func() {
 				So(err, ShouldResemble, errElasticSearch)
@@ -144,8 +153,12 @@ func TestRun(t *testing.T) {
 			}
 			svcErrors := make(chan error, 1)
 			svcList := service.NewServiceList(initMock)
-			cfg, _ := config.Get()
-			_, err := service.Run(ctx, cfg, svcList, testBuildTime, testGitCommit, testVersion, svcErrors)
+			cfg, err := config.Get()
+			if err != nil {
+				log.Error(ctx, "failed to retrieve the config", err)
+				t.FailNow()
+			}
+			_, err = service.Run(ctx, cfg, svcList, testBuildTime, testGitCommit, testVersion, svcErrors)
 
 			Convey("Then service Run fails with the same error and the flag is not set", func() {
 				So(err, ShouldResemble, errHealthcheck)
@@ -165,8 +178,12 @@ func TestRun(t *testing.T) {
 			svcErrors := make(chan error, 1)
 			svcList := service.NewServiceList(initMock)
 			serverWg.Add(1)
-			cfg, _ := config.Get()
-			_, err := service.Run(ctx, cfg, svcList, testBuildTime, testGitCommit, testVersion, svcErrors)
+			cfg, err := config.Get()
+			if err != nil {
+				log.Error(ctx, "failed to retrieve the config", err)
+				t.FailNow()
+			}
+			_, err = service.Run(ctx, cfg, svcList, testBuildTime, testGitCommit, testVersion, svcErrors)
 
 			Convey("Then service Run succeeds and all the flags are set", func() {
 				So(err, ShouldBeNil)
@@ -204,8 +221,12 @@ func TestRun(t *testing.T) {
 			}
 			svcErrors := make(chan error, 1)
 			svcList := service.NewServiceList(initMock)
-			cfg, _ := config.Get()
-			_, err := service.Run(ctx, cfg, svcList, testBuildTime, testGitCommit, testVersion, svcErrors)
+			cfg, err := config.Get()
+			if err != nil {
+				log.Error(ctx, "failed to retrieve the config", err)
+				t.FailNow()
+			}
+			_, err = service.Run(ctx, cfg, svcList, testBuildTime, testGitCommit, testVersion, svcErrors)
 
 			Convey("Then service Run fails, but all checks try to register", func() {
 				So(err, ShouldNotBeNil)
@@ -280,7 +301,11 @@ func TestClose(t *testing.T) {
 
 			svcErrors := make(chan error, 1)
 			svcList := service.NewServiceList(initMock)
-			cfg, _ := config.Get()
+			cfg, err := config.Get()
+			if err != nil {
+				log.Error(ctx, "failed to retrieve the config", err)
+				t.FailNow()
+			}
 			svc, err := service.Run(ctx, cfg, svcList, testBuildTime, testGitCommit, testVersion, svcErrors)
 			So(err, ShouldBeNil)
 
@@ -313,7 +338,11 @@ func TestClose(t *testing.T) {
 
 			svcErrors := make(chan error, 1)
 			svcList := service.NewServiceList(initMock)
-			cfg, _ := config.Get()
+			cfg, err := config.Get()
+			if err != nil {
+				log.Error(ctx, "failed to retrieve the config", err)
+				t.FailNow()
+			}
 			svc, err := service.Run(ctx, cfg, svcList, testBuildTime, testGitCommit, testVersion, svcErrors)
 			So(err, ShouldBeNil)
 

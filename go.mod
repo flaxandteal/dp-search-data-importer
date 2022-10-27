@@ -4,13 +4,11 @@ go 1.17
 
 replace github.com/coreos/etcd => github.com/coreos/etcd v3.3.24+incompatible
 
-replace github.com/ONSdigital/dp-kafka/v2 => /Users/rahulmadathumpalliyalil/workdir/ONSdigital/dp-kafka
-
 require (
 	github.com/ONSdigital/dp-component-test v0.6.3
 	github.com/ONSdigital/dp-elasticsearch/v3 v3.0.0-alpha.7
 	github.com/ONSdigital/dp-healthcheck v1.3.0
-	github.com/ONSdigital/dp-kafka/v2 v2.4.3
+	github.com/ONSdigital/dp-kafka/v2 v2.7.3
 	github.com/ONSdigital/dp-net v1.4.1
 	github.com/ONSdigital/dp-net/v2 v2.4.0
 	github.com/ONSdigital/log.go/v2 v2.2.0
