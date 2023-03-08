@@ -5,7 +5,7 @@ type SearchDataImportModel struct {
 	UID             string               `avro:"uid"`
 	URI             string               `avro:"uri"`
 	Edition         string               `avro:"edition"`
-	DataType        string               `avro:"type"`
+	DataType        string               `avro:"data_type"`
 	JobID           string               `avro:"job_id"`
 	SearchIndex     string               `avro:"search_index"`
 	CDID            string               `avro:"cdid"`
@@ -21,14 +21,29 @@ type SearchDataImportModel struct {
 	Cancelled       bool                 `avro:"cancelled"`
 	Finalised       bool                 `avro:"finalised"`
 	ProvisionalDate string               `avro:"provisional_date"`
+	CanonicalTopic  string               `avro:"canonical_topic"`
 	Published       bool                 `avro:"published"`
 	Language        string               `avro:"language"`
 	Survey          string               `avro:"survey"`
-	CanonicalTopic  string               `avro:"canonical_topic"`
+	PopulationType  *PopulationType      `avro:"population_type"`
+	Dimensions      []Dimension          `avro:"dimensions"`
 }
 
 // ReleaseDateDetails represents a change of release date
 type ReleaseDateDetails struct {
 	ChangeNotice string `avro:"change_notice"`
 	Date         string `avro:"previous_date"`
+}
+
+// Dimension represents the required information for each dataset dimension: name (unique ID) and label
+type Dimension struct {
+	Name     string `avro:"name"`
+	RawLabel string `avro:"raw_label"`
+	Label    string `avro:"label"`
+}
+
+// PopulationType represents the population type name (unique ID) and label
+type PopulationType struct {
+	Name  string `avro:"name"`
+	Label string `avro:"label"`
 }

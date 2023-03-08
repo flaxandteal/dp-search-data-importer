@@ -5,6 +5,7 @@ import (
 	"context"
 	"fmt"
 	"os"
+	"strings"
 	"time"
 
 	kafka "github.com/ONSdigital/dp-kafka/v2"
@@ -15,6 +16,11 @@ import (
 )
 
 const serviceName = "dp-search-data-importer"
+
+const (
+	ZebedeeDataType = "legacy"
+	DatasetDataType = "datasets"
+)
 
 func main() {
 	log.Namespace = serviceName
@@ -83,7 +89,7 @@ func scanEvent(scanner *bufio.Scanner) *models.SearchDataImportModel {
 	scanner.Scan()
 	uid := scanner.Text()
 
-	fmt.Println("Type the Data Type")
+	fmt.Printf("Type the Data Type (%s or %s)\n", DatasetDataType, ZebedeeDataType)
 	fmt.Printf("$ ")
 	scanner.Scan()
 	dataType := scanner.Text()
@@ -113,7 +119,7 @@ func scanEvent(scanner *bufio.Scanner) *models.SearchDataImportModel {
 	scanner.Scan()
 	title := scanner.Text()
 
-	return &models.SearchDataImportModel{
+	searchDataImport := &models.SearchDataImportModel{
 		UID:         uid,
 		DataType:    dataType,
 		JobID:       jobID,
@@ -126,4 +132,52 @@ func scanEvent(scanner *bufio.Scanner) *models.SearchDataImportModel {
 		Title:       title,
 		TraceID:     "2effer334d",
 	}
+
+	if dataType == DatasetDataType {
+		popType := &models.PopulationType{}
+		dimensions := []models.Dimension{}
+
+		fmt.Println("Type the population type Name")
+		fmt.Printf("$ ")
+		scanner.Scan()
+		popType.Name = scanner.Text()
+
+		fmt.Println("Type the population type Label")
+		fmt.Printf("$ ")
+		scanner.Scan()
+		popType.Label = scanner.Text()
+
+		for {
+			fmt.Println("Add dimension? [Yy] to confirm")
+			fmt.Printf("$ ")
+			scanner.Scan()
+			if strings.ToLower(scanner.Text()) != "y" {
+				break
+			}
+
+			dim := models.Dimension{}
+
+			fmt.Println("Type the dimension Name")
+			fmt.Printf("$ ")
+			scanner.Scan()
+			dim.Name = scanner.Text()
+
+			fmt.Println("Type the dimension Raw Label")
+			fmt.Printf("$ ")
+			scanner.Scan()
+			dim.RawLabel = scanner.Text()
+
+			fmt.Println("Type the dimension Label")
+			fmt.Printf("$ ")
+			scanner.Scan()
+			dim.Label = scanner.Text()
+
+			dimensions = append(dimensions, dim)
+		}
+
+		searchDataImport.PopulationType = popType
+		searchDataImport.Dimensions = dimensions
+	}
+
+	return searchDataImport
 }

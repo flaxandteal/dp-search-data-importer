@@ -41,8 +41,21 @@ func (t *Transform) TransformEventModelToEsModel(eventModel *models.SearchDataIm
 		Language:        eventModel.Language,
 		CanonicalTopic:  eventModel.CanonicalTopic,
 	}
+	if eventModel.PopulationType != nil {
+		esModels.PopulationType = &models.EsPopulationType{
+			Name:  eventModel.PopulationType.Name,
+			Label: eventModel.PopulationType.Label,
+		}
+	}
 	for _, data := range eventModel.DateChanges {
 		esModels.DateChanges = append(esModels.DateChanges, models.ReleaseDateChange(data))
+	}
+	for _, dim := range eventModel.Dimensions {
+		esModels.Dimensions = append(esModels.Dimensions, models.EsDimension{
+			Name:     dim.Name,
+			RawLabel: dim.RawLabel,
+			Label:    dim.Label,
+		})
 	}
 	return &esModels
 }

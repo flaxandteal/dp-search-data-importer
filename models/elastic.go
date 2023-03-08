@@ -23,6 +23,8 @@ type EsModel struct {
 	Language        string              `json:"language,omitempty"`
 	Survey          string              `json:"survey,omitempty"`
 	CanonicalTopic  string              `json:"canonical_topic"`
+	PopulationType  *EsPopulationType   `json:"population_type"`
+	Dimensions      []EsDimension       `json:"dimensions"`
 }
 
 // EsBulkResponse holds a response from ES
@@ -55,4 +57,17 @@ type EsBulkItemResponseError struct {
 type ReleaseDateChange struct {
 	ChangeNotice string `json:"change_notice"`
 	Date         string `json:"previous_date"`
+}
+
+// EsPopulationType represents the population type information in an elastic-search json
+type EsPopulationType struct {
+	Name  string `json:"name"`
+	Label string `json:"label"`
+}
+
+// EsDimension represents a dimension in an elastic-search json
+type EsDimension struct {
+	Name     string `json:"name"`
+	RawLabel string `json:"raw_label"`
+	Label    string `json:"label"`
 }
