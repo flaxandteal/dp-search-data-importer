@@ -37,7 +37,7 @@ func TestTransformEventModelToEsModel(t *testing.T) {
 					Date:         "test-date",
 				},
 			},
-			PopulationType: &models.PopulationType{
+			PopulationType: models.PopulationType{
 				Name:  "test-name",
 				Label: "test-label",
 			},

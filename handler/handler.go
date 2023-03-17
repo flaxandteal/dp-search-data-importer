@@ -3,13 +3,15 @@ package handler
 import (
 	"context"
 	"encoding/json"
-
-	"github.com/ONSdigital/dp-search-data-importer/event"
-	"github.com/ONSdigital/dp-search-data-importer/models"
-	"github.com/ONSdigital/dp-search-data-importer/transform"
-	"github.com/ONSdigital/log.go/v2/log"
+	"fmt"
 
 	dpelasticsearch "github.com/ONSdigital/dp-elasticsearch/v3/client"
+	kafka "github.com/ONSdigital/dp-kafka/v3"
+	"github.com/ONSdigital/dp-search-data-importer/config"
+	"github.com/ONSdigital/dp-search-data-importer/models"
+	"github.com/ONSdigital/dp-search-data-importer/schema"
+	"github.com/ONSdigital/dp-search-data-importer/transform"
+	"github.com/ONSdigital/log.go/v2/log"
 )
 
 const (
@@ -17,30 +19,48 @@ const (
 	esRespCreate = "create"
 )
 
-var _ event.Handler = (*BatchHandler)(nil)
-
 // BatchHandler handles batches of SearchDataImportModel events that contain CSV row data.
 type BatchHandler struct {
 	esClient dpelasticsearch.Client
+	esUrl    string
 }
 
 // NewBatchHandler returns a BatchHandler.
-func NewBatchHandler(esClient dpelasticsearch.Client) *BatchHandler {
-
+func NewBatchHandler(esClient dpelasticsearch.Client, cfg *config.Config) *BatchHandler {
 	return &BatchHandler{
 		esClient: esClient,
+		esUrl:    cfg.ElasticSearchAPIURL,
 	}
 }
 
-// Handle the given slice of SearchDataImport Model.
-func (batchHandler BatchHandler) Handle(ctx context.Context, url string, events []*models.SearchDataImportModel) error {
-	// no events received. Nothing more to do.
-	if len(events) == 0 {
+func (h *BatchHandler) Handle(ctx context.Context, batch []kafka.Message) error {
+	// no events received. Nothing more to do (this scenario should not happen)
+	if len(batch) == 0 {
 		log.Info(ctx, "there are no events to handle")
 		return nil
 	}
 
-	err := batchHandler.sendToES(ctx, url, events)
+	// unmarshal all events in batch
+	events := make([]*models.SearchDataImportModel, len(batch))
+	for i, msg := range batch {
+		e := &models.SearchDataImportModel{}
+		s := schema.SearchDataImportEvent
+
+		if err := s.Unmarshal(msg.GetData(), e); err != nil {
+			return &Error{
+				err: fmt.Errorf("failed to unmarshal event: %w", err),
+				logData: map[string]interface{}{
+					"msg_data": string(msg.GetData()),
+				},
+			}
+		}
+
+		events[i] = e
+	}
+	log.Info(ctx, "batch of events received", log.Data{"len": len(events)})
+
+	// send batch to elasticsearch
+	err := h.sendToES(ctx, events)
 	if err != nil {
 		log.Error(ctx, "failed to send event to Elastic Search", err)
 		return err
@@ -50,7 +70,7 @@ func (batchHandler BatchHandler) Handle(ctx context.Context, url string, events 
 }
 
 // Preparing the payload and sending bulk events to elastic search.
-func (batchHandler BatchHandler) sendToES(ctx context.Context, esDestURL string, events []*models.SearchDataImportModel) error {
+func (h *BatchHandler) sendToES(ctx context.Context, events []*models.SearchDataImportModel) error {
 
 	log.Info(ctx, "bulk events into ES starts")
 	target := len(events)
@@ -72,7 +92,7 @@ func (batchHandler BatchHandler) sendToES(ctx context.Context, esDestURL string,
 		bulkupsert = append(bulkupsert, upsertBulkRequestBody...)
 	}
 
-	jsonUpsertResponse, err := batchHandler.esClient.BulkUpdate(ctx, esDestIndex, esDestURL, bulkupsert)
+	jsonUpsertResponse, err := h.esClient.BulkUpdate(ctx, esDestIndex, h.esUrl, bulkupsert)
 	if err != nil {
 		if jsonUpsertResponse == nil {
 			log.Error(ctx, "server error while upserting the event", err)

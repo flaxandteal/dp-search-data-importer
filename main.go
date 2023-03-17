@@ -2,14 +2,15 @@ package main
 
 import (
 	"context"
-	"github.com/ONSdigital/dp-search-data-importer/config"
+	"fmt"
 	"os"
 	"os/signal"
 	"syscall"
 
+	"github.com/ONSdigital/dp-search-data-importer/config"
+
 	"github.com/ONSdigital/dp-search-data-importer/service"
 	"github.com/ONSdigital/log.go/v2/log"
-	"github.com/pkg/errors"
 )
 
 const serviceName = "dp-search-data-importer"
@@ -33,30 +34,50 @@ func main() {
 	}
 }
 
-func run(ctx context.Context) error {
-	signals := make(chan os.Signal, 1)
-	signal.Notify(signals, os.Interrupt, syscall.SIGTERM)
+func run(ctx context.Context) (err error) {
+	defer func() {
+		if r := recover(); r != nil {
+			err = fmt.Errorf("panic: %s", r)
+			fmt.Printf("\n%s\n", err)
+		}
+	}()
 
-	// Run the service, providing an error channel for fatal errors
+	signals := make(chan os.Signal, 1)
+	signal.Notify(signals, syscall.SIGINT, syscall.SIGTERM)
 	svcErrors := make(chan error, 1)
-	svcList := service.NewServiceList(&service.Init{})
+
 	// Read config
 	cfg, err := config.Get()
 	if err != nil {
-		return errors.Wrap(err, "unable to retrieve service configuration")
+		return fmt.Errorf("unable to retrieve service configuration: %w", err)
 	}
-	log.Info(ctx, "got service configuration", log.Data{"config": cfg})
-	svc, err := service.Run(ctx, cfg, svcList, BuildTime, GitCommit, Version, svcErrors)
-	if err != nil {
-		return errors.Wrap(err, "running service failed")
+	log.Info(ctx, "config on startup", log.Data{"config": cfg, "build_time": BuildTime, "git-commit": GitCommit})
+
+	// Make sure that context is cancelled when 'run' finishes its execution.
+	// Any remaining go-routine that was not terminated during svc.Close (graceful shutdown) will be terminated by ctx.Done()
+	var cancel context.CancelFunc
+	ctx, cancel = context.WithCancel(ctx)
+	defer cancel()
+
+	// Run the service
+	svc := service.New()
+	if err := svc.Init(ctx, cfg, BuildTime, GitCommit, Version); err != nil {
+		return fmt.Errorf("service int failed with error: %w", err)
+	}
+	if err := svc.Start(ctx, svcErrors); err != nil {
+		return fmt.Errorf("service start failed with error: %w", err)
 	}
 
-	// blocks until an os interrupt or a fatal error occurs
+	// Blocks until an os interrupt or a fatal error occurs
 	select {
 	case err := <-svcErrors:
-		log.Error(ctx, "service error received", err)
+		err = fmt.Errorf("service error received: %w", err)
+		if errClose := svc.Close(ctx); errClose != nil {
+			log.Error(ctx, "service close error during error handling", errClose)
+		}
+		return err
 	case sig := <-signals:
 		log.Info(ctx, "os signal received", log.Data{"signal": sig})
 	}
-	return svc.Close(ctx, cfg)
+	return svc.Close(ctx)
 }

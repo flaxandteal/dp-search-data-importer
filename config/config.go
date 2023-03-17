@@ -15,23 +15,32 @@ type Config struct {
 	GracefulShutdownTimeout    time.Duration `envconfig:"GRACEFUL_SHUTDOWN_TIMEOUT"`
 	HealthCheckInterval        time.Duration `envconfig:"HEALTHCHECK_INTERVAL"`
 	HealthCheckCriticalTimeout time.Duration `envconfig:"HEALTHCHECK_CRITICAL_TIMEOUT"`
-	KafkaAddr                  []string      `envconfig:"KAFKA_ADDR"`
-	KafkaVersion               string        `envconfig:"KAFKA_VERSION"`
-	KafkaOffsetOldest          bool          `envconfig:"KAFKA_OFFSET_OLDEST"`
-	KafkaNumWorkers            int           `envconfig:"KAFKA_NUM_WORKERS"`
-	KafkaSecProtocol           string        `envconfig:"KAFKA_SEC_PROTO"`
-	KafkaSecCACerts            string        `envconfig:"KAFKA_SEC_CA_CERTS"`
-	KafkaSecClientCert         string        `envconfig:"KAFKA_SEC_CLIENT_CERT"`
-	KafkaSecClientKey          string        `envconfig:"KAFKA_SEC_CLIENT_KEY"          json:"-"`
-	KafkaSecSkipVerify         bool          `envconfig:"KAFKA_SEC_SKIP_VERIFY"`
-	PublishedContentGroup      string        `envconfig:"KAFKA_PUBLISHED_CONTENT_GROUP"`
-	PublishedContentTopic      string        `envconfig:"KAFKA_PUBLISHED_CONTENT_TOPIC"`
 	BatchSize                  int           `envconfig:"BATCH_SIZE"`
 	BatchWaitTime              time.Duration `envconfig:"BATCH_WAIT_TIME"`
 	ElasticSearchAPIURL        string        `envconfig:"ELASTIC_SEARCH_URL"`
 	AwsRegion                  string        `envconfig:"AWS_REGION"`
 	AwsService                 string        `envconfig:"AWS_SERVICE"`
 	SignElasticsearchRequests  bool          `envconfig:"SIGN_ELASTICSEARCH_REQUESTS"`
+	StopConsumingOnUnhealthy   bool          `envconfig:"STOP_CONSUMING_ON_UNHEALTHY"`
+	Kafka                      *Kafka
+}
+
+// Kafka contains the config required to connect to Kafka
+type Kafka struct {
+	PublishedContentGroup     string   `envconfig:"KAFKA_PUBLISHED_CONTENT_GROUP"`
+	PublishedContentTopic     string   `envconfig:"KAFKA_PUBLISHED_CONTENT_TOPIC"`
+	Addr                      []string `envconfig:"KAFKA_ADDR"`
+	Version                   string   `envconfig:"KAFKA_VERSION"`
+	OffsetOldest              bool     `envconfig:"KAFKA_OFFSET_OLDEST"`
+	NumWorkers                int      `envconfig:"KAFKA_NUM_WORKERS"`
+	SecProtocol               string   `envconfig:"KAFKA_SEC_PROTO"`
+	SecCACerts                string   `envconfig:"KAFKA_SEC_CA_CERTS"            json:"-"`
+	SecClientCert             string   `envconfig:"KAFKA_SEC_CLIENT_CERT"         json:"-"`
+	SecClientKey              string   `envconfig:"KAFKA_SEC_CLIENT_KEY"          json:"-"`
+	SecSkipVerify             bool     `envconfig:"KAFKA_SEC_SKIP_VERIFY"`
+	MaxBytes                  int      `envconfig:"KAFKA_MAX_BYTES"`
+	ConsumerMinBrokersHealthy int      `envconfig:"KAFKA_CONSUMER_MIN_BROKERS_HEALTHY"`
+	ProducerMinBrokersHealthy int      `envconfig:"KAFKA_PRODUCER_MIN_BROKERS_HEALTHY"`
 }
 
 var cfg *Config
@@ -48,23 +57,29 @@ func Get() (*Config, error) {
 		GracefulShutdownTimeout:    5 * time.Second,
 		HealthCheckInterval:        30 * time.Second,
 		HealthCheckCriticalTimeout: 90 * time.Second,
-		KafkaAddr:                  []string{"localhost:9092", "localhost:9093", "localhost:9094"},
-		KafkaVersion:               "1.0.2",
-		KafkaOffsetOldest:          true,
-		KafkaNumWorkers:            1,
-		KafkaSecProtocol:           "",
-		KafkaSecCACerts:            "",
-		KafkaSecClientCert:         "",
-		KafkaSecClientKey:          "",
-		KafkaSecSkipVerify:         false,
-		PublishedContentGroup:      "dp-search-data-importer",
-		PublishedContentTopic:      "search-data-import",
 		BatchSize:                  500,
 		BatchWaitTime:              time.Second * 5,
 		ElasticSearchAPIURL:        "http://localhost:11200",
 		AwsRegion:                  "eu-west-1",
 		AwsService:                 "es",
 		SignElasticsearchRequests:  false,
+		StopConsumingOnUnhealthy:   true,
+		Kafka: &Kafka{
+			PublishedContentGroup:     "dp-search-data-importer",
+			PublishedContentTopic:     "search-data-import",
+			Addr:                      []string{"localhost:9092", "localhost:9093", "localhost:9094"},
+			Version:                   "1.0.2",
+			OffsetOldest:              true,
+			NumWorkers:                1,
+			SecProtocol:               "",
+			SecCACerts:                "",
+			SecClientCert:             "",
+			SecClientKey:              "",
+			SecSkipVerify:             false,
+			MaxBytes:                  2000000,
+			ConsumerMinBrokersHealthy: 1,
+			ProducerMinBrokersHealthy: 1,
+		},
 	}
 
 	return cfg, envconfig.Process("", cfg)

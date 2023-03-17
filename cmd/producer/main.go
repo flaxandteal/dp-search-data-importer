@@ -8,7 +8,7 @@ import (
 	"strings"
 	"time"
 
-	kafka "github.com/ONSdigital/dp-kafka/v2"
+	kafka "github.com/ONSdigital/dp-kafka/v3"
 	"github.com/ONSdigital/dp-search-data-importer/config"
 	"github.com/ONSdigital/dp-search-data-importer/models"
 	"github.com/ONSdigital/dp-search-data-importer/schema"
@@ -34,29 +34,28 @@ func main() {
 	}
 
 	// Create Kafka Producer
-	pChannels := kafka.CreateProducerChannels()
 	pConfig := &kafka.ProducerConfig{
-		KafkaVersion: &cfg.KafkaVersion,
+		BrokerAddrs:     cfg.Kafka.Addr,
+		Topic:           cfg.Kafka.PublishedContentTopic,
+		KafkaVersion:    &cfg.Kafka.Version,
+		MaxMessageBytes: &cfg.Kafka.MaxBytes,
 	}
-
-	// KafkaTLSProtocol informs service to use TLS protocol for kafka
-	if cfg.KafkaSecProtocol == config.KafkaTLSProtocol {
+	if cfg.Kafka.SecProtocol == config.KafkaTLSProtocol {
 		pConfig.SecurityConfig = kafka.GetSecurityConfig(
-			cfg.KafkaSecCACerts,
-			cfg.KafkaSecClientCert,
-			cfg.KafkaSecClientKey,
-			cfg.KafkaSecSkipVerify,
+			cfg.Kafka.SecCACerts,
+			cfg.Kafka.SecClientCert,
+			cfg.Kafka.SecClientKey,
+			cfg.Kafka.SecSkipVerify,
 		)
 	}
-
-	kafkaProducer, err := kafka.NewProducer(ctx, cfg.KafkaAddr, cfg.PublishedContentTopic, pChannels, pConfig)
+	kafkaProducer, err := kafka.NewProducer(ctx, pConfig)
 	if err != nil {
-		log.Fatal(ctx, "fatal error trying to create kafka producer", err, log.Data{"topic": cfg.PublishedContentTopic})
+		log.Fatal(ctx, "fatal error trying to create kafka producer", err, log.Data{"topic": cfg.Kafka.PublishedContentTopic})
 		os.Exit(1)
 	}
 
 	// kafka error logging go-routines
-	kafkaProducer.Channels().LogErrors(ctx, "kafka producer")
+	kafkaProducer.LogErrors(ctx)
 
 	time.Sleep(500 * time.Millisecond)
 	scanner := bufio.NewScanner(os.Stdin)
@@ -134,7 +133,7 @@ func scanEvent(scanner *bufio.Scanner) *models.SearchDataImportModel {
 	}
 
 	if dataType == DatasetDataType {
-		popType := &models.PopulationType{}
+		popType := models.PopulationType{}
 		dimensions := []models.Dimension{}
 
 		fmt.Println("Type the population type Name")

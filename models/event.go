@@ -25,7 +25,7 @@ type SearchDataImportModel struct {
 	Published       bool                 `avro:"published"`
 	Language        string               `avro:"language"`
 	Survey          string               `avro:"survey"`
-	PopulationType  *PopulationType      `avro:"population_type"`
+	PopulationType  PopulationType       `avro:"population_type"`
 	Dimensions      []Dimension          `avro:"dimensions"`
 }
 

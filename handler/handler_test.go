@@ -10,14 +10,22 @@ import (
 	"testing"
 
 	dpMock "github.com/ONSdigital/dp-elasticsearch/v3/client/mocks"
+	kafka "github.com/ONSdigital/dp-kafka/v3"
+	"github.com/ONSdigital/dp-kafka/v3/kafkatest"
+	"github.com/ONSdigital/dp-search-data-importer/config"
 	"github.com/ONSdigital/dp-search-data-importer/handler"
 	"github.com/ONSdigital/dp-search-data-importer/models"
+	"github.com/ONSdigital/dp-search-data-importer/schema"
 	. "github.com/smartystreets/goconvey/convey"
 )
 
 var (
 	testContext = context.Background()
+	indexName   = "ons"
 	esDestURL   = "locahost:9999"
+	testCfg     = &config.Config{
+		ElasticSearchAPIURL: esDestURL,
+	}
 
 	expectedEvent1 = &models.SearchDataImportModel{
 		UID:             "uid1",
@@ -40,6 +48,13 @@ var (
 		Survey:          "",
 		Language:        "",
 		CanonicalTopic:  "",
+		PopulationType: models.PopulationType{
+			Name:  "pop1",
+			Label: "popLbl1",
+		},
+		Dimensions: []models.Dimension{
+			{Name: "dim1", Label: "dimLbl1", RawLabel: "dimRawLbl1"},
+		},
 	}
 
 	expectedEvent2 = &models.SearchDataImportModel{
@@ -75,7 +90,6 @@ func successWithESResponseNoError() []byte {
 }
 
 func TestHandleWithEventsCreated(t *testing.T) {
-
 	Convey("Given a handler configured with successful es updates for all two events is success", t, func() {
 		elasticSearchMock := &dpMock.ClientMock{
 			BulkUpdateFunc: func(ctx context.Context, indexName string, url string, settings []byte) ([]byte, error) {
@@ -83,20 +97,23 @@ func TestHandleWithEventsCreated(t *testing.T) {
 			},
 		}
 
-		batchHandler := handler.NewBatchHandler(elasticSearchMock)
+		batchHandler := handler.NewBatchHandler(elasticSearchMock, testCfg)
 
-		Convey("When handle is called", func() {
-			err := batchHandler.Handle(testContext, esDestURL, testEvents)
+		Convey("When handle is called with no error", func() {
+			err := batchHandler.Handle(testContext, createTestBatch(testEvents))
 
-			Convey("Then the error is nil and it performed upsert action", func() {
+			Convey("Then the error is nil and it performed upsert action to the expected index", func() {
 				So(err, ShouldBeNil)
+				So(elasticSearchMock.BulkUpdateCalls(), ShouldHaveLength, 1)
+				So(elasticSearchMock.BulkUpdateCalls()[0].IndexName, ShouldEqual, indexName)
+				So(elasticSearchMock.BulkUpdateCalls()[0].URL, ShouldEqual, esDestURL)
+				So(elasticSearchMock.BulkUpdateCalls()[0].Settings, ShouldNotBeEmpty)
 			})
 		})
 	})
 }
 
 func TestHandleWithEventsUpdated(t *testing.T) {
-
 	Convey("Given a handler configured with sucessful es updates for two events with one create error", t, func() {
 		elasticSearchMock := &dpMock.ClientMock{
 			BulkUpdateFunc: func(ctx context.Context, indexName string, url string, settings []byte) ([]byte, error) {
@@ -104,13 +121,17 @@ func TestHandleWithEventsUpdated(t *testing.T) {
 			},
 		}
 
-		batchHandler := handler.NewBatchHandler(elasticSearchMock)
+		batchHandler := handler.NewBatchHandler(elasticSearchMock, testCfg)
 
 		Convey("When handle is called", func() {
-			err := batchHandler.Handle(testContext, esDestURL, testEvents)
+			err := batchHandler.Handle(testContext, createTestBatch(testEvents))
 
-			Convey("Then the error is nil and it performed upsert action", func() {
+			Convey("Then the error is nil and it performed upsert action to the expected index", func() {
 				So(err, ShouldBeNil)
+				So(elasticSearchMock.BulkUpdateCalls(), ShouldHaveLength, 1)
+				So(elasticSearchMock.BulkUpdateCalls()[0].IndexName, ShouldEqual, indexName)
+				So(elasticSearchMock.BulkUpdateCalls()[0].URL, ShouldEqual, esDestURL)
+				So(elasticSearchMock.BulkUpdateCalls()[0].Settings, ShouldNotBeEmpty)
 			})
 		})
 	})
@@ -123,13 +144,25 @@ func TestHandleWithInternalServerESResponse(t *testing.T) {
 				return nil, errors.New("unexpected status code from api")
 			},
 		}
-		batchHandler := handler.NewBatchHandler(elasticSearchMock)
+		batchHandler := handler.NewBatchHandler(elasticSearchMock, testCfg)
 		Convey("When handle is called", func() {
-			err := batchHandler.Handle(testContext, esDestURL, testEvents)
+			err := batchHandler.Handle(testContext, createTestBatch(testEvents))
 
 			Convey("And the error is not nil while performing upsert action", func() {
 				So(err, ShouldResemble, errors.New("unexpected status code from api"))
 			})
 		})
 	})
+}
+
+func createTestBatch(events []*models.SearchDataImportModel) []kafka.Message {
+	batch := make([]kafka.Message, len(events))
+	for i, s := range events {
+		e, err := schema.SearchDataImportEvent.Marshal(s)
+		So(err, ShouldBeNil)
+		msg, err := kafkatest.NewMessage(e, int64(i))
+		So(err, ShouldBeNil)
+		batch[i] = msg
+	}
+	return batch
 }
