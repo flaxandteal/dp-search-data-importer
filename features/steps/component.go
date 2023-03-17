@@ -20,7 +20,7 @@ import (
 )
 
 const (
-	WaitEventTimeout = 5 * time.Second // maximum time that the component test consumer will wait for a kafka event
+	WaitEventTimeout = 5 * time.Second // maximum time that the component test consumer will wait for an elasticsearch call
 )
 
 var (

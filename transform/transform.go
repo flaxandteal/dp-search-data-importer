@@ -6,7 +6,7 @@ import (
 
 // Transformer provides an interface by which to transform data from one form to another
 type Transformer interface {
-	TransformEventModelToEsModel(eventModel *models.SearchDataImportModel) *models.EsModel
+	TransformEventModelToEsModel(eventModel *models.SearchDataImport) *models.EsModel
 }
 
 // Transform provides a concrete implementation of the Transformer interface
@@ -18,7 +18,7 @@ func NewTransformer() Transformer {
 }
 
 // TransformModelToEsModel transforms a SearchDataImport into its EsModel counterpart
-func (t *Transform) TransformEventModelToEsModel(eventModel *models.SearchDataImportModel) *models.EsModel {
+func (t *Transform) TransformEventModelToEsModel(eventModel *models.SearchDataImport) *models.EsModel {
 	esModels := models.EsModel{
 		DataType:        eventModel.DataType,
 		Edition:         eventModel.Edition,

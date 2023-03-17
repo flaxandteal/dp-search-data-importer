@@ -27,7 +27,7 @@ var (
 		ElasticSearchAPIURL: esDestURL,
 	}
 
-	expectedEvent1 = &models.SearchDataImportModel{
+	expectedEvent1 = &models.SearchDataImport{
 		UID:             "uid1",
 		DataType:        "anyDataType1",
 		JobID:           "",
@@ -57,7 +57,7 @@ var (
 		},
 	}
 
-	expectedEvent2 = &models.SearchDataImportModel{
+	expectedEvent2 = &models.SearchDataImport{
 		UID:             "uid2",
 		DataType:        "anyDataType2",
 		JobID:           "",
@@ -72,7 +72,7 @@ var (
 		TraceID:         "anyTraceID2",
 	}
 
-	testEvents = []*models.SearchDataImportModel{
+	testEvents = []*models.SearchDataImport{
 		expectedEvent1,
 		expectedEvent2,
 	}
@@ -155,7 +155,7 @@ func TestHandleWithInternalServerESResponse(t *testing.T) {
 	})
 }
 
-func createTestBatch(events []*models.SearchDataImportModel) []kafka.Message {
+func createTestBatch(events []*models.SearchDataImport) []kafka.Message {
 	batch := make([]kafka.Message, len(events))
 	for i, s := range events {
 		e, err := schema.SearchDataImportEvent.Marshal(s)

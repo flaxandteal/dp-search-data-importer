@@ -41,9 +41,9 @@ func (h *BatchHandler) Handle(ctx context.Context, batch []kafka.Message) error 
 	}
 
 	// unmarshal all events in batch
-	events := make([]*models.SearchDataImportModel, len(batch))
+	events := make([]*models.SearchDataImport, len(batch))
 	for i, msg := range batch {
-		e := &models.SearchDataImportModel{}
+		e := &models.SearchDataImport{}
 		s := schema.SearchDataImportEvent
 
 		if err := s.Unmarshal(msg.GetData(), e); err != nil {
@@ -70,7 +70,7 @@ func (h *BatchHandler) Handle(ctx context.Context, batch []kafka.Message) error 
 }
 
 // Preparing the payload and sending bulk events to elastic search.
-func (h *BatchHandler) sendToES(ctx context.Context, events []*models.SearchDataImportModel) error {
+func (h *BatchHandler) sendToES(ctx context.Context, events []*models.SearchDataImport) error {
 
 	log.Info(ctx, "bulk events into ES starts")
 	target := len(events)
@@ -130,7 +130,7 @@ func (h *BatchHandler) sendToES(ctx context.Context, events []*models.SearchData
 }
 
 // Preparing the payload to be inserted into the elastic search.
-func prepareEventForBulkUpsertRequestBody(ctx context.Context, sdModel *models.SearchDataImportModel) (bulkbody []byte, err error) {
+func prepareEventForBulkUpsertRequestBody(ctx context.Context, sdModel *models.SearchDataImport) (bulkbody []byte, err error) {
 
 	uid := sdModel.UID
 	t := transform.NewTransformer()

@@ -10,7 +10,7 @@ import (
 
 func TestTransformEventModelToEsModel(t *testing.T) {
 	Convey("Given a fully populated search data import model", t, func() {
-		in := &models.SearchDataImportModel{
+		in := &models.SearchDataImport{
 			DataType:        "test-type",
 			Edition:         "test-edition",
 			URI:             "test-uri",

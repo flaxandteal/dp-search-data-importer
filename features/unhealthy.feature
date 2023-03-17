@@ -6,7 +6,12 @@ Feature: Search data importer unhealthy
 
     When the service starts
     And this search-data-import event is queued, to be consumed
-      | URI      | DataType | DatasetID |
-      | some_uri | legacy   | 123       |
+    """
+      {
+        "URI":       "some_uri",
+        "DataType":  "legacy",
+        "DatasetID": "123"
+      }
+    """
 
     Then nothing is sent to elasticsearch

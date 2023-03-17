@@ -1,6 +1,7 @@
 package steps
 
 import (
+	"encoding/json"
 	"errors"
 	"fmt"
 	"net/http"
@@ -11,7 +12,6 @@ import (
 	"github.com/ONSdigital/dp-search-data-importer/schema"
 	"github.com/cucumber/godog"
 	"github.com/google/go-cmp/cmp"
-	"github.com/rdumont/assistdog"
 )
 
 func (c *Component) RegisterSteps(ctx *godog.ScenarioContext) {
@@ -64,12 +64,6 @@ func (c *Component) elasticsearchReturns(response *godog.DocString) error {
 // Otherwise an error will be returned
 func (c *Component) thisModelIsSentToElasticSearch(es *godog.DocString) error {
 	b := []byte(es.Content)
-	// esa := &ElasticSearchAssertor{
-	// 	Expected: b,
-	// }
-	// c.ElasticSearchAPI.NewHandler().
-	// 	Post("/ons/_bulk").AssertCustom(esa).
-	// 	Reply(http.StatusOK)
 
 	esa, err := NewAssertor(b)
 	if err != nil {
@@ -84,7 +78,6 @@ func (c *Component) thisModelIsSentToElasticSearch(es *godog.DocString) error {
 			break
 		}
 	}
-	// time.Sleep(10 * time.Second)
 
 	if err := waitForElasticSearchCall(WaitEventTimeout, esa); err != nil {
 		return fmt.Errorf("error validating call to elasticsearch: %w", err)
@@ -114,22 +107,20 @@ func (c *Component) notingSentToElasticSearch() error {
 }
 
 // thisSearchDataImportEventIsQueued produces a new SearchDataImport event with the contents defined by the input
-func (c *Component) thisSearchDataImportEventIsQueued(table *godog.Table) error {
-	assist := assistdog.NewDefault()
-	assist.RegisterParser([]string{}, arrayParser)
-	r, err := assist.CreateSlice(&models.SearchDataImportModel{}, table)
-	if err != nil {
-		return fmt.Errorf("failed to create slice from godog table: %w", err)
+func (c *Component) thisSearchDataImportEventIsQueued(eventDocString *godog.DocString) error {
+	event := &models.SearchDataImport{}
+	if err := json.Unmarshal([]byte(eventDocString.Content), event); err != nil {
+		return fmt.Errorf("failed to unmarshal docstring to search data import event: %w", err)
 	}
-	expected := r.([]*models.SearchDataImportModel)
 
-	if err := c.KafkaConsumer.QueueMessage(schema.SearchDataImportEvent, expected[0]); err != nil {
+	if err := c.KafkaConsumer.QueueMessage(schema.SearchDataImportEvent, event); err != nil {
 		return fmt.Errorf("failed to queue event for testing: %w", err)
 	}
-
 	return nil
 }
 
+// waitForElasticSearchCall waits for a call to the provided ElasticSearch assessor, and it validates it against the expected body
+// If the validation fails or the timeout expires, an error is returned
 func waitForElasticSearchCall(timeWindow time.Duration, esa *ElasticSearchAssertor) error {
 	delay := time.NewTimer(timeWindow)
 

@@ -14,8 +14,26 @@ Feature: Search data imported to elasticsearch
 
     When the service starts
     And this search-data-import event is queued, to be consumed
-      | UID               | URI      | DatasetID | Edition    | DataType   | 
-      | cphi01-timeseries | some_uri | cphi01    | timeseries | cantabular |
+    """
+      {
+        "UID":       "cphi01-timeseries",
+        "URI":       "some_uri",
+        "DatasetID": "cphi01",
+        "Edition":   "timeseries",
+        "DataType":  "cantabular",
+        "PopulationType": {
+          "Name":  "popName",
+          "Label": "popLabel"
+        },
+        "Dimensions": [
+          {
+            "Name":     "dim1",
+            "Label":    "label1",
+            "RawLabel": "rawLabel1"
+          }
+        ]
+      }
+    """
 
     Then this model is sent to elasticsearch
     """
@@ -42,11 +60,17 @@ Feature: Search data imported to elasticsearch
           "finalised":false,
           "published":false,
           "canonical_topic":"",
-          "population_type":{
-            "name":"",
-            "label":""
+          "population_type": {
+            "name":  "popName",
+            "label": "popLabel"
           },
-          "dimensions":null
+          "dimensions": [
+ 		        {
+ 		          "name":      "dim1",
+ 		          "raw_label": "rawLabel1",
+ 		          "label":     "label1"
+ 		        }
+ 		      ]
         },
         "doc_as_upsert":true
       }

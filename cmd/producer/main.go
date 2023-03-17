@@ -80,7 +80,7 @@ func main() {
 }
 
 // scanEvent creates a searchDataImport event according to the user input
-func scanEvent(scanner *bufio.Scanner) *models.SearchDataImportModel {
+func scanEvent(scanner *bufio.Scanner) *models.SearchDataImport {
 	fmt.Println("--- [Send Kafka PublishedContent] ---")
 
 	fmt.Println("Type the UID")
@@ -118,7 +118,7 @@ func scanEvent(scanner *bufio.Scanner) *models.SearchDataImportModel {
 	scanner.Scan()
 	title := scanner.Text()
 
-	searchDataImport := &models.SearchDataImportModel{
+	searchDataImport := &models.SearchDataImport{
 		UID:         uid,
 		DataType:    dataType,
 		JobID:       jobID,

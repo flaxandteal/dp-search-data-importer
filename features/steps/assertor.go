@@ -9,18 +9,23 @@ import (
 	"testing"
 )
 
+// ElasticSearchCall represents a call to ElasticSearch, containing
+// the http request pointer
+// and the array of queries obtained from the request body
 type ElasticSearchCall struct {
 	Req     *http.Request
 	Queries []string
 }
 
+// ElasticSearchAssertor implements httpfake.Assertor so it can be registered to component test HTTP mocks
+// It contains an array of expected queries and a channel where the ElasticSearchCalls will be sent
 type ElasticSearchAssertor struct {
 	expected []string
 	called   chan *ElasticSearchCall
 }
 
 // NewAssertor creates a new ElasticSearch Assertor
-// If a non-nil expected by te array is provided, it will be converted into a slice of pretty json strings
+// If a non-nil expected byte array is provided, it will be converted into a slice of pretty json strings
 func NewAssertor(expected []byte) (*ElasticSearchAssertor, error) {
 	var (
 		err            error
