@@ -31,7 +31,7 @@ var (
 
 type Component struct {
 	componenttest.ErrorFeature
-	ElasticSearchAPI *httpfake.HTTPFake  // ElasticSearch API mock at HTTP level
+	ElasticsearchAPI *httpfake.HTTPFake  // Elasticsearch API mock at HTTP level
 	KafkaConsumer    *kafkatest.Consumer // Mock for service kafka consumer
 	errorChan        chan error
 	svc              *service.Service
@@ -44,7 +44,7 @@ type Component struct {
 
 func NewComponent(t *testing.T) *Component {
 	c := &Component{
-		ElasticSearchAPI: httpfake.New(
+		ElasticsearchAPI: httpfake.New(
 			httpfake.WithTesting(t),
 		),
 		errorChan:        make(chan error),
@@ -69,7 +69,7 @@ func (c *Component) initService(ctx context.Context) error {
 	}
 
 	cfg.HealthCheckInterval = time.Second
-	cfg.ElasticSearchAPIURL = c.ElasticSearchAPI.ResolveURL("")
+	cfg.ElasticSearchAPIURL = c.ElasticsearchAPI.ResolveURL("")
 
 	log.Info(ctx, "config used by component tests", log.Data{"cfg": cfg})
 
@@ -129,7 +129,7 @@ func (c *Component) Reset() error {
 		return fmt.Errorf("failed to initialise service: %w", err)
 	}
 
-	c.ElasticSearchAPI.Reset()
+	c.ElasticsearchAPI.Reset()
 
 	return nil
 }

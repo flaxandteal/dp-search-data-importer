@@ -20,8 +20,8 @@ func (c *Component) RegisterSteps(ctx *godog.ScenarioContext) {
 	ctx.Step(`^elasticsearch is unhealthy`, c.elasticSearchIsUnhealthy)
 	ctx.Step(`^elasticsearch returns the following response for bulk update$`, c.elasticsearchReturns)
 	ctx.Step(`^this search-data-import event is queued, to be consumed$`, c.thisSearchDataImportEventIsQueued)
-	ctx.Step(`^nothing is sent to elasticsearch`, c.notingSentToElasticSearch)
-	ctx.Step(`^this model is sent to elasticsearch$`, c.thisModelIsSentToElasticSearch)
+	ctx.Step(`^nothing is sent to elasticsearch`, c.notingSentToElasticsearch)
+	ctx.Step(`^this model is sent to elasticsearch$`, c.thisModelIsSentToElasticsearch)
 }
 
 // theServiceStarts starts the service under test in a new go-routine
@@ -34,7 +34,7 @@ func (c *Component) theServiceStarts() error {
 // elasticSearchIsHealthy generates a mocked healthy response for elasticsearch healthecheck
 func (c *Component) elasticSearchIsHealthy() error {
 	const res = `{"cluster_name": "docker-cluster", "status": "green"}`
-	c.ElasticSearchAPI.NewHandler().
+	c.ElasticsearchAPI.NewHandler().
 		Get("/_cluster/health").
 		Reply(http.StatusOK).
 		BodyString(res)
@@ -44,7 +44,7 @@ func (c *Component) elasticSearchIsHealthy() error {
 // elasticSearchIsUnhealthy generates a mocked unhealthy response for elasticsearch healthecheck
 func (c *Component) elasticSearchIsUnhealthy() error {
 	const res = `{"cluster_name": "docker-cluster", "status": "red"}`
-	c.ElasticSearchAPI.NewHandler().
+	c.ElasticsearchAPI.NewHandler().
 		Get("/_cluster/health").
 		Reply(http.StatusOK).
 		BodyString(res)
@@ -52,17 +52,17 @@ func (c *Component) elasticSearchIsUnhealthy() error {
 }
 
 func (c *Component) elasticsearchReturns(response *godog.DocString) error {
-	c.ElasticSearchAPI.NewHandler().
+	c.ElasticsearchAPI.NewHandler().
 		Post("/ons/_bulk").
 		Reply(http.StatusOK).
 		BodyString(response.Content)
 	return nil
 }
 
-// thisModelIsSentToElasticSearch defines the assertion for elasticsearch POST /ons/_bulk
+// thisModelIsSentToElasticsearch defines the assertion for elasticsearch POST /ons/_bulk
 // Note that this assumes elasticsearchReturns has already been called before
 // Otherwise an error will be returned
-func (c *Component) thisModelIsSentToElasticSearch(es *godog.DocString) error {
+func (c *Component) thisModelIsSentToElasticsearch(es *godog.DocString) error {
 	b := []byte(es.Content)
 
 	esa, err := NewAssertor(b)
@@ -71,7 +71,7 @@ func (c *Component) thisModelIsSentToElasticSearch(es *godog.DocString) error {
 	}
 
 	ok := false
-	for _, h := range c.ElasticSearchAPI.RequestHandlers {
+	for _, h := range c.ElasticsearchAPI.RequestHandlers {
 		if h.Method == http.MethodPost && h.URL.Path == "/ons/_bulk" {
 			h.AssertCustom(esa)
 			ok = true
@@ -79,7 +79,7 @@ func (c *Component) thisModelIsSentToElasticSearch(es *godog.DocString) error {
 		}
 	}
 
-	if err := waitForElasticSearchCall(WaitEventTimeout, esa); err != nil {
+	if err := waitForElasticsearchCall(WaitEventTimeout, esa); err != nil {
 		return fmt.Errorf("error validating call to elasticsearch: %w", err)
 	}
 
@@ -89,18 +89,18 @@ func (c *Component) thisModelIsSentToElasticSearch(es *godog.DocString) error {
 	return nil
 }
 
-// notingSentToElasticSearch validates that no call is done for elasticsearch POST /ons/_bulk
-func (c *Component) notingSentToElasticSearch() error {
+// notingSentToElasticsearch validates that no call is done for elasticsearch POST /ons/_bulk
+func (c *Component) notingSentToElasticsearch() error {
 	esa, err := NewAssertor(nil)
 	if err != nil {
 		return fmt.Errorf("failed to create elasticsearch assertor: %w", err)
 	}
 
-	c.ElasticSearchAPI.NewHandler().
+	c.ElasticsearchAPI.NewHandler().
 		Post("/ons/_bulk").
 		AssertCustom(esa)
 
-	if err := waitNoElasticSearchCall(WaitEventTimeout, esa); err != nil {
+	if err := waitNoElasticsearchCall(WaitEventTimeout, esa); err != nil {
 		return fmt.Errorf("error validating that nothing was sent to elasticsearch: %w", err)
 	}
 	return nil
@@ -119,9 +119,9 @@ func (c *Component) thisSearchDataImportEventIsQueued(eventDocString *godog.DocS
 	return nil
 }
 
-// waitForElasticSearchCall waits for a call to the provided ElasticSearch assessor, and it validates it against the expected body
+// waitForElasticsearchCall waits for a call to the provided Elasticsearch assessor, and it validates it against the expected body
 // If the validation fails or the timeout expires, an error is returned
-func waitForElasticSearchCall(timeWindow time.Duration, esa *ElasticSearchAssertor) error {
+func waitForElasticsearchCall(timeWindow time.Duration, esa *ElasticsearchAssertor) error {
 	delay := time.NewTimer(timeWindow)
 
 	select {
@@ -143,9 +143,9 @@ func waitForElasticSearchCall(timeWindow time.Duration, esa *ElasticSearchAssert
 	}
 }
 
-// waitNoElasticSearchCall waits until the timeWindow elapses.
+// waitNoElasticsearchCall waits until the timeWindow elapses.
 // If during the time window elasticsearch is called then an error is returned
-func waitNoElasticSearchCall(timeWindow time.Duration, esa *ElasticSearchAssertor) error {
+func waitNoElasticsearchCall(timeWindow time.Duration, esa *ElasticsearchAssertor) error {
 	delay := time.NewTimer(timeWindow)
 
 	select {

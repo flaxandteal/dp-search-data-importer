@@ -11,36 +11,36 @@ const KafkaTLSProtocol = "TLS"
 
 // Config represents service configuration for dp-search-data-importer
 type Config struct {
-	BindAddr                   string        `envconfig:"BIND_ADDR"`
-	GracefulShutdownTimeout    time.Duration `envconfig:"GRACEFUL_SHUTDOWN_TIMEOUT"`
-	HealthCheckInterval        time.Duration `envconfig:"HEALTHCHECK_INTERVAL"`
-	HealthCheckCriticalTimeout time.Duration `envconfig:"HEALTHCHECK_CRITICAL_TIMEOUT"`
-	BatchSize                  int           `envconfig:"BATCH_SIZE"`
-	BatchWaitTime              time.Duration `envconfig:"BATCH_WAIT_TIME"`
-	ElasticSearchAPIURL        string        `envconfig:"ELASTIC_SEARCH_URL"`
 	AwsRegion                  string        `envconfig:"AWS_REGION"`
 	AwsService                 string        `envconfig:"AWS_SERVICE"`
-	SignElasticsearchRequests  bool          `envconfig:"SIGN_ELASTICSEARCH_REQUESTS"`
-	StopConsumingOnUnhealthy   bool          `envconfig:"STOP_CONSUMING_ON_UNHEALTHY"`
+	BatchSize                  int           `envconfig:"BATCH_SIZE"`
+	BatchWaitTime              time.Duration `envconfig:"BATCH_WAIT_TIME"`
+	BindAddr                   string        `envconfig:"BIND_ADDR"`
+	ElasticSearchAPIURL        string        `envconfig:"ELASTIC_SEARCH_URL"`
+	GracefulShutdownTimeout    time.Duration `envconfig:"GRACEFUL_SHUTDOWN_TIMEOUT"`
+	HealthCheckCriticalTimeout time.Duration `envconfig:"HEALTHCHECK_CRITICAL_TIMEOUT"`
+	HealthCheckInterval        time.Duration `envconfig:"HEALTHCHECK_INTERVAL"`
 	Kafka                      *Kafka
+	SignElasticsearchRequests  bool `envconfig:"SIGN_ELASTICSEARCH_REQUESTS"`
+	StopConsumingOnUnhealthy   bool `envconfig:"STOP_CONSUMING_ON_UNHEALTHY"`
 }
 
 // Kafka contains the config required to connect to Kafka
 type Kafka struct {
+	Addr                      []string `envconfig:"KAFKA_ADDR"`
+	ConsumerMinBrokersHealthy int      `envconfig:"KAFKA_CONSUMER_MIN_BROKERS_HEALTHY"`
+	MaxBytes                  int      `envconfig:"KAFKA_MAX_BYTES"`
+	NumWorkers                int      `envconfig:"KAFKA_NUM_WORKERS"`
+	OffsetOldest              bool     `envconfig:"KAFKA_OFFSET_OLDEST"`
+	ProducerMinBrokersHealthy int      `envconfig:"KAFKA_PRODUCER_MIN_BROKERS_HEALTHY"`
 	PublishedContentGroup     string   `envconfig:"KAFKA_PUBLISHED_CONTENT_GROUP"`
 	PublishedContentTopic     string   `envconfig:"KAFKA_PUBLISHED_CONTENT_TOPIC"`
-	Addr                      []string `envconfig:"KAFKA_ADDR"`
-	Version                   string   `envconfig:"KAFKA_VERSION"`
-	OffsetOldest              bool     `envconfig:"KAFKA_OFFSET_OLDEST"`
-	NumWorkers                int      `envconfig:"KAFKA_NUM_WORKERS"`
-	SecProtocol               string   `envconfig:"KAFKA_SEC_PROTO"`
 	SecCACerts                string   `envconfig:"KAFKA_SEC_CA_CERTS"            json:"-"`
 	SecClientCert             string   `envconfig:"KAFKA_SEC_CLIENT_CERT"         json:"-"`
 	SecClientKey              string   `envconfig:"KAFKA_SEC_CLIENT_KEY"          json:"-"`
+	SecProtocol               string   `envconfig:"KAFKA_SEC_PROTO"`
 	SecSkipVerify             bool     `envconfig:"KAFKA_SEC_SKIP_VERIFY"`
-	MaxBytes                  int      `envconfig:"KAFKA_MAX_BYTES"`
-	ConsumerMinBrokersHealthy int      `envconfig:"KAFKA_CONSUMER_MIN_BROKERS_HEALTHY"`
-	ProducerMinBrokersHealthy int      `envconfig:"KAFKA_PRODUCER_MIN_BROKERS_HEALTHY"`
+	Version                   string   `envconfig:"KAFKA_VERSION"`
 }
 
 var cfg *Config

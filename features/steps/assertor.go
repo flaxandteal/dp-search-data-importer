@@ -9,24 +9,24 @@ import (
 	"testing"
 )
 
-// ElasticSearchCall represents a call to ElasticSearch, containing
+// ElasticsearchCall represents a call to Elasticsearch, containing
 // the http request pointer
 // and the array of queries obtained from the request body
-type ElasticSearchCall struct {
+type ElasticsearchCall struct {
 	Req     *http.Request
 	Queries []string
 }
 
-// ElasticSearchAssertor implements httpfake.Assertor so it can be registered to component test HTTP mocks
-// It contains an array of expected queries and a channel where the ElasticSearchCalls will be sent
-type ElasticSearchAssertor struct {
+// ElasticsearchAssertor implements httpfake.Assertor so it can be registered to component test HTTP mocks
+// It contains an array of expected queries and a channel where the ElasticsearchCalls will be sent
+type ElasticsearchAssertor struct {
 	expected []string
-	called   chan *ElasticSearchCall
+	called   chan *ElasticsearchCall
 }
 
-// NewAssertor creates a new ElasticSearch Assertor
+// NewAssertor creates a new Elasticsearch Assertor
 // If a non-nil expected byte array is provided, it will be converted into a slice of pretty json strings
-func NewAssertor(expected []byte) (*ElasticSearchAssertor, error) {
+func NewAssertor(expected []byte) (*ElasticsearchAssertor, error) {
 	var (
 		err            error
 		expectedString = []string{}
@@ -39,23 +39,23 @@ func NewAssertor(expected []byte) (*ElasticSearchAssertor, error) {
 		}
 	}
 
-	return &ElasticSearchAssertor{
+	return &ElasticsearchAssertor{
 		expected: expectedString,
-		called:   make(chan *ElasticSearchCall),
+		called:   make(chan *ElasticsearchCall),
 	}, nil
 }
 
 // Expected returns a slice of expected queries
-func (esa *ElasticSearchAssertor) Expected() []string {
+func (esa *ElasticsearchAssertor) Expected() []string {
 	return esa.expected
 }
 
 // Assert converts the request body to a slice of pretty json strings
 // and sends them to the 'called' channel, so the caller can do the validation
-func (esa *ElasticSearchAssertor) Assert(r *http.Request) error {
+func (esa *ElasticsearchAssertor) Assert(r *http.Request) error {
 	var bodyStrings []string
 	defer func() {
-		esa.called <- &ElasticSearchCall{
+		esa.called <- &ElasticsearchCall{
 			Req:     r,
 			Queries: bodyStrings,
 		}
@@ -115,8 +115,8 @@ func multiJsonPretty(data []byte) ([]string, error) {
 	return ret, nil
 }
 
-func (esa *ElasticSearchAssertor) Log(t testing.TB) {}
+func (esa *ElasticsearchAssertor) Log(t testing.TB) {}
 
-func (esa *ElasticSearchAssertor) Error(t testing.TB, err error) {
+func (esa *ElasticsearchAssertor) Error(t testing.TB, err error) {
 	t.Error(err)
 }
