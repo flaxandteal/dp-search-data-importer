@@ -40,10 +40,12 @@ type Dimension struct {
 	Name     string `avro:"name"`
 	RawLabel string `avro:"raw_label"`
 	Label    string `avro:"label"`
+	AggKey   string `avro:"agg_key"`
 }
 
 // PopulationType represents the population type name (unique ID) and label
 type PopulationType struct {
-	Name  string `avro:"name"`
-	Label string `avro:"label"`
+	Name   string `avro:"name"`
+	Label  string `avro:"label"`
+	AggKey string `avro:"agg_key"`
 }

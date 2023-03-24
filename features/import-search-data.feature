@@ -23,13 +23,15 @@ Feature: Search data imported to elasticsearch
         "DataType":  "cantabular",
         "PopulationType": {
           "Name":  "popName",
-          "Label": "popLabel"
+          "Label": "popLabel",
+          "AggKey": "popName###popLabel"
         },
         "Dimensions": [
           {
             "Name":     "dim1",
             "Label":    "label1",
-            "RawLabel": "rawLabel1"
+            "RawLabel": "rawLabel1",
+            "AggKey": "dim1###label1"
           }
         ]
       }
@@ -62,13 +64,15 @@ Feature: Search data imported to elasticsearch
           "canonical_topic":"",
           "population_type": {
             "name":  "popName",
-            "label": "popLabel"
+            "label": "popLabel",
+            "agg_key": "popName###popLabel"
           },
           "dimensions": [
  		        {
  		          "name":      "dim1",
  		          "raw_label": "rawLabel1",
- 		          "label":     "label1"
+ 		          "label":     "label1",
+              "agg_key": "dim1###label1"
  		        }
  		      ]
         },

@@ -42,8 +42,9 @@ func (t *Transform) TransformEventModelToEsModel(eventModel *models.SearchDataIm
 		CanonicalTopic:  eventModel.CanonicalTopic,
 	}
 	esModels.PopulationType = &models.EsPopulationType{
-		Name:  eventModel.PopulationType.Name,
-		Label: eventModel.PopulationType.Label,
+		Name:   eventModel.PopulationType.Name,
+		Label:  eventModel.PopulationType.Label,
+		AggKey: eventModel.PopulationType.AggKey,
 	}
 	for _, data := range eventModel.DateChanges {
 		esModels.DateChanges = append(esModels.DateChanges, models.ReleaseDateChange(data))

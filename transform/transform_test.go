@@ -38,14 +38,16 @@ func TestTransformEventModelToEsModel(t *testing.T) {
 				},
 			},
 			PopulationType: models.PopulationType{
-				Name:  "test-name",
-				Label: "test-label",
+				Name:   "test-name",
+				Label:  "test-label",
+				AggKey: "test-name###test-label",
 			},
 			Dimensions: []models.Dimension{
 				{
 					Name:     "dim1",
 					Label:    "label1",
 					RawLabel: "raw-label-1",
+					AggKey:   "dim1###label1",
 				},
 			},
 		}
@@ -81,14 +83,16 @@ func TestTransformEventModelToEsModel(t *testing.T) {
 					},
 				},
 				PopulationType: &models.EsPopulationType{
-					Name:  "test-name",
-					Label: "test-label",
+					Name:   "test-name",
+					Label:  "test-label",
+					AggKey: "test-name###test-label",
 				},
 				Dimensions: []models.EsDimension{
 					{
 						Name:     "dim1",
 						Label:    "label1",
 						RawLabel: "raw-label-1",
+						AggKey:   "dim1###label1",
 					},
 				},
 			})
