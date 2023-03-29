@@ -22,16 +22,18 @@ Feature: Search data imported to elasticsearch
         "Edition":   "timeseries",
         "DataType":  "cantabular",
         "PopulationType": {
+          "Key": "pop-label",
+          "AggKey": "pop-label###Pop Label",
           "Name":  "popName",
-          "Label": "popLabel",
-          "AggKey": "popName###popLabel"
+          "Label": "Pop Label"
         },
         "Dimensions": [
           {
-            "Name":     "dim1",
-            "Label":    "label1",
-            "RawLabel": "rawLabel1",
-            "AggKey": "dim1###label1"
+            "Key": "label-1",
+            "AggKey": "label-1###Label 1",
+            "Name":     "dim1,dim2",
+            "Label":    "Label 1",
+            "RawLabel": "Label 1 (10 categories),Label 1 (20 categories)"
           }
         ]
       }
@@ -63,16 +65,18 @@ Feature: Search data imported to elasticsearch
           "published":false,
           "canonical_topic":"",
           "population_type": {
+            "key": "pop-label",
+            "agg_key": "pop-label###Pop Label",
             "name":  "popName",
-            "label": "popLabel",
-            "agg_key": "popName###popLabel"
+            "label": "Pop Label"
           },
           "dimensions": [
  		        {
- 		          "name":      "dim1",
- 		          "raw_label": "rawLabel1",
- 		          "label":     "label1",
-              "agg_key": "dim1###label1"
+              "key": "label-1",
+              "agg_key": "label-1###Label 1",
+ 		          "name":      "dim1,dim2",
+ 		          "label":     "Label 1",
+              "raw_label": "Label 1 (10 categories),Label 1 (20 categories)"
  		        }
  		      ]
         },

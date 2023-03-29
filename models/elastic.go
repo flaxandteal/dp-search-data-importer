@@ -61,15 +61,17 @@ type ReleaseDateChange struct {
 
 // EsPopulationType represents the population type information in an elastic-search json
 type EsPopulationType struct {
+	Key    string `json:"key"`
+	AggKey string `json:"agg_key"`
 	Name   string `json:"name"`
 	Label  string `json:"label"`
-	AggKey string `json:"agg_key"`
 }
 
 // EsDimension represents a dimension in an elastic-search json
 type EsDimension struct {
-	Name     string `json:"name"`
-	RawLabel string `json:"raw_label"`
-	Label    string `json:"label"`
+	Key      string `json:"key"`
 	AggKey   string `json:"agg_key"`
+	Name     string `json:"name"`
+	Label    string `json:"label"`
+	RawLabel string `json:"raw_label"`
 }
