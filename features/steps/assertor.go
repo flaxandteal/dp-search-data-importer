@@ -33,7 +33,7 @@ func NewAssertor(expected []byte) (*ElasticsearchAssertor, error) {
 	)
 
 	if expected != nil {
-		expectedString, err = multiJsonPretty(expected)
+		expectedString, err = multiJSONPretty(expected)
 		if err != nil {
 			return nil, fmt.Errorf("failed to marshal response body: %w", err)
 		}
@@ -66,7 +66,7 @@ func (esa *ElasticsearchAssertor) Assert(r *http.Request) error {
 		return fmt.Errorf("failed to read request body: %w", err)
 	}
 
-	bodyStrings, err = multiJsonPretty(b)
+	bodyStrings, err = multiJSONPretty(b)
 	if err != nil {
 		return fmt.Errorf("failed to marshal response body: %w", err)
 	}
@@ -82,7 +82,7 @@ func jsonPretty(data []byte) (string, error) {
 	return prettyJSON.String(), nil
 }
 
-func multiJsonPretty(data []byte) ([]string, error) {
+func multiJSONPretty(data []byte) ([]string, error) {
 	ret := []string{} // return slice
 	depth := 0        // json tree depth level
 	startIndex := 0   // current block first index

@@ -1,12 +1,8 @@
 package handler_test
 
 import (
-	"bytes"
 	"context"
-	"encoding/json"
 	"errors"
-	"io"
-	"net/http"
 	"testing"
 
 	dpMock "github.com/ONSdigital/dp-elasticsearch/v3/client/mocks"
@@ -76,24 +72,14 @@ var (
 		expectedEvent1,
 		expectedEvent2,
 	}
-	mockSuccessESResponseWithNoError = "{\"took\":6,\"errors\":false,\"items\":[{\"create\":{\"_index\":\"ons1637667136829001\",\"_type\":\"_doc\",\"_id\":\"testTitle3\",\"_version\":1,\"result\":\"created\",\"_shards\":{\"total\":2,\"successful\":2,\"failed\":0},\"_seq_no\":0,\"_primary_term\":1,\"status\":201}}]}"
+	mockSuccessESResponseWithNoError = []byte("{\"took\":6,\"errors\":false,\"items\":[{\"create\":{\"_index\":\"ons1637667136829001\",\"_type\":\"_doc\",\"_id\":\"testTitle3\",\"_version\":1,\"result\":\"created\",\"_shards\":{\"total\":2,\"successful\":2,\"failed\":0},\"_seq_no\":0,\"_primary_term\":1,\"status\":201}}]}")
 )
-
-func successWithESResponseNoError() []byte {
-	res := &http.Response{
-		StatusCode: 200,
-		Body:       io.NopCloser(bytes.NewBufferString(mockSuccessESResponseWithNoError)),
-		Header:     make(http.Header),
-	}
-	resByte, _ := json.Marshal(res)
-	return resByte
-}
 
 func TestHandleWithEventsCreated(t *testing.T) {
 	Convey("Given a handler configured with successful es updates for all two events is success", t, func() {
 		elasticSearchMock := &dpMock.ClientMock{
 			BulkUpdateFunc: func(ctx context.Context, indexName string, url string, settings []byte) ([]byte, error) {
-				return successWithESResponseNoError(), nil
+				return mockSuccessESResponseWithNoError, nil
 			},
 		}
 
@@ -117,7 +103,7 @@ func TestHandleWithEventsUpdated(t *testing.T) {
 	Convey("Given a handler configured with sucessful es updates for two events with one create error", t, func() {
 		elasticSearchMock := &dpMock.ClientMock{
 			BulkUpdateFunc: func(ctx context.Context, indexName string, url string, settings []byte) ([]byte, error) {
-				return successWithESResponseNoError(), nil
+				return mockSuccessESResponseWithNoError, nil
 			},
 		}
 

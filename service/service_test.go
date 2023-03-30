@@ -20,10 +20,6 @@ import (
 	. "github.com/smartystreets/goconvey/convey"
 )
 
-const (
-	esDestURL = "http://locahost:9999"
-)
-
 var (
 	ctx           = context.Background()
 	testBuildTime = "BuildTime"
