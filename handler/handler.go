@@ -22,14 +22,14 @@ const (
 // BatchHandler handles batches of SearchDataImportModel events that contain CSV row data.
 type BatchHandler struct {
 	esClient dpelasticsearch.Client
-	esUrl    string
+	esURL    string
 }
 
 // NewBatchHandler returns a BatchHandler.
 func NewBatchHandler(esClient dpelasticsearch.Client, cfg *config.Config) *BatchHandler {
 	return &BatchHandler{
 		esClient: esClient,
-		esUrl:    cfg.ElasticSearchAPIURL,
+		esURL:    cfg.ElasticSearchAPIURL,
 	}
 }
 
@@ -92,7 +92,7 @@ func (h *BatchHandler) sendToES(ctx context.Context, events []*models.SearchData
 		bulkupsert = append(bulkupsert, upsertBulkRequestBody...)
 	}
 
-	jsonUpsertResponse, err := h.esClient.BulkUpdate(ctx, esDestIndex, h.esUrl, bulkupsert)
+	jsonUpsertResponse, err := h.esClient.BulkUpdate(ctx, esDestIndex, h.esURL, bulkupsert)
 	if err != nil {
 		if jsonUpsertResponse == nil {
 			log.Error(ctx, "server error while upserting the event", err)

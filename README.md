@@ -1,9 +1,11 @@
 dp-search-data-importer
 ================
-Service to store searchable content into elasticsearch
+
+Service to store searchable content into elasticsearch. See [search service architecture docs here](https://github.com/ONSdigital/dp-search-api/tree/develop/architecture#search-service-architecture)
 
 ### Getting started
 
+* Run `make help` to see full list of make targets
 * Run `make debug`
 
 The service runs in the background consuming messages from Kafka.

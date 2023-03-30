@@ -5,7 +5,6 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
-	"strings"
 	"time"
 
 	"github.com/ONSdigital/dp-search-data-importer/models"
@@ -160,17 +159,4 @@ func waitNoElasticsearchCall(timeWindow time.Duration, esa *ElasticsearchAsserto
 		}
 		return fmt.Errorf("unexpected call to elasticsearch: %s %s", r.Req.Method, r.Req.URL.String())
 	}
-}
-
-// we are passing the string array as [xxxx,yyyy,zzz]
-// this is required to support array being used in kafka messages
-func arrayParser(raw string) (interface{}, error) {
-	// remove the starting and trailing brackets
-	str := strings.Trim(raw, "[]")
-	if str == "" {
-		return []string{}, nil
-	}
-
-	strArray := strings.Split(str, ",")
-	return strArray, nil
 }
