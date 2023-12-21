@@ -40,9 +40,13 @@ func (h *BatchHandler) Handle(ctx context.Context, batch []kafka.Message) error 
 		return nil
 	}
 
+	fmt.Println("#########################################################################################################", len(batch))
 	// unmarshal all events in batch
 	events := make([]*models.SearchDataImport, len(batch))
-	for i, msg := range batch {
+
+	// unmarshal all events in batch and sort them by indexes
+	eventMap := make(map[string][]*models.SearchDataImport)
+	for _, msg := range batch {
 		e := &models.SearchDataImport{}
 		s := schema.SearchDataImportEvent
 
@@ -55,17 +59,23 @@ func (h *BatchHandler) Handle(ctx context.Context, batch []kafka.Message) error 
 			}
 		}
 
-		events[i] = e
+		eventMap[e.SearchIndex] = append(eventMap[e.SearchIndex], e)
 	}
+
 	log.Info(ctx, "batch of events received", log.Data{"len": len(events)})
 
-	// send batch to elasticsearch
-	err := h.sendToES(ctx, events)
-	if err != nil {
-		log.Error(ctx, "failed to send event to Elastic Search", err)
-		return err
+	for _, eventsByIdx := range eventMap {
+		// send batch to elasticsearch concurrently
+		go func(events []*models.SearchDataImport) {
+			// send batch to Elasticsearch
+			err := h.sendToES(ctx, events)
+			if err != nil {
+				log.Error(ctx, "failed to send events to Elastic Search", err)
+			}
+		}(eventsByIdx)
 	}
 
+	// if all of them are erroring I'd want to exit the process,
 	return nil
 }
 
@@ -75,6 +85,9 @@ func (h *BatchHandler) sendToES(ctx context.Context, events []*models.SearchData
 	log.Info(ctx, "bulk events into ES starts")
 	target := len(events)
 
+	fmt.Println(target, events[0].SearchIndex)
+	fmt.Println(target, events[0].SearchIndex)
+	fmt.Println(target, events[0].SearchIndex)
 	var bulkupsert []byte
 	for _, event := range events {
 		if event.UID == "" {

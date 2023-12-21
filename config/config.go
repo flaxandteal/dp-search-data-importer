@@ -27,20 +27,22 @@ type Config struct {
 
 // Kafka contains the config required to connect to Kafka
 type Kafka struct {
-	Addr                      []string `envconfig:"KAFKA_ADDR"`
-	ConsumerMinBrokersHealthy int      `envconfig:"KAFKA_CONSUMER_MIN_BROKERS_HEALTHY"`
-	MaxBytes                  int      `envconfig:"KAFKA_MAX_BYTES"`
-	NumWorkers                int      `envconfig:"KAFKA_NUM_WORKERS"`
-	OffsetOldest              bool     `envconfig:"KAFKA_OFFSET_OLDEST"`
-	ProducerMinBrokersHealthy int      `envconfig:"KAFKA_PRODUCER_MIN_BROKERS_HEALTHY"`
-	PublishedContentGroup     string   `envconfig:"KAFKA_PUBLISHED_CONTENT_GROUP"`
-	PublishedContentTopic     string   `envconfig:"KAFKA_PUBLISHED_CONTENT_TOPIC"`
-	SecCACerts                string   `envconfig:"KAFKA_SEC_CA_CERTS"            json:"-"`
-	SecClientCert             string   `envconfig:"KAFKA_SEC_CLIENT_CERT"         json:"-"`
-	SecClientKey              string   `envconfig:"KAFKA_SEC_CLIENT_KEY"          json:"-"`
-	SecProtocol               string   `envconfig:"KAFKA_SEC_PROTO"`
-	SecSkipVerify             bool     `envconfig:"KAFKA_SEC_SKIP_VERIFY"`
-	Version                   string   `envconfig:"KAFKA_VERSION"`
+	Addr                      []string      `envconfig:"KAFKA_ADDR"`
+	ConsumerMinBrokersHealthy int           `envconfig:"KAFKA_CONSUMER_MIN_BROKERS_HEALTHY"`
+	MaxBytes                  int           `envconfig:"KAFKA_MAX_BYTES"`
+	NumWorkers                int           `envconfig:"KAFKA_NUM_WORKERS"`
+	OffsetOldest              bool          `envconfig:"KAFKA_OFFSET_OLDEST"`
+	ProducerMinBrokersHealthy int           `envconfig:"KAFKA_PRODUCER_MIN_BROKERS_HEALTHY"`
+	PublishedContentGroup     string        `envconfig:"KAFKA_PUBLISHED_CONTENT_GROUP"`
+	PublishedContentTopic     string        `envconfig:"KAFKA_PUBLISHED_CONTENT_TOPIC"`
+	SecCACerts                string        `envconfig:"KAFKA_SEC_CA_CERTS"            json:"-"`
+	SecClientCert             string        `envconfig:"KAFKA_SEC_CLIENT_CERT"         json:"-"`
+	SecClientKey              string        `envconfig:"KAFKA_SEC_CLIENT_KEY"          json:"-"`
+	SecProtocol               string        `envconfig:"KAFKA_SEC_PROTO"`
+	SecSkipVerify             bool          `envconfig:"KAFKA_SEC_SKIP_VERIFY"`
+	Version                   string        `envconfig:"KAFKA_VERSION"`
+	ConsumerBatchSize         int           `envconfig:"KAFKA_CONSUMER_BATCH_SIZE"`
+	ConsumerBatchWaitTime     time.Duration `envconfig:"KAFKA_CONSUMER_BATCH_WAIT_TIME"`
 }
 
 var cfg *Config
@@ -79,6 +81,8 @@ func Get() (*Config, error) {
 			MaxBytes:                  2000000,
 			ConsumerMinBrokersHealthy: 1,
 			ProducerMinBrokersHealthy: 1,
+			ConsumerBatchSize:         500,
+			ConsumerBatchWaitTime:     5 * time.Second,
 		},
 	}
 

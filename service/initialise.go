@@ -53,6 +53,8 @@ var GetKafkaConsumer = func(ctx context.Context, cfg *config.Kafka) (kafka.ICons
 		MinBrokersHealthy: &cfg.ConsumerMinBrokersHealthy,
 		KafkaVersion:      &cfg.Version,
 		Offset:            &kafkaOffset,
+		BatchSize:         &cfg.ConsumerBatchSize,
+		BatchWaitTime:     &cfg.ConsumerBatchWaitTime,
 	}
 	if cfg.SecProtocol == config.KafkaTLSProtocol {
 		cgConfig.SecurityConfig = kafka.GetSecurityConfig(
