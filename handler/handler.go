@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 
+	"github.com/ONSdigital/dp-api-clients-go/v2/nlp/berlin"
 	dpelasticsearch "github.com/ONSdigital/dp-elasticsearch/v3/client"
 	kafka "github.com/ONSdigital/dp-kafka/v3"
 	"github.com/ONSdigital/dp-search-data-importer/config"
@@ -21,26 +22,28 @@ const (
 
 // BatchHandler handles batches of SearchDataImportModel events that contain CSV row data.
 type BatchHandler struct {
-	esClient dpelasticsearch.Client
-	esURL    string
+	berlinClient berlin.Clienter
+	esClient     dpelasticsearch.Client
+	esURL        string
 }
 
 // NewBatchHandler returns a BatchHandler.
-func NewBatchHandler(esClient dpelasticsearch.Client, cfg *config.Config) *BatchHandler {
+func NewBatchHandler(esClient dpelasticsearch.Client, cfg *config.Config, brlClient berlin.Clienter) *BatchHandler {
 	return &BatchHandler{
-		esClient: esClient,
-		esURL:    cfg.ElasticSearchAPIURL,
+		berlinClient: brlClient,
+		esClient:     esClient,
+		esURL:        cfg.ElasticSearchAPIURL,
 	}
 }
 
 func (h *BatchHandler) Handle(ctx context.Context, batch []kafka.Message) error {
 	// no events received. Nothing more to do (this scenario should not happen)
+	fmt.Println("enters")
 	if len(batch) == 0 {
 		log.Info(ctx, "there are no events to handle")
 		return nil
 	}
 
-	fmt.Println("#########################################################################################################", len(batch))
 	// unmarshal all events in batch
 	events := make([]*models.SearchDataImport, len(batch))
 
@@ -63,7 +66,6 @@ func (h *BatchHandler) Handle(ctx context.Context, batch []kafka.Message) error 
 	}
 
 	log.Info(ctx, "batch of events received", log.Data{"len": len(events)})
-
 	for _, eventsByIdx := range eventMap {
 		// send batch to elasticsearch concurrently
 		go func(events []*models.SearchDataImport) {
@@ -85,8 +87,6 @@ func (h *BatchHandler) sendToES(ctx context.Context, events []*models.SearchData
 	log.Info(ctx, "bulk events into ES starts")
 	target := len(events)
 
-	fmt.Println(target, events[0].SearchIndex)
-	fmt.Println(target, events[0].SearchIndex)
 	fmt.Println(target, events[0].SearchIndex)
 	var bulkupsert []byte
 	for _, event := range events {

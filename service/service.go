@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/ONSdigital/dp-api-clients-go/v2/nlp/berlin"
 	dpelasticsearch "github.com/ONSdigital/dp-elasticsearch/v3/client"
 	dpkafka "github.com/ONSdigital/dp-kafka/v3"
 	"github.com/ONSdigital/dp-search-data-importer/config"
@@ -45,8 +46,11 @@ func (svc *Service) Init(ctx context.Context, cfg *config.Config, buildTime, git
 		return fmt.Errorf("failed to create kafka consumer: %w", err)
 	}
 
+	// Crates a berlin client
+	berlinClient := berlin.New(cfg.BerlinAPIURL)
+
 	// Create batch handler and register it to the kafka consumer
-	h := handler.NewBatchHandler(svc.EsCli, cfg)
+	h := handler.NewBatchHandler(svc.EsCli, cfg, berlinClient)
 	if err := svc.Consumer.RegisterBatchHandler(ctx, h.Handle); err != nil {
 		return fmt.Errorf("failed to register batch handler: %w", err)
 	}

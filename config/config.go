@@ -15,6 +15,7 @@ type Config struct {
 	AwsService                 string        `envconfig:"AWS_SERVICE"`
 	BatchSize                  int           `envconfig:"BATCH_SIZE"`
 	BatchWaitTime              time.Duration `envconfig:"BATCH_WAIT_TIME"`
+	BerlinAPIURL               string        `envconfig:"BERLIN_API_URL"`
 	BindAddr                   string        `envconfig:"BIND_ADDR"`
 	ElasticSearchAPIURL        string        `envconfig:"ELASTIC_SEARCH_URL"`
 	GracefulShutdownTimeout    time.Duration `envconfig:"GRACEFUL_SHUTDOWN_TIMEOUT"`
@@ -55,6 +56,7 @@ func Get() (*Config, error) {
 	}
 
 	cfg = &Config{
+		BerlinAPIURL:               "http://localhost:28900",
 		BindAddr:                   "localhost:25900",
 		GracefulShutdownTimeout:    5 * time.Second,
 		HealthCheckInterval:        30 * time.Second,
