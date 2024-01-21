@@ -27,6 +27,7 @@ type SearchDataImport struct {
 	Survey          string               `avro:"survey"`
 	PopulationType  PopulationType       `avro:"population_type"`
 	Dimensions      []Dimension          `avro:"dimensions"`
+	Location        string
 }
 
 // ReleaseDateDetails represents a change of release date

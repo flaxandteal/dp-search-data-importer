@@ -44,6 +44,7 @@ func (h *BatchHandler) Handle(ctx context.Context, batch []kafka.Message) error 
 		return nil
 	}
 
+	fmt.Println("#########################################################################################################", len(batch))
 	// unmarshal all events in batch
 	events := make([]*models.SearchDataImport, len(batch))
 
@@ -53,6 +54,9 @@ func (h *BatchHandler) Handle(ctx context.Context, batch []kafka.Message) error 
 		e := &models.SearchDataImport{}
 		s := schema.SearchDataImportEvent
 
+		fmt.Println(string(msg.GetData()))
+		fmt.Println(string(msg.GetData()))
+		fmt.Println(string(msg.GetData()))
 		if err := s.Unmarshal(msg.GetData(), e); err != nil {
 			return &Error{
 				err: fmt.Errorf("failed to unmarshal event: %w", err),
@@ -62,10 +66,25 @@ func (h *BatchHandler) Handle(ctx context.Context, batch []kafka.Message) error 
 			}
 		}
 
+		brlOpt := berlin.Options{}
+		brlOpt.Q(e.Summary)
+
+		brlResults, err := h.berlinClient.GetBerlin(ctx, brlOpt)
+		if err != nil {
+			log.Error(ctx, "There was an error getting berlin results", err)
+		}
+
+		fmt.Println(brlResults)
+		// example how to fill the location
+		e.Location = brlResults.Matches[0].Subdivision[0]
+		fmt.Println("keywords", e.Location)
+		fmt.Println("keywords", e)
+
 		eventMap[e.SearchIndex] = append(eventMap[e.SearchIndex], e)
 	}
 
 	log.Info(ctx, "batch of events received", log.Data{"len": len(events)})
+	fmt.Println("event looks like: ", eventMap)
 	for _, eventsByIdx := range eventMap {
 		// send batch to elasticsearch concurrently
 		go func(events []*models.SearchDataImport) {
