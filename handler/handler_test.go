@@ -5,6 +5,9 @@ import (
 	"errors"
 	"testing"
 
+	"github.com/ONSdigital/dp-api-clients-go/v2/nlp/berlin"
+	brlErrs "github.com/ONSdigital/dp-api-clients-go/v2/nlp/berlin/errors"
+	brlModels "github.com/ONSdigital/dp-api-clients-go/v2/nlp/berlin/models"
 	dpMock "github.com/ONSdigital/dp-elasticsearch/v3/client/mocks"
 	kafka "github.com/ONSdigital/dp-kafka/v3"
 	"github.com/ONSdigital/dp-kafka/v3/kafkatest"
@@ -83,7 +86,8 @@ func TestHandleWithEventsCreated(t *testing.T) {
 			},
 		}
 
-		batchHandler := handler.NewBatchHandler(elasticSearchMock, testCfg)
+		brlClient := mockBerlinClient()
+		batchHandler := handler.NewBatchHandler(elasticSearchMock, testCfg, brlClient)
 
 		Convey("When handle is called with no error", func() {
 			err := batchHandler.Handle(testContext, createTestBatch(testEvents))
@@ -107,7 +111,8 @@ func TestHandleWithEventsUpdated(t *testing.T) {
 			},
 		}
 
-		batchHandler := handler.NewBatchHandler(elasticSearchMock, testCfg)
+		brlClient := mockBerlinClient()
+		batchHandler := handler.NewBatchHandler(elasticSearchMock, testCfg, brlClient)
 
 		Convey("When handle is called", func() {
 			err := batchHandler.Handle(testContext, createTestBatch(testEvents))
@@ -130,7 +135,10 @@ func TestHandleWithInternalServerESResponse(t *testing.T) {
 				return nil, errors.New("unexpected status code from api")
 			},
 		}
-		batchHandler := handler.NewBatchHandler(elasticSearchMock, testCfg)
+
+		brlClient := mockBerlinClient()
+		batchHandler := handler.NewBatchHandler(elasticSearchMock, testCfg, brlClient)
+
 		Convey("When handle is called", func() {
 			err := batchHandler.Handle(testContext, createTestBatch(testEvents))
 
@@ -151,4 +159,18 @@ func createTestBatch(events []*models.SearchDataImport) []kafka.Message {
 		batch[i] = msg
 	}
 	return batch
+}
+
+func mockBerlinClient() berlin.ClienterMock {
+	return berlin.ClienterMock{
+		GetBerlinFunc: func(ctx context.Context, options berlin.Options) (*brlModels.Berlin, brlErrs.Error) {
+			return &brlModels.Berlin{
+				Matches: []brlModels.Matches{
+					brlModels.Matches{
+						Subdivision: []string{"subdiv1", "subdiv2"},
+					},
+				},
+			}, nil
+		},
+	}
 }
