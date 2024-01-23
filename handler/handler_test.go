@@ -5,10 +5,12 @@ import (
 	"errors"
 	"testing"
 
+	healthcheck "github.com/ONSdigital/dp-api-clients-go/v2/health"
 	"github.com/ONSdigital/dp-api-clients-go/v2/nlp/berlin"
 	brlErrs "github.com/ONSdigital/dp-api-clients-go/v2/nlp/berlin/errors"
 	brlModels "github.com/ONSdigital/dp-api-clients-go/v2/nlp/berlin/models"
 	dpMock "github.com/ONSdigital/dp-elasticsearch/v3/client/mocks"
+	health "github.com/ONSdigital/dp-healthcheck/healthcheck"
 	kafka "github.com/ONSdigital/dp-kafka/v3"
 	"github.com/ONSdigital/dp-kafka/v3/kafkatest"
 	"github.com/ONSdigital/dp-search-data-importer/config"
@@ -161,8 +163,8 @@ func createTestBatch(events []*models.SearchDataImport) []kafka.Message {
 	return batch
 }
 
-func mockBerlinClient() berlin.ClienterMock {
-	return berlin.ClienterMock{
+func mockBerlinClient() *berlin.ClienterMock {
+	return &berlin.ClienterMock{
 		GetBerlinFunc: func(ctx context.Context, options berlin.Options) (*brlModels.Berlin, brlErrs.Error) {
 			return &brlModels.Berlin{
 				Matches: []brlModels.Matches{
@@ -171,6 +173,15 @@ func mockBerlinClient() berlin.ClienterMock {
 					},
 				},
 			}, nil
+		},
+		CheckerFunc: func(ctx context.Context, check *health.CheckState) error {
+			panic("mock out the Checker method")
+		},
+		HealthFunc: func() *healthcheck.Client {
+			panic("mock out the Health method")
+		},
+		URLFunc: func() string {
+			panic("mock out the URL method")
 		},
 	}
 }
