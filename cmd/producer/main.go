@@ -122,7 +122,7 @@ func scanEvent(scanner *bufio.Scanner) *models.SearchDataImport {
 		UID:         uid,
 		DataType:    dataType,
 		JobID:       jobID,
-		SearchIndex: "ONS",
+		SearchIndex: "kamen",
 		CDID:        cdid,
 		DatasetID:   datasetID,
 		Keywords:    []string{"keyword1", "keyword2"},

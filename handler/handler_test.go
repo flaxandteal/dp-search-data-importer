@@ -168,8 +168,11 @@ func mockBerlinClient() *berlin.ClienterMock {
 		GetBerlinFunc: func(ctx context.Context, options berlin.Options) (*brlModels.Berlin, brlErrs.Error) {
 			return &brlModels.Berlin{
 				Matches: []brlModels.Matches{
-					brlModels.Matches{
-						Subdivision: []string{"subdiv1", "subdiv2"},
+					{
+						brlModels.Locations{
+							Subdivision: []string{"subdiv1", "subdiv2"},
+						},
+						brlModels.Scores{},
 					},
 				},
 			}, nil

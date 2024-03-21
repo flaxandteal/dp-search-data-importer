@@ -44,7 +44,7 @@ func (h *BatchHandler) Handle(ctx context.Context, batch []kafka.Message) error 
 		return nil
 	}
 
-	fmt.Println("#########################################################################################################", len(batch))
+	fmt.Println("###############################################", len(batch))
 	// unmarshal all events in batch
 	events := make([]*models.SearchDataImport, len(batch))
 
@@ -54,7 +54,8 @@ func (h *BatchHandler) Handle(ctx context.Context, batch []kafka.Message) error 
 		e := &models.SearchDataImport{}
 		s := schema.SearchDataImportEvent
 
-		fmt.Println(string(msg.GetData()))
+		fmt.Println("get msg data from batch")
+		fmt.Println("get msg data from batch")
 		fmt.Println(string(msg.GetData()))
 		fmt.Println(string(msg.GetData()))
 		if err := s.Unmarshal(msg.GetData(), e); err != nil {
@@ -66,7 +67,7 @@ func (h *BatchHandler) Handle(ctx context.Context, batch []kafka.Message) error 
 			}
 		}
 
-		brlOpt := berlin.Options{}
+		brlOpt := berlin.OptInit()
 		brlOpt.Q(e.Summary)
 
 		brlResults, err := h.berlinClient.GetBerlin(ctx, brlOpt)
@@ -76,7 +77,7 @@ func (h *BatchHandler) Handle(ctx context.Context, batch []kafka.Message) error 
 
 		fmt.Println(brlResults)
 		// example how to fill the location
-		e.Location = brlResults.Matches[0].Subdivision[0]
+		e.Location = brlResults.Matches[0].Loc.Subdivision[0]
 		fmt.Println("keywords", e.Location)
 		fmt.Println("keywords", e)
 
