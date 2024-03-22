@@ -55,10 +55,9 @@ func (h *BatchHandler) Handle(ctx context.Context, batch []kafka.Message) error 
 		s := schema.SearchDataImportEvent
 
 		fmt.Println("get msg data from batch")
-		fmt.Println("get msg data from batch")
-		fmt.Println(string(msg.GetData()))
 		fmt.Println(string(msg.GetData()))
 		if err := s.Unmarshal(msg.GetData(), e); err != nil {
+			fmt.Println("Error on line 59")
 			return &Error{
 				err: fmt.Errorf("failed to unmarshal event: %w", err),
 				logData: map[string]interface{}{
@@ -68,24 +67,25 @@ func (h *BatchHandler) Handle(ctx context.Context, batch []kafka.Message) error 
 		}
 
 		brlOpt := berlin.OptInit()
-		brlOpt.Q(e.Summary)
+		brlOpt.Q("London")
 
 		brlResults, err := h.berlinClient.GetBerlin(ctx, brlOpt)
 		if err != nil {
 			log.Error(ctx, "There was an error getting berlin results", err)
 		}
 
-		fmt.Println(brlResults)
+		fmt.Println("These are the berlin results")
+		fmt.Println(brlResults.Matches[0].Loc.Subdivision[0])
 		// example how to fill the location
 		e.Location = brlResults.Matches[0].Loc.Subdivision[0]
 		fmt.Println("keywords", e.Location)
-		fmt.Println("keywords", e)
+		fmt.Println(e.SearchIndex)
 
 		eventMap[e.SearchIndex] = append(eventMap[e.SearchIndex], e)
+		fmt.Println("event looks like: ", eventMap[e.SearchIndex][0].Location)
 	}
 
 	log.Info(ctx, "batch of events received", log.Data{"len": len(events)})
-	fmt.Println("event looks like: ", eventMap)
 	for _, eventsByIdx := range eventMap {
 		// send batch to elasticsearch concurrently
 		go func(events []*models.SearchDataImport) {
@@ -115,27 +115,42 @@ func (h *BatchHandler) sendToES(ctx context.Context, events []*models.SearchData
 			continue // break here
 		}
 
+		fmt.Println("upsertBulkRequestBody starts here")
 		upsertBulkRequestBody, err := prepareEventForBulkUpsertRequestBody(ctx, event)
 		if err != nil {
+			fmt.Println("upsertBulkRequestBody errors")
 			log.Error(ctx, "error in preparing the bulk for upsert", err, log.Data{
 				"event": *event,
 			})
 			continue
 		}
+		fmt.Println("upsertBulkRequestBody appends")
 		bulkupsert = append(bulkupsert, upsertBulkRequestBody...)
+		fmt.Println(upsertBulkRequestBody)
 	}
 
+	fmt.Println("jsonUpsertResponse starts")
+	uri := fmt.Sprintf("%s/%s/_bulk", h.esURL, esDestIndex)
+	fmt.Println("yo this is the fcking URI: ", uri)
+
+	printableString := string(bulkupsert)
+	fmt.Println("this is the bulkupserts", printableString)
 	jsonUpsertResponse, err := h.esClient.BulkUpdate(ctx, esDestIndex, h.esURL, bulkupsert)
 	if err != nil {
+		fmt.Println("jsonUpsertResponse errors")
 		if jsonUpsertResponse == nil {
+			fmt.Println("this is the err: ", err)
 			log.Error(ctx, "server error while upserting the event", err)
 			return err
 		}
+		fmt.Println("warning logged")
 		log.Warn(ctx, "error in response from elasticsearch while upserting the event", log.FormatErrors([]error{err}))
 	}
 
+	fmt.Println("bulkRes starts here")
 	var bulkRes models.EsBulkResponse
 	if err := json.Unmarshal(jsonUpsertResponse, &bulkRes); err != nil {
+		fmt.Println("bulkRes errors")
 		log.Error(ctx, "error unmarshaling json", err)
 		return err
 	}
@@ -164,18 +179,22 @@ func (h *BatchHandler) sendToES(ctx context.Context, events []*models.SearchData
 
 // Preparing the payload to be inserted into the elastic search.
 func prepareEventForBulkUpsertRequestBody(ctx context.Context, sdModel *models.SearchDataImport) (bulkbody []byte, err error) {
-
+	fmt.Println("prepareEventForBulkUpsertRequestBody entered")
 	uid := sdModel.UID
+	fmt.Println("check uid ", uid)
 	t := transform.NewTransformer()
 	esModel := t.TransformEventModelToEsModel(sdModel)
 
 	if esModel != nil {
+		fmt.Println("entering empty es model")
 		b, err := json.Marshal(esModel)
 		if err != nil {
+			fmt.Println("error while marshaling bulk request")
 			log.Error(ctx, "error marshal to json while preparing bulk request", err)
 			return nil, err
 		}
 
+		fmt.Println("bulk body ")
 		bulkbody = append(bulkbody, []byte("{ \""+"update"+"\": { \"_id\": \""+uid+"\" } }\n")...)
 		bulkbody = append(bulkbody, []byte("{")...)
 		bulkbody = append(bulkbody, []byte("\"doc\":")...)
@@ -184,5 +203,6 @@ func prepareEventForBulkUpsertRequestBody(ctx context.Context, sdModel *models.S
 		bulkbody = append(bulkbody, []byte("}")...)
 		bulkbody = append(bulkbody, []byte("\n")...)
 	}
+
 	return bulkbody, nil
 }

@@ -2,8 +2,6 @@ module github.com/ONSdigital/dp-search-data-importer
 
 go 1.21
 
-toolchain go1.21.8
-
 replace github.com/coreos/etcd => github.com/coreos/etcd v3.3.24+incompatible
 
 require (

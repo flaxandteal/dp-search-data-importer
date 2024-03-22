@@ -1,6 +1,7 @@
 FROM golang:1.21-bullseye AS base
 
 
+RUN git config --global --add safe.directory /go
 ENV GOCACHE=/go/.go/cache GOPATH=/go/.go/path TZ=Europe/London
 
 # Install github.com/cespare/reflex
@@ -12,5 +13,4 @@ RUN go clean -modcache
 
 # Map between the working directories of dev and live
 RUN ln -s /go /dp-search-data-importer
-RUN git config --global --add safe.directory /go
 WORKDIR /dp-search-data-importer
