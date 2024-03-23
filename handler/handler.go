@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"sync"
 
 	"github.com/ONSdigital/dp-api-clients-go/v2/nlp/berlin"
 	dpelasticsearch "github.com/ONSdigital/dp-elasticsearch/v3/client"
@@ -54,8 +55,6 @@ func (h *BatchHandler) Handle(ctx context.Context, batch []kafka.Message) error 
 		e := &models.SearchDataImport{}
 		s := schema.SearchDataImportEvent
 
-		fmt.Println("get msg data from batch")
-		fmt.Println(string(msg.GetData()))
 		if err := s.Unmarshal(msg.GetData(), e); err != nil {
 			fmt.Println("Error on line 59")
 			return &Error{
@@ -78,25 +77,27 @@ func (h *BatchHandler) Handle(ctx context.Context, batch []kafka.Message) error 
 		fmt.Println(brlResults.Matches[0].Loc.Subdivision[0])
 		// example how to fill the location
 		e.Location = brlResults.Matches[0].Loc.Subdivision[0]
-		fmt.Println("keywords", e.Location)
-		fmt.Println(e.SearchIndex)
 
 		eventMap[e.SearchIndex] = append(eventMap[e.SearchIndex], e)
-		fmt.Println("event looks like: ", eventMap[e.SearchIndex][0].Location)
 	}
+
+	var wg sync.WaitGroup
 
 	log.Info(ctx, "batch of events received", log.Data{"len": len(events)})
 	for _, eventsByIdx := range eventMap {
 		// send batch to elasticsearch concurrently
+		wg.Add(1) // Increment the WaitGroup counter
+		fmt.Println("this is eventsByIDX: ", eventsByIdx[0].SearchIndex)
 		go func(events []*models.SearchDataImport) {
 			// send batch to Elasticsearch
-			err := h.sendToES(ctx, events)
+			err := h.sendToES(context.TODO(), events)
 			if err != nil {
 				log.Error(ctx, "failed to send events to Elastic Search", err)
 			}
 		}(eventsByIdx)
 	}
 
+	wg.Wait()
 	// if all of them are erroring I'd want to exit the process,
 	return nil
 }
@@ -132,6 +133,8 @@ func (h *BatchHandler) sendToES(ctx context.Context, events []*models.SearchData
 	fmt.Println("jsonUpsertResponse starts")
 	uri := fmt.Sprintf("%s/%s/_bulk", h.esURL, esDestIndex)
 	fmt.Println("yo this is the fcking URI: ", uri)
+	// remember to change the index to the bulkUpdate method when uploading shit
+	// !!!!!!!!!!!!!!
 
 	printableString := string(bulkupsert)
 	fmt.Println("this is the bulkupserts", printableString)
